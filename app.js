@@ -242,6 +242,27 @@ let sortDir = "desc"; // "asc" | "desc"
 const POS_ORDER = ["GK","RB","CB","LB","CDM","CM","CAM","RM","LM","ST"];
 const STATUS_ORDER = ["Special","Exciting","Great","Sell"];
 
+// Save title button
+
+btnEditSaveTitle?.addEventListener("click", async () => {
+  try {
+    await requireLoginOrRedirect();
+
+    const currentTitle = saveTitleEl?.textContent || "Untitled save";
+    const next = prompt("Edit career save title:", currentTitle);
+    if (!next) return;
+
+    await aws.updateSaveTitle(CURRENT_SAVE_ID, next.trim());
+
+    // Update UI immediately
+    if (saveTitleEl) saveTitleEl.textContent = next.trim();
+    document.title = `${next.trim()} — FC26 Transfer Tracker`;
+  } catch (err) {
+    alert(err?.message || String(err));
+    console.error(err);
+  }
+});
+
 // ---------- DOM ----------
 const $ = (id)=>document.getElementById(id);
 
@@ -281,6 +302,9 @@ const toggleExEl = $("toggle-ex");
 const allSenioritySegs = Array.from(document.querySelectorAll('.segmented[aria-label="Seniority filter"]'));
 const currencySeg = document.querySelector('.segmented[aria-label="Currency"]');
 const sortableHeaders = Array.from(document.querySelectorAll("th.sortable"));
+
+const btnEditSaveTitle = document.getElementById("edit-save-title");
+const saveTitleEl = document.getElementById("save-title");
 
 // ---------- auth/session ----------
 async function requireLoginOrRedirect(){
