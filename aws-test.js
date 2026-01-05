@@ -45,9 +45,19 @@ async function whoAmI() {
       const email = (emailEl.value || "").trim();
       if (!email) return show("Enter your email first.");
 
-      // Starts the sign-in. Cognito will email a code.
-      const res = await signIn({ username: email });
-      show({ signIn: "code sent (check email)", nextStep: res.nextStep });
+      // Force the passwordless Email OTP flow.
+      // This requires Email OTP enabled in the Cognito user pool/app client.
+      const res = await signIn({
+        username: email,
+        options: {
+          authFlowType: "USER_AUTH",
+          preferredChallenge: "EMAIL_OTP",
+        },
+      });
+
+      // Expected next step when Email OTP is enabled:
+      // CONFIRM_SIGN_IN_WITH_EMAIL_CODE
+      show({ signIn: "started", nextStep: res.nextStep });
     });
 
     document.getElementById("btn-confirm").addEventListener("click", async () => {
