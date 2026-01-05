@@ -81,13 +81,20 @@ export async function listSaves() {
 
 export async function createSave(displayName) {
   await initAws();
-  const name = String(displayName || "").trim() || "Untitled save";
+  const title = String(displayName || "").trim() || "Untitled save";
+  const createdAt = new Date().toISOString();
 
-  // 1) Try schema with `title`
-  {
-    const { data, errors } = await client.models.CareerSave.create({ title: name });
-    if (!errors?.length) return normaliseSave(data);
-  }
+  // Your schema uses `title` (required) and optional `createdAt`.
+  const { data, errors } = await client.models.CareerSave.create({ title, createdAt });
+  if (errors?.length) throw new Error(joinErrors(errors));
+  return normaliseSave(data);
+}
+
+export async function deleteSave(id) {
+  await initAws();
+  const { errors } = await client.models.CareerSave.delete({ id });
+  if (errors?.length) throw new Error(joinErrors(errors));
+}
 
   // 2) Fallback: schema with `name`
   {
@@ -97,72 +104,43 @@ export async function createSave(displayName) {
   }
 }
 
-export async function listPlayers(saveId) {
+export async function listPlayers(careerSaveId) {
   await initAws();
 
-  const tryList = async (fieldName) => {
-    const { data, errors } = await client.models.Player.list({
-      filter: { [fieldName]: { eq: saveId } },
-    });
-    if (errors?.length) {
-      const msg = joinErrors(errors);
-      // This is the exact error you’re getting
-      if (msg.includes("ModelPlayerFilterInput") && msg.includes("field that is not defined")) {
-        return { retryable: true, msg };
-      }
-      throw new Error(msg);
-    }
-    return { data: Array.isArray(data) ? data : [] };
-  };
+  // Schema: Player.careerSaveId
+  const { data, errors } = await client.models.Player.list({
+    filter: { careerSaveId: { eq: careerSaveId } },
+  });
 
-  // 1) Try saveId first
-  const a = await tryList("saveId");
-  if (a.data) return a.data;
-
-  // 2) Retry careerSaveId if saveId is not part of schema
-  const b = await tryList("careerSaveId");
-  if (b.data) return b.data;
-
-  // If we somehow got here, throw the last message
-  throw new Error(a.msg || b.msg || "Unable to list players.");
+  if (errors?.length) throw new Error(joinErrors(errors));
+  return Array.isArray(data) ? data : [];
 }
 
-
-export async function addPlayer(saveId, player) {
+export async function addPlayer(careerSaveId, player) {
   await initAws();
 
-  const tryCreate = async (fieldName) => {
-    const payload = { [fieldName]: saveId, ...player };
-    const { data, errors } = await client.models.Player.create(payload);
-    if (errors?.length) {
-      const msg = joinErrors(errors);
-      // If schema doesn’t have that linking field, GraphQL rejects it
-      if (msg.includes("CreatePlayerInput") && msg.includes("field that is not defined")) {
-        return { retryable: true, msg };
-      }
-      throw new Error(msg);
-    }
-    return { data };
+  const now = new Date().toISOString();
+
+  // Ensure required linkage + timestamps exist (they are in your schema).
+  const payload = {
+    careerSaveId,
+    createdAt: player?.createdAt || now,
+    updatedAt: now,
+    ...player,
   };
 
-  // 1) Try saveId
-  const a = await tryCreate("saveId");
-  if (a.data) return a.data;
-
-  // 2) Retry careerSaveId
-  const b = await tryCreate("careerSaveId");
-  if (b.data) return b.data;
-
-  throw new Error(a.msg || b.msg || "Unable to add player.");
+  const { data, errors } = await client.models.Player.create(payload);
+  if (errors?.length) throw new Error(joinErrors(errors));
+  return data;
 }
-
 
 export async function updatePlayer(id, updates) {
   await initAws();
+  const now = new Date().toISOString();
 
-  // IMPORTANT: do not inject updatedAt unless your schema explicitly has it.
   const { data, errors } = await client.models.Player.update({
     id,
+    updatedAt: now,
     ...updates,
   });
   if (errors?.length) throw new Error(joinErrors(errors));
