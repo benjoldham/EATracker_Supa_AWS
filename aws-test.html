@@ -1,0 +1,38 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>AWS Test</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; max-width: 760px; margin: 48px auto; padding: 0 16px; }
+    .row { display:flex; gap:8px; margin: 8px 0; }
+    input, button { padding: 10px; font-size: 16px; }
+    input { flex: 1; }
+    pre { background: #f6f6f6; padding: 12px; border-radius: 8px; overflow:auto; }
+  </style>
+</head>
+<body>
+  <h1>AWS Amplify Gen 2 Test</h1>
+  <p>This page is Phase 1 only. It does not change your Supabase MVP.</p>
+
+  <div class="row">
+    <button id="btn-signin">Sign in</button>
+    <button id="btn-signout">Sign out</button>
+    <button id="btn-whoami">Who am I?</button>
+  </div>
+
+  <hr />
+
+  <h2>Create Ping</h2>
+  <div class="row">
+    <input id="msg" placeholder="Type a message..." />
+    <button id="btn-create">Create</button>
+    <button id="btn-list">List</button>
+  </div>
+
+  <pre id="out">Ready.</pre>
+
+  <script type="module" src="./aws-test.js"></script>
+</body>
+</html>
