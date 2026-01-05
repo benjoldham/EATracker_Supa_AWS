@@ -97,32 +97,65 @@ export async function createSave(displayName) {
   }
 }
 
-export async function deleteSave(id) {
-  await initAws();
-  const { errors } = await client.models.CareerSave.delete({ id });
-  if (errors?.length) throw new Error(joinErrors(errors));
-}
-
-// -------- Data: Players --------
 export async function listPlayers(saveId) {
   await initAws();
-  const { data, errors } = await client.models.Player.list({
-    filter: { saveId: { eq: saveId } },
-  });
-  if (errors?.length) throw new Error(joinErrors(errors));
-  return Array.isArray(data) ? data : [];
+
+  const tryList = async (fieldName) => {
+    const { data, errors } = await client.models.Player.list({
+      filter: { [fieldName]: { eq: saveId } },
+    });
+    if (errors?.length) {
+      const msg = joinErrors(errors);
+      // This is the exact error you’re getting
+      if (msg.includes("ModelPlayerFilterInput") && msg.includes("field that is not defined")) {
+        return { retryable: true, msg };
+      }
+      throw new Error(msg);
+    }
+    return { data: Array.isArray(data) ? data : [] };
+  };
+
+  // 1) Try saveId first
+  const a = await tryList("saveId");
+  if (a.data) return a.data;
+
+  // 2) Retry careerSaveId if saveId is not part of schema
+  const b = await tryList("careerSaveId");
+  if (b.data) return b.data;
+
+  // If we somehow got here, throw the last message
+  throw new Error(a.msg || b.msg || "Unable to list players.");
 }
+
 
 export async function addPlayer(saveId, player) {
   await initAws();
 
-  // IMPORTANT: do not inject timestamps here; only send schema fields.
-  const payload = { saveId, ...player };
+  const tryCreate = async (fieldName) => {
+    const payload = { [fieldName]: saveId, ...player };
+    const { data, errors } = await client.models.Player.create(payload);
+    if (errors?.length) {
+      const msg = joinErrors(errors);
+      // If schema doesn’t have that linking field, GraphQL rejects it
+      if (msg.includes("CreatePlayerInput") && msg.includes("field that is not defined")) {
+        return { retryable: true, msg };
+      }
+      throw new Error(msg);
+    }
+    return { data };
+  };
 
-  const { data, errors } = await client.models.Player.create(payload);
-  if (errors?.length) throw new Error(joinErrors(errors));
-  return data;
+  // 1) Try saveId
+  const a = await tryCreate("saveId");
+  if (a.data) return a.data;
+
+  // 2) Retry careerSaveId
+  const b = await tryCreate("careerSaveId");
+  if (b.data) return b.data;
+
+  throw new Error(a.msg || b.msg || "Unable to add player.");
 }
+
 
 export async function updatePlayer(id, updates) {
   await initAws();
