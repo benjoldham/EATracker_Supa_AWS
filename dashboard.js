@@ -89,6 +89,7 @@ function render(saves, statsBySaveId) {
       <td class="num">${fmtMoneyAbbrevGBP(stat.profit)}</td>
       <td style="white-space:nowrap;">
         <button class="btn btn-secondary" data-open>Open</button>
+        <button class="btn btn-secondary" data-edit>Edit</button>
         <button class="btn btn-danger" data-del>Delete</button>
       </td>
     `;
@@ -154,6 +155,7 @@ rowsEl?.addEventListener("click", async (e) => {
   const id = tr.dataset.id;
 
   const openBtn = e.target.closest("button[data-open]");
+  const editBtn = e.target.closest("button[data-edit]");
   const delBtn = e.target.closest("button[data-del]");
 
   try {
@@ -162,6 +164,16 @@ rowsEl?.addEventListener("click", async (e) => {
     if (openBtn) {
       location.href = `./tracker.html?save=${encodeURIComponent(id)}`;
       return;
+    }
+
+    if (editBtn) {
+     const current = tr.querySelector("strong")?.textContent || "";
+     const next = prompt("Rename career save:", current);
+     if (!next) return;
+
+     await aws.updateSaveTitle(id, next);
+     await refresh();
+     return;
     }
 
     if (delBtn) {
