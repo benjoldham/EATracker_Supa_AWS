@@ -1,31 +1,39 @@
-// FC26 Transfer Tracker — Dashboard (Supabase-backed)
+// FC26 Transfer Tracker — Dashboard (AWS Amplify Gen 2-backed)
 //
-// This replaces localStorage multi-save with Supabase tables:
-// - saves
-// - players
+// This replaces Supabase tables with Amplify Data models:
+// - CareerSave
+// - Player
 
-import { supabase, requireSession } from "./supabaseClient.js";
+import * as aws from "./awsClient.js";
 
 document.getElementById("btn-signout")?.addEventListener("click", async () => {
   const ok = confirm("Sign out?");
   if (!ok) return;
 
-  await supabase.auth.signOut();
+  await aws.awsSignOut?.();
   location.href = "./login.html";
 });
 
-
-function uid(){ return crypto.randomUUID ? crypto.randomUUID() : (Math.random().toString(16).slice(2) + Date.now().toString(16)); }
-function asInt(v,fallback=0){ const n=Number(v); return Number.isFinite(n) ? Math.trunc(n) : fallback; }
-
-function fmtDate(iso){
-  try{
-    const d = new Date(iso);
-    return d.toLocaleString(undefined, { year:"numeric", month:"short", day:"2-digit" });
-  }catch{ return ""; }
+function uid() {
+  return crypto.randomUUID
+    ? crypto.randomUUID()
+    : Math.random().toString(16).slice(2) + Date.now().toString(16);
+}
+function asInt(v, fallback = 0) {
+  const n = Number(v);
+  return Number.isFinite(n) ? Math.trunc(n) : fallback;
 }
 
-function fmtMoneyAbbrevGBP(amountGBP){
+function fmtDate(iso) {
+  try {
+    const d = new Date(iso);
+    return d.toLocaleString(undefined, { year: "numeric", month: "short", day: "2-digit" });
+  } catch {
+    return "";
+  }
+}
+
+function fmtMoneyAbbrevGBP(amountGBP) {
   const sym = "£";
   const n = Number(amountGBP) || 0;
   const abs = Math.abs(n);
@@ -47,29 +55,44 @@ const btnAdd = document.getElementById("btn-add-save");
 const rowsEl = document.getElementById("save-rows");
 const emptyEl = document.getElementById("empty-state");
 
-
-async function requireLoginOrRedirect(){
-  const session = await requireSession();
-  if(!session){
+async function requireLoginOrRedirect() {
+  const session = await aws.getSession?.();
+  if (!session?.signedIn) {
     location.href = "./login.html";
     throw new Error("Not signed in");
   }
   return session;
 }
 
-function setEmpty(isEmpty){
+function setEmpty(isEmpty) {
   if (!emptyEl) return;
   emptyEl.style.display = isEmpty ? "" : "none";
 }
 
-function render(saves, statsBySaveId){
+function escapeHtml(str) {
+  return String(str ?? "").replace(/[&<>"']/g, (m) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    "\"": "&quot;",
+    "'": "&#039;",
+  }[m]));
+}
+
+function getSaveCreatedIso(s) {
+  // Support multiple possible field names depending on your schema.
+  return s.createdAt || s.created_at || s.created || s.createdOn || "";
+}
+
+function render(saves, statsBySaveId) {
   rowsEl.innerHTML = "";
   setEmpty(!saves.length);
 
-  for (const s of saves){
+  for (const s of saves) {
     const stat = statsBySaveId.get(s.id) || { count: 0, profit: 0 };
     const tr = document.createElement("tr");
     tr.dataset.id = s.id;
+
     tr.innerHTML = `
       <td>
         <div style="display:flex; flex-direction:column; gap:2px;">
@@ -77,7 +100,7 @@ function render(saves, statsBySaveId){
           <span class="subtle">${escapeHtml(s.id)}</span>
         </div>
       </td>
-      <td>${fmtDate(s.created_at)}</td>
+      <td>${fmtDate(getSaveCreatedIso(s))}</td>
       <td class="num">${stat.count}</td>
       <td class="num">${fmtMoneyAbbrevGBP(stat.profit)}</td>
       <td style="white-space:nowrap;">
@@ -90,123 +113,137 @@ function render(saves, statsBySaveId){
   }
 }
 
-function escapeHtml(str){
-  return String(str ?? "").replace(/[&<>"']/g, (m)=>({
-    "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"
-  }[m]));
+async function fetchSaves() {
+  // Expect: aws.listSaves() -> array of CareerSave records with at least {id,name,createdAt?}
+  const saves = await aws.listSaves?.();
+  return Array.isArray(saves) ? saves : [];
 }
 
-async function fetchSaves(){
-  const { data, error } = await supabase
-    .from("saves")
-    .select("*")
-    .order("created_at", { ascending: false });
-
-  if (error) throw error;
-  return data || [];
+function getPlayerSaveId(p) {
+  // Support multiple possible field names depending on your schema.
+  return p.saveId || p.save_id || p.save || "";
 }
 
-async function fetchPlayerStats(){
-  // Pull minimal columns and aggregate client-side for speed + simplicity.
-  const { data, error } = await supabase
-    .from("players")
-    .select("save_id,cost_gbp,sale_gbp");
+function getProfitGBP(p) {
+  // Your existing app uses cost_gbp / sale_gbp. Support alternates too.
+  const cost = asInt(p.cost_gbp ?? p.costGBP ?? p.cost ?? 0, 0);
+  const sale = asInt(p.sale_gbp ?? p.saleGBP ?? p.sale ?? 0, 0);
+  return sale - cost;
+}
 
-  if (error) throw error;
-
+async function fetchPlayerStats() {
+  // Pull minimal fields and aggregate client-side.
+  // We will list players per save by listing ALL players, if your awsClient supports it.
+  // Best is: listPlayers(saveId) per save; but for dashboard stats we just fetch all players once.
+  // If your awsClient does not expose listAllPlayers, we compute stats by fetching per-save below.
   const map = new Map();
-  for (const r of (data || [])){
-    const id = r.save_id;
-    if (!map.has(id)) map.set(id, { count: 0, profit: 0 });
-    const s = map.get(id);
-    s.count += 1;
-    s.profit += asInt(r.sale_gbp,0) - asInt(r.cost_gbp,0);
+
+  // Strategy:
+  // 1) load saves
+  // 2) for each save, list players and compute stats
+  const saves = await fetchSaves();
+  for (const s of saves) {
+    const list = await aws.listPlayers?.(s.id);
+    const players = Array.isArray(list) ? list : [];
+    let count = 0;
+    let profit = 0;
+    for (const p of players) {
+      count += 1;
+      profit += getProfitGBP(p);
+    }
+    map.set(s.id, { count, profit });
   }
+
   return map;
 }
 
-async function refresh(){
+async function refresh() {
   const saves = await fetchSaves();
   const stats = await fetchPlayerStats();
+  // Sort newest first if your awsClient does not already do it
+  saves.sort((a, b) => String(getSaveCreatedIso(b)).localeCompare(String(getSaveCreatedIso(a))));
   render(saves, stats);
 }
 
-btnAdd?.addEventListener("click", async ()=>{
-  try{
+btnAdd?.addEventListener("click", async () => {
+  try {
     await requireLoginOrRedirect();
     const name = prompt("Career save name:", "New Career Save");
     if (!name) return;
 
-    const { data, error } = await supabase
-      .from("saves")
-      .insert({ id: uid(), name: name.trim() })
-      .select("*")
-      .single();
+    // Expect: aws.createSave(name) returns created save with id
+    const created = await aws.createSave?.(name.trim());
+    const id = created?.id || uid();
 
-    if (error) throw error;
-    location.href = `./tracker.html?save=${encodeURIComponent(data.id)}`;
-  }catch(err){
+    location.href = `./tracker.html?save=${encodeURIComponent(id)}`;
+  } catch (err) {
     alert(err?.message || String(err));
     console.error(err);
   }
 });
 
-rowsEl?.addEventListener("click", async (e)=>{
+rowsEl?.addEventListener("click", async (e) => {
   const tr = e.target.closest("tr");
   if (!tr) return;
   const id = tr.dataset.id;
 
   const openBtn = e.target.closest("button[data-open]");
   const editBtn = e.target.closest("button[data-edit]");
-  const delBtn  = e.target.closest("button[data-del]");
+  const delBtn = e.target.closest("button[data-del]");
 
-  try{
+  try {
     await requireLoginOrRedirect();
 
-    if (openBtn){
+    if (openBtn) {
       location.href = `./tracker.html?save=${encodeURIComponent(id)}`;
       return;
     }
 
-    if (editBtn){
+    if (editBtn) {
       const currentName = tr.querySelector("strong")?.textContent || "";
       const next = prompt("Rename career save:", currentName);
       if (!next) return;
 
-      const { error } = await supabase
-        .from("saves")
-        .update({ name: next.trim() })
-        .eq("id", id);
+      // Prefer a dedicated helper if you created it in awsClient.js.
+      if (aws.updateSaveName) {
+        await aws.updateSaveName(id, next.trim());
+      } else if (aws.updateSave) {
+        await aws.updateSave({ id, name: next.trim() });
+      } else {
+        throw new Error("Missing awsClient function: updateSaveName(saveId, name) or updateSave({id,name})");
+      }
 
-      if (error) throw error;
       await refresh();
       return;
     }
 
-    if (delBtn){
+    if (delBtn) {
       if (!confirm("Delete this career save and all its players? This cannot be undone.")) return;
 
-      // Delete players first (FK safety if you add constraints later)
-      let r = await supabase.from("players").delete().eq("save_id", id);
-      if (r.error) throw r.error;
+      // Delete players first, then save (mirrors your existing behaviour)
+      const list = await aws.listPlayers?.(id);
+      const players = Array.isArray(list) ? list : [];
+      for (const p of players) {
+        if (aws.deletePlayer) await aws.deletePlayer(p.id);
+      }
 
-      r = await supabase.from("saves").delete().eq("id", id);
-      if (r.error) throw r.error;
+      if (aws.deleteSave) await aws.deleteSave(id);
+      else throw new Error("Missing awsClient function: deleteSave(saveId)");
 
       await refresh();
       return;
     }
-  }catch(err){
+  } catch (err) {
     alert(err?.message || String(err));
     console.error(err);
   }
 });
 
-(async function boot(){
-  try{
+(async function boot() {
+  try {
     await requireLoginOrRedirect();
     await refresh();
-  }catch(err){
+  } catch (err) {
     alert(err?.message || String(err));
     console.error(err);
   }
