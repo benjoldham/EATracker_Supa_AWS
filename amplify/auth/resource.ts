@@ -4,7 +4,8 @@ export const auth = defineAuth({
   loginWith: {
     email: true,
   },
-  // Required for signInWithRedirect() / hosted login
+
+  // Enable hosted/redirect login (required for signInWithRedirect)
   redirectUrls: {
     callbackUrls: [
       "https://main.d1qq9xnqrsdy22.amplifyapp.com/aws-test.html",
