@@ -133,3 +133,22 @@ export async function deletePlayer(id) {
   const { errors } = await client.models.Player.delete({ id });
   if (errors?.length) throw new Error(joinErrors(errors));
 }
+
+/* =====================
+   Career Save Title 
+===================== */
+
+export async function updateSaveTitle(id, title) {
+  await initAws();
+  const t = String(title || "").trim();
+  if (!t) throw new Error("Title cannot be empty.");
+
+  const { data, errors } = await client.models.CareerSave.update({
+    id,
+    title: t,
+  });
+
+  if (errors?.length) throw new Error(joinErrors(errors));
+  return data;
+}
+
