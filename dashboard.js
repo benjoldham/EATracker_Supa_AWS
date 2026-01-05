@@ -96,7 +96,7 @@ function render(saves, statsBySaveId) {
     tr.innerHTML = `
       <td>
         <div style="display:flex; flex-direction:column; gap:2px;">
-          <strong>${escapeHtml(s.name || "Untitled save")}</strong>
+          <strong>${escapeHtml((s.name || s.title) || "Untitled save")}</strong>
           <span class="subtle">${escapeHtml(s.id)}</span>
         </div>
       </td>
