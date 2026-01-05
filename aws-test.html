@@ -16,11 +16,17 @@
   <h1>AWS Amplify Gen 2 Test</h1>
   <p>This page is Phase 1 only. It does not change your Supabase MVP.</p>
 
-  <div class="row">
-    <button id="btn-signin">Sign in</button>
-    <button id="btn-signout">Sign out</button>
-    <button id="btn-whoami">Who am I?</button>
-  </div>
+<h2>Sign in (Email OTP)</h2>
+<div class="row">
+  <input id="email" placeholder="you@email.com" />
+  <button id="btn-send">Send code</button>
+</div>
+<div class="row">
+  <input id="code" placeholder="6-digit code" />
+  <button id="btn-confirm">Confirm</button>
+  <button id="btn-signout">Sign out</button>
+</div>
+
 
   <hr />
 
