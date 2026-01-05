@@ -13,7 +13,7 @@ let client = null;
 
 async function loadOutputs() {
   const res = await fetch("./amplify_outputs.json", { cache: "no-store" });
-  if (!res.ok) throw new Error(`Failed to load amplify_outputs.json (${res.status})`);
+  if (!res.ok) throw new Error("Failed to load amplify_outputs.json");
   return await res.json();
 }
 
@@ -24,6 +24,14 @@ export async function initAws() {
   client = generateClient();
   configured = true;
 }
+
+function joinErrors(errors) {
+  return (errors || []).map(e => e.message).join("; ");
+}
+
+/* =====================
+   AUTH
+===================== */
 
 export async function getSession() {
   await initAws();
@@ -36,10 +44,9 @@ export async function getSession() {
   }
 }
 
-// -------- Auth (email + password) --------
 export async function awsSignUp(email, password) {
   await initAws();
-  return await signUp({
+  return signUp({
     username: email,
     password,
     options: { userAttributes: { email } },
@@ -48,46 +55,35 @@ export async function awsSignUp(email, password) {
 
 export async function awsSignIn(email, password) {
   await initAws();
-  return await signIn({ username: email, password });
+  return signIn({ username: email, password });
 }
 
 export async function awsSignOut() {
   await initAws();
-  return await signOut();
+  return signOut();
 }
 
-// -------- helpers --------
-function joinErrors(errors) {
-  return (errors || []).map((e) => e?.message || String(e)).join("; ");
-}
+/* =====================
+   CAREER SAVES
+===================== */
 
-function normaliseSave(s) {
-  if (!s) return s;
-  return {
-    ...s,
-    // dashboard expects .name
-    name: s.name ?? s.title ?? "Untitled save",
-    title: s.title ?? s.name ?? null,
-  };
-}
-
-// -------- Data: Career Saves --------
 export async function listSaves() {
   await initAws();
   const { data, errors } = await client.models.CareerSave.list();
   if (errors?.length) throw new Error(joinErrors(errors));
-  return Array.isArray(data) ? data.map(normaliseSave) : [];
+  return data ?? [];
 }
 
-export async function createSave(displayName) {
+export async function createSave(title) {
   await initAws();
-  const title = String(displayName || "").trim() || "Untitled save";
-  const createdAt = new Date().toISOString();
+  const name = String(title || "").trim() || "Untitled save";
 
-  // Your schema uses `title` (required) and optional `createdAt`.
-  const { data, errors } = await client.models.CareerSave.create({ title, createdAt });
+  const { data, errors } = await client.models.CareerSave.create({
+    title: name,
+  });
+
   if (errors?.length) throw new Error(joinErrors(errors));
-  return normaliseSave(data);
+  return data;
 }
 
 export async function deleteSave(id) {
@@ -96,36 +92,24 @@ export async function deleteSave(id) {
   if (errors?.length) throw new Error(joinErrors(errors));
 }
 
-  // 2) Fallback: schema with `name`
-  {
-    const { data, errors } = await client.models.CareerSave.create({ name });
-    if (errors?.length) throw new Error(joinErrors(errors));
-    return normaliseSave(data);
-  }
-}
+/* =====================
+   PLAYERS
+===================== */
 
 export async function listPlayers(careerSaveId) {
   await initAws();
-
-  // Schema: Player.careerSaveId
   const { data, errors } = await client.models.Player.list({
     filter: { careerSaveId: { eq: careerSaveId } },
   });
-
   if (errors?.length) throw new Error(joinErrors(errors));
-  return Array.isArray(data) ? data : [];
+  return data ?? [];
 }
 
 export async function addPlayer(careerSaveId, player) {
   await initAws();
 
-  const now = new Date().toISOString();
-
-  // Ensure required linkage + timestamps exist (they are in your schema).
   const payload = {
     careerSaveId,
-    createdAt: player?.createdAt || now,
-    updatedAt: now,
     ...player,
   };
 
@@ -136,11 +120,8 @@ export async function addPlayer(careerSaveId, player) {
 
 export async function updatePlayer(id, updates) {
   await initAws();
-  const now = new Date().toISOString();
-
   const { data, errors } = await client.models.Player.update({
     id,
-    updatedAt: now,
     ...updates,
   });
   if (errors?.length) throw new Error(joinErrors(errors));
