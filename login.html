@@ -1,59 +1,54 @@
 <!doctype html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Sign in</title>
+  <title>Login — FC26 Transfer Tracker</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="./styles.css" />
   <style>
-    body { font-family: system-ui, sans-serif; max-width: 520px; margin: 48px auto; padding: 0 16px; }
-    input, button { padding: 10px; font-size: 16px; }
-    input { width: 100%; margin: 8px 0; }
-    button { width: 100%; }
-    .msg { margin-top: 12px; color: #444; }
-    .err { margin-top: 12px; color: #b00020; }
+    .login-wrap { max-width: 520px; margin: 64px auto; padding: 0 16px; }
+    .card { background: #fff; border: 1px solid rgba(0,0,0,.08); border-radius: 14px; padding: 18px; }
+    .row { display: flex; gap: 10px; flex-wrap: wrap; }
+    .row > * { flex: 1; min-width: 180px; }
+    input { width: 100%; padding: 10px; font-size: 16px; }
+    button { padding: 10px 12px; font-size: 16px; cursor: pointer; }
+    .muted { opacity: .75; }
+    .error { color: #b00020; white-space: pre-wrap; }
+    .ok { color: #0a7a2f; white-space: pre-wrap; }
   </style>
 </head>
 <body>
-  <h1>Sign in</h1>
-  <p>Enter your email and we’ll send you a magic link.</p>
+  <div class="login-wrap">
+    <h1>FC26 Transfer Tracker</h1>
+    <p class="muted">Sign in to access your career saves on any device.</p>
 
-  <form id="form">
-    <input id="email" type="email" placeholder="you@email.com" required />
-    <button type="submit">Send magic link</button>
-  </form>
+    <div class="card">
+      <div class="row">
+        <div>
+          <label>Email</label>
+          <input id="email" type="email" autocomplete="email" placeholder="you@email.com" />
+        </div>
+        <div>
+          <label>Password</label>
+          <input id="password" type="password" autocomplete="current-password" placeholder="••••••••" />
+        </div>
+      </div>
 
-  <div id="out" class="msg"></div>
+      <div style="height: 10px;"></div>
 
-  <script type="module">
-    import { supabase } from "./supabaseClient.js";
+      <div class="row">
+        <button id="btn-signin" class="btn">Sign in</button>
+        <button id="btn-signup" class="btn btn-secondary">Create account</button>
+      </div>
 
-    // Build a redirect back to your app root (works for /repo/ GitHub Pages)
-    const baseUrl = new URL(".", location.href).toString(); // ends with trailing slash
-    const redirectTo = baseUrl + "index.html";
+      <div style="height: 12px;"></div>
 
-    const form = document.getElementById("form");
-    const out = document.getElementById("out");
+      <div id="status" class="muted"></div>
+      <div id="error" class="error"></div>
+      <div id="ok" class="ok"></div>
+    </div>
+  </div>
 
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      out.className = "msg";
-      out.textContent = "Sending…";
-
-      const email = document.getElementById("email").value.trim();
-
-      const { error } = await supabase.auth.signInWithOtp({
-        email,
-        options: { emailRedirectTo: redirectTo }
-      });
-
-      if (error) {
-        out.className = "err";
-        out.textContent = error.message;
-      } else {
-        out.className = "msg";
-        out.textContent = "Check your email for the link.";
-      }
-    });
-  </script>
+  <script type="module" src="./login.js"></script>
 </body>
 </html>
