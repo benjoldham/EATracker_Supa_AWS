@@ -63,8 +63,8 @@ function getSaveCreatedIso(s) {
 }
 
 function getProfitGBP(p) {
-  const cost = asInt(p.cost_gbp ?? p.costGBP ?? p.cost ?? 0, 0);
-  const sale = asInt(p.sale_gbp ?? p.saleGBP ?? p.sale ?? 0, 0);
+  const cost = asInt(p.cost ?? 0, 0);
+  const sale = asInt(p.sale ?? 0, 0);
   return sale - cost;
 }
 
