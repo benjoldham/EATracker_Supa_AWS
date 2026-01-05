@@ -102,39 +102,73 @@ function escapeHtml(str){
 
 function fromAwsPlayer(row){
   if(!row) return row;
+
+  // Backend schema (Amplify):
+  // careerSaveId, firstName, surname, seniority, position, ovrInitial, potentialMin, potentialMax, active, cost, sale, currency, createdAt, updatedAt
   return {
     ...row,
-    firstName: row.firstName ?? row.forename ?? row.first ?? "",
-    surname: row.surname ?? row.lastName ?? row.last ?? "",
-    pos: (row.pos ?? row.position ?? "").toString().toUpperCase(),
-    intl: row.intl ?? row.ovr ?? row.overall ?? row.rating ?? "",
-    potMin: row.potMin ?? row.pot_min ?? row.potential_min ?? "",
-    potMax: row.potMax ?? row.pot_max ?? row.potential_max ?? "",
+
+    // UI fields
+    firstName: row.firstName ?? "",
+    surname: row.surname ?? "",
     seniority: (row.seniority === "Youth") ? "Youth" : "Senior",
     active: (row.active === "N") ? "N" : "Y",
-    cost_gbp: asInt(row.cost_gbp ?? row.costGBP ?? row.cost ?? 0, 0),
-    sale_gbp: asInt(row.sale_gbp ?? row.saleGBP ?? row.sale ?? 0, 0),
-    created_at_ms: Number.isFinite(Number(row.created_at_ms)) ? Number(row.created_at_ms) : Date.now(),
+
+    pos: (row.position ?? "").toString().toUpperCase(),
+    intl: row.ovrInitial ?? "",
+    potMin: row.potentialMin ?? "",
+    potMax: row.potentialMax ?? "",
+
+    // UI keeps money internally in GBP for consistent totals; currency selector is display-only.
+    cost_gbp: asInt(row.cost ?? 0, 0),
+    sale_gbp: asInt(row.sale ?? 0, 0),
+
+    // For UI flash/sort tie-breaks, keep a ms timestamp derived from createdAt if present
+    created_at_ms: (() => {
+      const iso = row.createdAt;
+      const t = iso ? Date.parse(iso) : NaN;
+      return Number.isFinite(t) ? t : Date.now();
+    })(),
+
+    // Keep the last-known currency from backend if present
+    currency: (row.currency === "EUR" || row.currency === "USD") ? row.currency : "GBP",
   };
 }
 
 function toAwsPlayer(p){
   if(!p) return p;
+
+  const nowIso = new Date().toISOString();
+
+  // Only send fields that exist in the Amplify schema.
   return {
     id: p.id,
-    firstName: p.firstName ?? "",
-    surname: p.surname ?? "",
+
+    firstName: String(p.firstName ?? "").trim(),
+    surname: String(p.surname ?? "").trim(),
     seniority: (p.seniority === "Youth") ? "Youth" : "Senior",
     position: (p.pos ?? "").toString().toUpperCase(),
-    ovr: Number.isFinite(Number(p.intl)) ? Number(p.intl) : null,
-    potMin: Number.isFinite(Number(p.potMin)) ? Number(p.potMin) : null,
-    potMax: Number.isFinite(Number(p.potMax)) ? Number(p.potMax) : null,
+
+    ovrInitial: Number.isFinite(Number(p.intl)) ? Number(p.intl) : null,
+    potentialMin: Number.isFinite(Number(p.potMin)) ? Number(p.potMin) : null,
+    potentialMax: Number.isFinite(Number(p.potMax)) ? Number(p.potMax) : null,
+
     active: (p.active === "N") ? "N" : "Y",
-    cost_gbp: asInt(p.cost_gbp, 0),
-    sale_gbp: asInt(p.sale_gbp, 0),
-    created_at_ms: Number.isFinite(Number(p.created_at_ms)) ? Number(p.created_at_ms) : Date.now(),
+
+    // Store GBP values in the backend. (Your UI already converts between currencies.)
+    cost: Number(asInt(p.cost_gbp, 0)),
+    sale: Number(asInt(p.sale_gbp, 0)),
+
+    currency: (p.currency === "EUR" || p.currency === "USD") ? p.currency : "GBP",
+
+    createdAt: (() => {
+      const ms = Number(p.created_at_ms);
+      return Number.isFinite(ms) ? new Date(ms).toISOString() : nowIso;
+    })(),
+    updatedAt: nowIso,
   };
 }
+
 
 function convertFromGBP(amountGBP, currency){
   const c = (currency in FX) ? currency : "GBP";
@@ -753,7 +787,7 @@ function readForm(){
   const cost_gbp = Math.round(convertToGBP(costInCur, currency));
   const sale_gbp = Math.round(convertToGBP(saleInCur, currency));
 
-  return { id: uid(), firstName, surname, seniority, pos, intl, potMin, potMax, active, cost_gbp, sale_gbp };
+  return { id: uid(), firstName, surname, seniority, pos, intl, potMin, potMax, active, cost_gbp, sale_gbp, currency };
 }
 
 function loadIntoForm(p){
