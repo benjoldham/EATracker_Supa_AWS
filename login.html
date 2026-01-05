@@ -1,0 +1,59 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Sign in</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 520px; margin: 48px auto; padding: 0 16px; }
+    input, button { padding: 10px; font-size: 16px; }
+    input { width: 100%; margin: 8px 0; }
+    button { width: 100%; }
+    .msg { margin-top: 12px; color: #444; }
+    .err { margin-top: 12px; color: #b00020; }
+  </style>
+</head>
+<body>
+  <h1>Sign in</h1>
+  <p>Enter your email and we’ll send you a magic link.</p>
+
+  <form id="form">
+    <input id="email" type="email" placeholder="you@email.com" required />
+    <button type="submit">Send magic link</button>
+  </form>
+
+  <div id="out" class="msg"></div>
+
+  <script type="module">
+    import { supabase } from "./supabaseClient.js";
+
+    // Build a redirect back to your app root (works for /repo/ GitHub Pages)
+    const baseUrl = new URL(".", location.href).toString(); // ends with trailing slash
+    const redirectTo = baseUrl + "index.html";
+
+    const form = document.getElementById("form");
+    const out = document.getElementById("out");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      out.className = "msg";
+      out.textContent = "Sending…";
+
+      const email = document.getElementById("email").value.trim();
+
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: { emailRedirectTo: redirectTo }
+      });
+
+      if (error) {
+        out.className = "err";
+        out.textContent = error.message;
+      } else {
+        out.className = "msg";
+        out.textContent = "Check your email for the link.";
+      }
+    });
+  </script>
+</body>
+</html>
