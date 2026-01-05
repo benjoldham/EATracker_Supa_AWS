@@ -10,22 +10,34 @@ and "delete" any "Todo" records.
 const schema = a.schema({
   CareerSave: a
     .model({
-      name: a.string().required(),
+      title: a.string().required(),
       createdAt: a.datetime(),
-      updatedAt: a.datetime(),
     })
     .authorization((allow) => [allow.owner()]),
 
   Player: a
     .model({
-      saveId: a.id().required(),           // links player -> CareerSave
-      firstName: a.string(),
-      lastName: a.string(),
+      careerSaveId: a.id().required(), // link to CareerSave
+
+      // Fields your UI likely sends (adjust names to match your app.js / awsClient.js)
+      firstName: a.string().required(),
+      surname: a.string().required(),
+      seniority: a.string(), // "Senior" | "Youth"
       position: a.string(),
-      notes: a.string(),
+      ovrInitial: a.integer(),
+      potentialMin: a.integer(),
+      potentialMax: a.integer(),
+      active: a.string(), // "Y" | "N"
+      cost: a.float(),
+      sale: a.float(),
+      currency: a.string(), // "GBP" | "EUR" | "USD"
+
       createdAt: a.datetime(),
       updatedAt: a.datetime(),
     })
+    .secondaryIndexes((index) => [
+      index("careerSaveId").sortKeys(["createdAt"]),
+    ])
     .authorization((allow) => [allow.owner()]),
 });
 
@@ -34,7 +46,7 @@ export type Schema = ClientSchema<typeof schema>;
 export const data = defineData({
   schema,
   authorizationModes: {
-    defaultAuthorizationMode: 'userPool',
+    defaultAuthorizationMode: "userPool",
   },
 });
 
