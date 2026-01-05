@@ -45,8 +45,8 @@
               "isRequired": true,
               "attributes": []
             },
-            "name": {
-              "name": "name",
+            "title": {
+              "name": "title",
               "isArray": false,
               "type": "String",
               "isRequired": true,
@@ -64,7 +64,8 @@
               "isArray": false,
               "type": "AWSDateTime",
               "isRequired": false,
-              "attributes": []
+              "attributes": [],
+              "isReadOnly": true
             }
           },
           "syncable": true,
@@ -110,8 +111,8 @@
               "isRequired": true,
               "attributes": []
             },
-            "saveId": {
-              "name": "saveId",
+            "careerSaveId": {
+              "name": "careerSaveId",
               "isArray": false,
               "type": "ID",
               "isRequired": true,
@@ -121,11 +122,18 @@
               "name": "firstName",
               "isArray": false,
               "type": "String",
-              "isRequired": false,
+              "isRequired": true,
               "attributes": []
             },
-            "lastName": {
-              "name": "lastName",
+            "surname": {
+              "name": "surname",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true,
+              "attributes": []
+            },
+            "seniority": {
+              "name": "seniority",
               "isArray": false,
               "type": "String",
               "isRequired": false,
@@ -138,8 +146,50 @@
               "isRequired": false,
               "attributes": []
             },
-            "notes": {
-              "name": "notes",
+            "ovrInitial": {
+              "name": "ovrInitial",
+              "isArray": false,
+              "type": "Int",
+              "isRequired": false,
+              "attributes": []
+            },
+            "potentialMin": {
+              "name": "potentialMin",
+              "isArray": false,
+              "type": "Int",
+              "isRequired": false,
+              "attributes": []
+            },
+            "potentialMax": {
+              "name": "potentialMax",
+              "isArray": false,
+              "type": "Int",
+              "isRequired": false,
+              "attributes": []
+            },
+            "active": {
+              "name": "active",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false,
+              "attributes": []
+            },
+            "cost": {
+              "name": "cost",
+              "isArray": false,
+              "type": "Float",
+              "isRequired": false,
+              "attributes": []
+            },
+            "sale": {
+              "name": "sale",
+              "isArray": false,
+              "type": "Float",
+              "isRequired": false,
+              "attributes": []
+            },
+            "currency": {
+              "name": "currency",
               "isArray": false,
               "type": "String",
               "isRequired": false,
@@ -166,6 +216,17 @@
             {
               "type": "model",
               "properties": {}
+            },
+            {
+              "type": "key",
+              "properties": {
+                "name": "playersByCareerSaveIdAndCreatedAt",
+                "queryField": "listPlayerByCareerSaveIdAndCreatedAt",
+                "fields": [
+                  "careerSaveId",
+                  "createdAt"
+                ]
+              }
             },
             {
               "type": "auth",
