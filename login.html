@@ -15,6 +15,8 @@
     .muted { opacity: .75; }
     .error { color: #b00020; white-space: pre-wrap; }
     .ok { color: #0a7a2f; white-space: pre-wrap; }
+    .hidden { display: none; }
+    .divider { height: 12px; }
   </style>
 </head>
 <body>
@@ -34,14 +36,27 @@
         </div>
       </div>
 
-      <div style="height: 10px;"></div>
+      <div class="divider"></div>
 
       <div class="row">
-        <button id="btn-signin" class="btn">Sign in</button>
-        <button id="btn-signup" class="btn btn-secondary">Create account</button>
+        <button id="btn-signin" class="btn" type="button">Sign in</button>
+        <button id="btn-signup" class="btn btn-secondary" type="button">Create account</button>
       </div>
 
-      <div style="height: 12px;"></div>
+      <div class="divider"></div>
+
+      <!-- Confirmation block (shown only when needed) -->
+      <div id="confirm-block" class="hidden">
+        <p class="muted" style="margin: 0 0 8px 0;">
+          Enter the verification code sent to your email.
+        </p>
+        <div class="row">
+          <input id="confirm-code" inputmode="numeric" placeholder="Verification code" />
+          <button id="btn-confirm" class="btn" type="button">Confirm account</button>
+          <button id="btn-resend" class="btn btn-secondary" type="button">Resend code</button>
+        </div>
+        <div class="divider"></div>
+      </div>
 
       <div id="status" class="muted"></div>
       <div id="error" class="error"></div>
@@ -51,5 +66,4 @@
 
   <script type="module" src="./login.js"></script>
 </body>
-
 </html>
