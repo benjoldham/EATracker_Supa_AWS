@@ -8,13 +8,24 @@ and "delete" any "Todo" records.
 =========================================================================*/
 
 const schema = a.schema({
-  // Phase 1 test model: proves Auth + API + DB works end-to-end.
-  Ping: a
+  CareerSave: a
     .model({
-      message: a.string().required(),
+      name: a.string().required(),
       createdAt: a.datetime(),
+      updatedAt: a.datetime(),
     })
-    // Owner-based access: users only see their own records
+    .authorization((allow) => [allow.owner()]),
+
+  Player: a
+    .model({
+      saveId: a.id().required(),           // links player -> CareerSave
+      firstName: a.string(),
+      lastName: a.string(),
+      position: a.string(),
+      notes: a.string(),
+      createdAt: a.datetime(),
+      updatedAt: a.datetime(),
+    })
     .authorization((allow) => [allow.owner()]),
 });
 
@@ -23,7 +34,6 @@ export type Schema = ClientSchema<typeof schema>;
 export const data = defineData({
   schema,
   authorizationModes: {
-    // Use Cognito User Pool auth (signed-in users)
     defaultAuthorizationMode: 'userPool',
   },
 });
