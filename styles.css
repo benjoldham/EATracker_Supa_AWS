@@ -14,7 +14,7 @@
 html,body{ height:100%; }
 body{
   margin:0;
-  background: radial-gradient(1100px 600px at 20% 0%, #15264b 0%, var(--bg) 55%);
+  background-color: #040d20;
   color:var(--text);
   font-family:var(--sans);
 }
