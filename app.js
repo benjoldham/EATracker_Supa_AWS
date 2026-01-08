@@ -1,10 +1,18 @@
-import { supabase, ensureAnonSession } from "./supabaseClient.js";
+import * as aws from "./awsClient.js";
 
 // FC26 Transfer Tracker (v7) — v6 UI + correct sorting + ex-player toggle
 // Exchange rates source: exchangerate-api.com (open.er-api.com) base GBP.
 // Rates last updated: Tue, 23 Dec 2025 00:02:31 +0000.
 
-// Multi-save storage
+document.getElementById("btn-signout")?.addEventListener("click", async () => {
+  const ok = confirm("Sign out?");
+  if (!ok) return;
+
+  await aws.awsSignOut?.();
+  location.href = "./login.html";
+});
+
+// Multi-save storage (legacy) — left in place for now; AWS uses URL save param + backend.
 const SAVES_KEY = "fc26_transfer_tracker_saves_v1";
 const SAVE_PREFIX = "fc26_transfer_tracker_save_v1_";
 
@@ -13,53 +21,6 @@ const LEGACY_KEY_V7 = "fc26_transfer_tracker_v7";
 const LEGACY_KEY_V6 = "fc26_transfer_tracker_v6";
 
 function playersKey(saveId){ return `${SAVE_PREFIX}${saveId}_players`; }
-
-function loadSaves(){
-  try{
-    const raw = localStorage.getItem(SAVES_KEY);
-    const parsed = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed) ? parsed : [];
-  }catch{ return []; }
-}
-function saveSaves(saves){ localStorage.setItem(SAVES_KEY, JSON.stringify(saves)); }
-
-async function updateSaveName(saveId, nextName){
-  const name = String(nextName || "").trim() || "Untitled";
-  await ensureAnonSession();
-  const { data, error } = await supabase
-    .from("saves")
-    .update({ name })
-    .eq("id", saveId)
-    .select("*")
-    .single();
-
-  if (error) throw error;
-  return data;
-}
-
-function migrateLegacyIntoFirstSaveIfNeeded(){
-  const saves = loadSaves();
-  if (saves.length) return;
-
-  const raw = localStorage.getItem(LEGACY_KEY_V7) || localStorage.getItem(LEGACY_KEY_V6);
-  if (!raw) return;
-  let parsed;
-  try{ parsed = JSON.parse(raw); }catch{ return; }
-  if (!Array.isArray(parsed) || parsed.length === 0) return;
-
-  const id = uid();
-  const first = { id, name: "My Career Save", createdAt: new Date().toISOString() };
-  saveSaves([first]);
-  localStorage.setItem(playersKey(id), JSON.stringify(parsed));
-}
-
-function getCurrentSave(){
-  // Supabase version: saveId comes from URL. Save metadata is fetched from Supabase in boot().
-  const url = new URL(location.href);
-  const saveId = url.searchParams.get("save");
-  return { saveId, save: null };
-}
-
 
 // 1 GBP = X currency units
 const FX = { GBP: 1, EUR: 1.144446, USD: 1.34518 };
@@ -87,7 +48,7 @@ function fullName(firstName,surname){
 }
 function displayName(p){
   const first=(p.firstName||"").trim();
-  const sur=(p.surname||"").trim();
+  const sur=(p.surname||p.lastName||"").trim();
   if(!first && !sur) return "";
   const initial = first ? first[0].toUpperCase()+"." : "";
   const space = initial && sur ? " " : "";
@@ -131,9 +92,83 @@ function escapeHtml(str){
     .replaceAll("&","&amp;")
     .replaceAll("<","&lt;")
     .replaceAll(">","&gt;")
-    .replaceAll('"',"&quot;")
+    .replaceAll('"',"quot;")
     .replaceAll("'","&#039;");
 }
+
+// ---------- AWS <-> UI field mapping ----------
+// Your UI historically uses camelCase fields; your backend model may use either.
+// We normalise here so the rest of the UI stays unchanged.
+
+function fromAwsPlayer(row){
+  if(!row) return row;
+
+  // Backend schema (Amplify):
+  // careerSaveId, firstName, surname, seniority, position, ovrInitial, potentialMin, potentialMax, active, cost, sale, currency, createdAt, updatedAt
+  return {
+    ...row,
+
+    // UI fields
+    firstName: row.firstName ?? "",
+    surname: row.surname ?? "",
+    seniority: (row.seniority === "Youth") ? "Youth" : "Senior",
+    active: (row.active === "N") ? "N" : "Y",
+
+    pos: (row.position ?? "").toString().toUpperCase(),
+    intl: row.ovrInitial ?? "",
+    potMin: row.potentialMin ?? "",
+    potMax: row.potentialMax ?? "",
+
+    // UI keeps money internally in GBP for consistent totals; currency selector is display-only.
+    cost_gbp: asInt(row.cost ?? 0, 0),
+    sale_gbp: asInt(row.sale ?? 0, 0),
+
+    // For UI flash/sort tie-breaks, keep a ms timestamp derived from createdAt if present
+    created_at_ms: (() => {
+      const iso = row.createdAt;
+      const t = iso ? Date.parse(iso) : NaN;
+      return Number.isFinite(t) ? t : Date.now();
+    })(),
+
+    // Keep the last-known currency from backend if present
+    currency: (row.currency === "EUR" || row.currency === "USD") ? row.currency : "GBP",
+  };
+}
+
+function toAwsPlayer(p){
+  if(!p) return p;
+
+  const nowIso = new Date().toISOString();
+
+  // Only send fields that exist in the Amplify schema.
+  return {
+    id: p.id,
+
+    firstName: String(p.firstName ?? "").trim(),
+    surname: String(p.surname ?? "").trim(),
+    seniority: (p.seniority === "Youth") ? "Youth" : "Senior",
+    position: (p.pos ?? "").toString().toUpperCase(),
+
+    ovrInitial: Number.isFinite(Number(p.intl)) ? Number(p.intl) : null,
+    potentialMin: Number.isFinite(Number(p.potMin)) ? Number(p.potMin) : null,
+    potentialMax: Number.isFinite(Number(p.potMax)) ? Number(p.potMax) : null,
+
+    active: (p.active === "N") ? "N" : "Y",
+
+    // Store GBP values in the backend. (Your UI already converts between currencies.)
+    cost: Number(asInt(p.cost_gbp, 0)),
+    sale: Number(asInt(p.sale_gbp, 0)),
+
+    currency: (p.currency === "EUR" || p.currency === "USD") ? p.currency : "GBP",
+
+    createdAt: (() => {
+      const ms = Number(p.created_at_ms);
+      return Number.isFinite(ms) ? new Date(ms).toISOString() : nowIso;
+    })(),
+    updatedAt: nowIso,
+  };
+}
+
 
 function convertFromGBP(amountGBP, currency){
   const c = (currency in FX) ? currency : "GBP";
@@ -173,6 +208,12 @@ function fmtPct(p){
 }
 
 // ---------- boot: save selection ----------
+function getCurrentSave(){
+  const url = new URL(location.href);
+  const saveId = url.searchParams.get("save");
+  return { saveId, save: null };
+}
+
 const { saveId: CURRENT_SAVE_ID } = getCurrentSave();
 
 // If someone opens the tracker without selecting a save, send them to the dashboard.
@@ -180,91 +221,12 @@ if (!CURRENT_SAVE_ID){
   location.replace("./index.html");
 }
 
-// Title will be loaded from Supabase in boot().
-var saveTitleEl = document.getElementById("save-title");
+// Title will be loaded from backend in boot().
+const saveTitleEl = document.getElementById("save-title");
 let CURRENT_SAVE = null;
 
-// Title editor (updates save name)
-const editTitleBtn = document.getElementById("edit-save-title");
-if (saveTitleEl && editTitleBtn){
-  let isEditingTitle = false;
-  let originalTitle = saveTitleEl.textContent || "";
-
-  const placeCaretAtEnd = (el)=>{
-    try{
-      const range = document.createRange();
-      range.selectNodeContents(el);
-      range.collapse(false);
-      const sel = window.getSelection();
-      sel.removeAllRanges();
-      sel.addRange(range);
-    }catch{}
-  };
-
-  const startTitleEdit = ()=>{
-    originalTitle = saveTitleEl.textContent || "";
-    isEditingTitle = true;
-    editTitleBtn.textContent = "Done";
-    saveTitleEl.setAttribute("contenteditable","true");
-    saveTitleEl.setAttribute("spellcheck","false");
-    saveTitleEl.focus();
-    placeCaretAtEnd(saveTitleEl);
-  };
-
-  const commitTitleEdit = async ()=>{
-    if (!isEditingTitle) return;
-    isEditingTitle = false;
-    editTitleBtn.textContent = "Edit title";
-    saveTitleEl.removeAttribute("contenteditable");
-    saveTitleEl.removeAttribute("spellcheck");
-
-    const next = (saveTitleEl.textContent || "").trim() || "Untitled";
-    saveTitleEl.textContent = next; // normalize
-    document.title = `${next} — FC26 Transfer Tracker`;
-    try{
-      const updated = await updateSaveName(CURRENT_SAVE_ID, next);
-      CURRENT_SAVE = updated;
-    }catch(err){
-      alert(err?.message || String(err));
-      console.error(err);
-    }
-  };
-
-  const cancelTitleEdit = ()=>{
-    if (!isEditingTitle) return;
-    saveTitleEl.textContent = originalTitle;
-    isEditingTitle = false;
-    editTitleBtn.textContent = "Edit title";
-    saveTitleEl.removeAttribute("contenteditable");
-    saveTitleEl.removeAttribute("spellcheck");
-  };
-
-  editTitleBtn.addEventListener("click", ()=>{
-    if (!isEditingTitle) startTitleEdit();
-    else commitTitleEdit();
-  });
-
-  saveTitleEl.addEventListener("keydown", (e)=>{
-    if (!isEditingTitle) return;
-    if (e.key === "Enter"){ e.preventDefault(); commitTitleEdit(); }
-    if (e.key === "Escape"){ e.preventDefault(); cancelTitleEdit(); }
-  });
-
-  // Live-update the save name while typing (so dashboard stays in sync)
-  saveTitleEl.addEventListener("input", ()=>{
-    if (!isEditingTitle) return;
-    const next = (saveTitleEl.textContent || "").trim();
-    const updated = updateSaveName(CURRENT_SAVE_ID, next || "Untitled");
-    if (updated) CURRENT_SAVE.name = updated.name;
-  });
-
-  saveTitleEl.addEventListener("blur", ()=>{
-    if (isEditingTitle) commitTitleEdit();
-  });
-}
-
 // ---------- state ----------
-let players = []; // loaded from Supabase in boot()
+let players = []; // loaded from backend in boot()
 let editingId = null;
 
 let seniorityFilter = "Senior"; // shared
@@ -320,45 +282,43 @@ const allSenioritySegs = Array.from(document.querySelectorAll('.segmented[aria-l
 const currencySeg = document.querySelector('.segmented[aria-label="Currency"]');
 const sortableHeaders = Array.from(document.querySelectorAll("th.sortable"));
 
-// ---------- persistence ----------
-// ------- persistence (Supabase) -------
-async function fetchSaveOrRedirect(){
-  await ensureAnonSession();
-  const { data, error } = await supabase
-    .from("saves")
-    .select("*")
-    .eq("id", CURRENT_SAVE_ID)
-    .single();
+// ---------- auth/session ----------
+async function requireLoginOrRedirect(){
+  const session = await aws.getSession?.();
+  if(!session?.signedIn){
+    location.href = "./login.html";
+    throw new Error("Not signed in");
+  }
+  return session;
+}
 
-  if (error || !data){
-    // If save doesn't exist (or isn't accessible), go back.
+// ------- persistence (AWS) -------
+async function fetchSaveOrRedirect(){
+  await requireLoginOrRedirect();
+
+  // Expect: listSaves() returns saves user owns; we find the requested one.
+  const saves = await aws.listSaves?.();
+  const save = Array.isArray(saves) ? saves.find(s => s.id === CURRENT_SAVE_ID) : null;
+
+  if (!save){
     location.replace("./index.html");
     return null;
   }
-  return data;
+  return save;
 }
 
 async function fetchPlayers(){
-  await ensureAnonSession();
-  const { data, error } = await supabase
-    .from("players")
-    .select("*")
-    .eq("save_id", CURRENT_SAVE_ID);
+  await requireLoginOrRedirect();
 
-  if (error) throw error;
+  // Expect: listPlayers(saveId) returns players belonging to this save
+  const data = await aws.listPlayers?.(CURRENT_SAVE_ID);
+  const list = Array.isArray(data) ? data : [];
 
-  // Normalise any older fields / defaults
-  return (data || []).map((p)=>{
-    const seniority = (p.seniority === "Youth") ? "Youth" : "Senior";
-    const cost_gbp = asInt(p.cost_gbp ?? p.cost ?? 0, 0);
-    const sale_gbp = asInt(p.sale_gbp ?? p.sale ?? 0, 0);
-    const active = (p.active === "N") ? "N" : "Y";
-    return { ...p, seniority, cost_gbp, sale_gbp, active };
-  });
+  return list.map(fromAwsPlayer);
 }
 
 // Legacy no-op (kept because the UI calls it in a few places; we now persist per-action)
-function savePlayers(){ /* handled by Supabase per-action */ }
+function savePlayers(){ /* handled by AWS per-action */ }
 
 // ---------- edit name display ----------
 function updateEditName(){
@@ -597,7 +557,6 @@ function render(){
 }
 
 function renderTotals(){
-  // Totals include active + ex players, but respect seniorityFilter
   const list = players.filter(matchesSeniority);
 
   const totalCostGBP = list.reduce((s,p)=>s+asInt(p.cost_gbp,0),0);
@@ -625,25 +584,14 @@ btnAdd.addEventListener("click", async ()=>{
   if(!data) return;
 
   try{
-    await ensureAnonSession();
-    const payload = {
-      ...data,
-      save_id: CURRENT_SAVE_ID,
-      created_at_ms: Number.isFinite(Number(data.createdAt)) ? Number(data.createdAt) : Date.now(),
-    };
+    await requireLoginOrRedirect();
 
-    // Insert and get the stored row back
-    const { data: inserted, error } = await supabase
-      .from("players")
-      .insert(payload)
-      .select("*")
-      .single();
-
-    if (error) throw error;
+    // create via awsClient
+    const created = await aws.addPlayer?.(CURRENT_SAVE_ID, toAwsPlayer({ ...data, id: uid() }));
+    const inserted = created ? fromAwsPlayer(created) : fromAwsPlayer({ ...data, id: uid() });
 
     players.push(inserted);
 
-    // Auto-switch Senior/Youth unless currently All
     if (seniorityFilter !== "All"){
       setSeniorityFilter(inserted.seniority);
     }
@@ -656,6 +604,7 @@ btnAdd.addEventListener("click", async ()=>{
     console.error(err);
   }
 });
+
 btnUpdate.addEventListener("click", async ()=>{
   if(!editingId) return;
   const data = readForm();
@@ -665,23 +614,10 @@ btnUpdate.addEventListener("click", async ()=>{
   if(idx === -1) return;
 
   try{
-    await ensureAnonSession();
-    const payload = {
-      ...data,
-      save_id: CURRENT_SAVE_ID,
-      created_at_ms: players[idx].created_at_ms || players[idx].createdAt || Date.now(),
-    };
+    await requireLoginOrRedirect();
 
-    const { data: updated, error } = await supabase
-      .from("players")
-      .update(payload)
-      .eq("id", editingId)
-      .select("*")
-      .single();
-
-    if (error) throw error;
-
-    players[idx] = updated;
+    const updated = await aws.updatePlayer?.(editingId, toAwsPlayer({ ...players[idx], ...data, id: editingId }));
+    players[idx] = fromAwsPlayer(updated || { ...players[idx], ...data, id: editingId });
 
     if (seniorityFilter !== "All"){
       setSeniorityFilter(players[idx].seniority);
@@ -695,6 +631,7 @@ btnUpdate.addEventListener("click", async ()=>{
     console.error(err);
   }
 });
+
 btnClear.addEventListener("click", ()=>{
   form.reset();
   fActive.value = "Y";
@@ -709,13 +646,18 @@ btnClear.addEventListener("click", ()=>{
 btnCancel.addEventListener("click", ()=>clearForm());
 
 btnReset.addEventListener("click", async ()=>{
-  const ok = confirm("Reset everything? This deletes all players from this career save in Supabase.");
+  const ok = confirm("Reset everything? This deletes all players from this career save.");
   if(!ok) return;
 
   try{
-    await ensureAnonSession();
-    const { error } = await supabase.from("players").delete().eq("save_id", CURRENT_SAVE_ID);
-    if (error) throw error;
+    await requireLoginOrRedirect();
+
+    // delete all players for this save
+    const list = await aws.listPlayers?.(CURRENT_SAVE_ID);
+    const items = Array.isArray(list) ? list : [];
+    for (const p of items){
+      if (aws.deletePlayer) await aws.deletePlayer(p.id);
+    }
 
     players = [];
     clearForm();
@@ -725,6 +667,7 @@ btnReset.addEventListener("click", async ()=>{
     console.error(err);
   }
 });
+
 rowsEl.addEventListener("click", (e)=>{
   const btn = e.target.closest("button");
   if(!btn) return;
@@ -739,9 +682,8 @@ rowsEl.addEventListener("click", (e)=>{
     if(!ok) return;
     (async ()=>{
       try{
-        await ensureAnonSession();
-        const { error } = await supabase.from("players").delete().eq("id", id);
-        if (error) throw error;
+        await requireLoginOrRedirect();
+        await aws.deletePlayer?.(id);
         players = players.filter(x=>x.id!==id);
         if(editingId===id) clearForm();
         render();
@@ -768,46 +710,42 @@ btnExport.addEventListener("click", ()=>{
   URL.revokeObjectURL(url);
 });
 
+// Import: keep as-is but use AWS create/delete instead of Supabase bulk ops
 importFile.addEventListener("change", async ()=>{
   const file = importFile.files && importFile.files[0];
   if(!file) return;
 
   try{
-    await ensureAnonSession();
+    await requireLoginOrRedirect();
     const text = await file.text();
     const parsed = JSON.parse(text);
     if(!Array.isArray(parsed)) throw new Error("Invalid file format (expected an array).");
 
-    // Replace all players for this save:
-    const { error: delErr } = await supabase.from("players").delete().eq("save_id", CURRENT_SAVE_ID);
-    if (delErr) throw delErr;
+    // Delete existing players for this save
+    const existing = await aws.listPlayers?.(CURRENT_SAVE_ID);
+    const items = Array.isArray(existing) ? existing : [];
+    for (const p of items){
+      if (aws.deletePlayer) await aws.deletePlayer(p.id);
+    }
 
-    const cleaned = parsed.map((x)=>{
-      const cost_gbp = asInt(x.cost_gbp ?? x.cost ?? 0, 0);
-      const sale_gbp = asInt(x.sale_gbp ?? x.sale ?? 0, 0);
-      return {
-        id: x.id || (crypto.randomUUID ? crypto.randomUUID() : uid()),
-        save_id: CURRENT_SAVE_ID,
-        forename: String(x.forename ?? x.first ?? "").trim(),
-        surname: String(x.surname ?? x.last ?? "").trim(),
-        seniority: (x.seniority === "Youth") ? "Youth" : "Senior",
-        position: String(x.position ?? "CM"),
-        ovr: asInt(x.ovr ?? 50, 50),
-        pot_min: asInt(x.pot_min ?? x.potMin ?? 50, 50),
-        pot_max: asInt(x.pot_max ?? x.potMax ?? 50, 50),
-        active: (x.active === "N") ? "N" : "Y",
-        cost_gbp,
-        sale_gbp,
-        created_at_ms: Number.isFinite(Number(x.created_at_ms ?? x.createdAt)) ? Number(x.created_at_ms ?? x.createdAt) : Date.now(),
-      };
-    });
+    // Insert imported players one-by-one (simple + robust)
+    const cleaned = parsed.map((x)=>({
+      id: x.id || (crypto.randomUUID ? crypto.randomUUID() : uid()),
+      firstName: String(x.forename ?? x.firstName ?? x.first ?? "").trim(),
+      surname: String(x.surname ?? x.last ?? "").trim(),
+      seniority: (x.seniority === "Youth") ? "Youth" : "Senior",
+      pos: String(x.position ?? x.pos ?? "CM"),
+      intl: asInt(x.ovr ?? x.intl ?? 50, 50),
+      potMin: asInt(x.pot_min ?? x.potMin ?? 50, 50),
+      potMax: asInt(x.pot_max ?? x.potMax ?? 50, 50),
+      active: (x.active === "N") ? "N" : "Y",
+      cost_gbp: asInt(x.cost_gbp ?? x.cost ?? 0, 0),
+      sale_gbp: asInt(x.sale_gbp ?? x.sale ?? 0, 0),
+      created_at_ms: Number.isFinite(Number(x.created_at_ms ?? x.createdAt)) ? Number(x.created_at_ms ?? x.createdAt) : Date.now(),
+    }));
 
-    // Insert in chunks (PostgREST payload limits)
-    const chunkSize = 500;
-    for (let i=0; i<cleaned.length; i+=chunkSize){
-      const chunk = cleaned.slice(i, i+chunkSize);
-      const { error } = await supabase.from("players").insert(chunk);
-      if (error) throw error;
+    for (const p of cleaned){
+      await aws.addPlayer?.(CURRENT_SAVE_ID, toAwsPlayer(p));
     }
 
     players = await fetchPlayers();
@@ -820,6 +758,7 @@ importFile.addEventListener("change", async ()=>{
     importFile.value="";
   }
 });
+
 form.addEventListener("keydown", (e)=>{
   if(e.key!=="Enter") return;
   e.preventDefault();
@@ -848,10 +787,11 @@ function readForm(){
   const cost_gbp = Math.round(convertToGBP(costInCur, currency));
   const sale_gbp = Math.round(convertToGBP(saleInCur, currency));
 
-  return { id: uid(), firstName, surname, seniority, pos, intl, potMin, potMax, active, cost_gbp, sale_gbp, createdAt: Date.now() };
+  return { id: uid(), firstName, surname, seniority, pos, intl, potMin, potMax, active, cost_gbp, sale_gbp, currency };
 }
 
 function loadIntoForm(p){
+  p = fromAwsPlayer(p);
   editingId = p.id;
   fFirst.value = p.firstName || "";
   fSurname.value = p.surname || "";
@@ -901,7 +841,7 @@ function clearForm(){
     CURRENT_SAVE = save;
 
     if (saveTitleEl){
-      saveTitleEl.textContent = save.title || "Untitled";
+      saveTitleEl.textContent = save.name || "Untitled";
       document.title = `${saveTitleEl.textContent} — FC26 Transfer Tracker`;
     }
 
