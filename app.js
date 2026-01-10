@@ -524,16 +524,16 @@ function render(){
 
     tr.innerHTML = `
       <td><div class="cell-contain">${escapeHtml(displayName(p))}</div></td>
-      <td><div class="cell-contain">${escapeHtml(p.seniority || "Senior")}</div><</td>
-      <td><div class="cell-contain">${escapeHtml(p.pos || "")}</div><</td>
-      <td><div class="cell-contain">${escapeHtml(String(p.intl ?? ""))}</div><</td>
-      <td><div class="cell-contain">${avgDisplay}</div><</td>
-      <td><div class="cell-contain"><span class="badge ${badgeClass(status)}">${status}</span></div><</td>
-      <td><div class="cell-contain">${escapeHtml(p.active || "Y")}</div><</td>
-      <td class="num"><div class="cell-contain"><span class="val-neg">${fmtMoneyAbbrevFromGBP(p.cost_gbp || 0, currency)}</span></div><</td>
-      <td class="num"><div class="cell-contain">${saleCell}</td>
-      <td class="num"><div class="cell-contain"><span class="${valClassFromNumber(profGBP)}">${fmtMoneyAbbrevFromGBP(profGBP, currency)}</span></div><</td>
-      <td class="num"><div class="cell-contain"><span class="${valClassFromNumber(Number.isFinite(r)?r:NaN)}">${fmtPct(r)}</span></div><</td>
+      <td><div class="cell-contain">${escapeHtml(p.seniority || "Senior")}</div></td>
+      <td><div class="cell-contain">${escapeHtml(p.pos || "")}</div></td>
+      <td><div class="cell-contain">${escapeHtml(String(p.intl ?? ""))}</div></td>
+      <td><div class="cell-contain">${avgDisplay}</div></td>
+      <td><div class="cell-contain"><span class="badge ${badgeClass(status)}">${status}</span></div></td>
+      <td><div class="cell-contain">${escapeHtml(p.active || "Y")}</div></td>
+      <td class="num"><div class="cell-contain"><span class="val-neg">${fmtMoneyAbbrevFromGBP(p.cost_gbp || 0, currency)}</span></div></td>
+      <td class="num"><div class="cell-contain">${saleCell}</div></td>
+      <td class="num"><div class="cell-contain"><span class="${valClassFromNumber(profGBP)}">${fmtMoneyAbbrevFromGBP(profGBP, currency)}</span></div></td>
+      <td class="num"><div class="cell-contain"><span class="${valClassFromNumber(Number.isFinite(r)?r:NaN)}">${fmtPct(r)}</span></div></td>
       <td>
         <div class="row-actions">
           <button class="icon-btn" data-action="edit" data-id="${p.id}">Edit</button>
