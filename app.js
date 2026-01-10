@@ -523,12 +523,12 @@ function render(){
     if (lastFlashId && p.id === lastFlashId) tr.classList.add("flash");
 
     tr.innerHTML = `
-      <td><div class="cell-contain">${escapeHtml(displayName(p))}</div></td>
-      <td><div class="cell-contain">${escapeHtml(p.seniority || "Senior")}</div></td>
+      <td><div class="cell-contain wide">${escapeHtml(displayName(p))}</div></td>
+      <td><div class="cell-contain wide">${escapeHtml(p.seniority || "Senior")}</div></td>
       <td><div class="cell-contain">${escapeHtml(p.pos || "")}</div></td>
       <td><div class="cell-contain">${escapeHtml(String(p.intl ?? ""))}</div></td>
       <td><div class="cell-contain">${avgDisplay}</div></td>
-      <td><div class="cell-contain"><span class="badge ${badgeClass(status)}">${status}</span></div></td>
+      <td><div class="cell-contain wide"><span class="badge ${badgeClass(status)}">${status}</span></div></td>
       <td><div class="cell-contain">${escapeHtml(p.active || "Y")}</div></td>
       <td class="num"><div class="cell-contain"><span class="val-neg">${fmtMoneyAbbrevFromGBP(p.cost_gbp || 0, currency)}</span></div></td>
       <td class="num"><div class="cell-contain">${saleCell}</div></td>
