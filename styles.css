@@ -156,7 +156,7 @@ table{
   width:100%;
   border-collapse:collapse;
   background: rgba(0,0,0,.16);
-  min-width: 1040px;
+  min-width: 440px;
 }
 thead th{
   position:sticky;
@@ -170,7 +170,7 @@ thead th{
   white-space:nowrap;
 }
 tbody td{
-  padding:10px 10px;
+  padding:0px 5px;
   border-bottom:1px solid rgba(255,255,255,.06);
   vertical-align:middle;
   font-size:14px;
@@ -180,6 +180,24 @@ tbody tr:hover td{ background: rgba(255,255,255,.03); }
 tbody tr.flash td{
   animation: flashRow 1.3s ease-out 1;
 }
+
+th:first-child, td:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background:#0e1424;
+}
+
+td .cell-contain{
+  font-size:12px;
+  width:30px;
+}
+
+td .cell-contain.wide{
+  font-size:12px;
+  width:100px;
+}
+
 @keyframes flashRow{
   0%{ background: rgba(45,212,191,.22); }
   100%{ background: rgba(255,255,255,0); }
