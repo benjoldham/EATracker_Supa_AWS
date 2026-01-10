@@ -523,7 +523,7 @@ function render(){
     if (lastFlashId && p.id === lastFlashId) tr.classList.add("flash");
 
     tr.innerHTML = `
-      <td>${escapeHtml(displayName(p))}</td>
+      <td><div class="container>"${escapeHtml(displayName(p))}</div></td>
       <td>${escapeHtml(p.seniority || "Senior")}</td>
       <td>${escapeHtml(p.pos || "")}</td>
       <td>${escapeHtml(String(p.intl ?? ""))}</td>
