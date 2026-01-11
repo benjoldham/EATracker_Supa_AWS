@@ -233,6 +233,8 @@ let CURRENT_SAVE = null;
 let players = []; // loaded from backend in boot()
 let editingId = null;
 
+let seniorityFilter = "Senior";   // ✅ ADD THIS BACK
+
 function setSeniorityFilter(next){
   const allowed = ["Senior", "Youth", "Watchlist", "All"];
   seniorityFilter = allowed.includes(next) ? next : "Senior";
