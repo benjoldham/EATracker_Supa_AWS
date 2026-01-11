@@ -528,8 +528,8 @@ function render(){
       <td><div class="cell-contain">${escapeHtml(String(p.intl ?? ""))}</div></td>
       <td><div class="cell-contain">${avgDisplay}</div></td>
       <td><div class="cell-contain wide"><span class="badge ${badgeClass(status)}">${status}</span></div></td>
-      <td><div class="cell-contain">${escapeHtml(p.seniority || "Senior")}</div></td>
-      <td><div class="cell-contain">${escapeHtml(p.active || "Y")}</div></td>
+      <td><div class="cell-contain wide">${escapeHtml(p.seniority || "Senior")}</div></td>
+      <td><div class="cell-contain hidden">${escapeHtml(p.active || "Y")}</div></td>
       <td class="num"><div class="cell-contain"><span class="val-neg">${fmtMoneyAbbrevFromGBP(p.cost_gbp || 0, currency)}</span></div></td>
       <td class="num"><div class="cell-contain">${saleCell}</div></td>
       <td class="num"><div class="cell-contain"><span class="${valClassFromNumber(profGBP)}">${fmtMoneyAbbrevFromGBP(profGBP, currency)}</span></div></td>
