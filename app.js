@@ -406,16 +406,7 @@ function syncMoneyInputsToCurrency(){
   applySeniorityToForm();
 }
 
-// ---------- shared seniority filters ----------
-function setSeniorityFilter(next){
-  seniorityFilter = (next === "Youth" || next === "All") ? next : "Senior";
-  for(const seg of allSenioritySegs){
-    for(const b of Array.from(seg.querySelectorAll(".seg-btn"))){
-      b.classList.toggle("active", b.dataset.seniority === seniorityFilter);
-    }
-  }
-  render();
-}
+
 for(const seg of allSenioritySegs){
   seg.addEventListener("click", (e)=>{
     const btn = e.target.closest("button.seg-btn");
@@ -846,7 +837,9 @@ function loadIntoForm(p){
   editingId = p.id;
   fFirst.value = p.firstName || "";
   fSurname.value = p.surname || "";
-  fSeniority.value = (p.seniority==="Youth" ? "Youth":"Senior");
+  fSeniority.value = ["Senior","Youth","Watchlist"].includes(p.seniority)
+  ? p.seniority
+  : "Senior";
   fPos.value = p.pos || "";
   fIntl.value = p.intl ?? "";
   fPotMin.value = p.potMin ?? "";
