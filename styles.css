@@ -110,6 +110,9 @@ h1{ margin:10px 0 6px; font-size:28px; }
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap:12px;
 }
+
+.hidden{display: none;}
+
 label{ display:flex; flex-direction:column; gap:7px; color:var(--muted); font-size:12px; }
 
 input, select{
