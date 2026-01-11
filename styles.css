@@ -330,13 +330,13 @@ th.sortable .arrow{ margin-left:6px; color: var(--muted); font-weight:900; }
   grid-auto-rows: minmax(min-content, max-content);
   grid-template-areas:
     ".   .    st   .   ."
-    "lm  .    cam  .   rm"
+    "lm . cam . rm"
     ".   .    cm   .   ."
     ".   .    cdm  .   ."
     "lb  cbl  .    cbr rb"
     ".   .    gk   .   .";
-  gap: 14px;                 /* ✅ was 18 */
-  padding: 16px;             /* ✅ was 22 */
+  gap: 4px;                 /* ✅ was 18 */
+  padding: 4px;             /* ✅ was 22 */
   box-sizing: border-box;
   justify-content: center;    /* ✅ keeps grid centered instead of stretching wide */
   align-content: start;
@@ -371,7 +371,7 @@ th.sortable .arrow{ margin-left:6px; color: var(--muted); font-weight:900; }
 .pitch-pos {
   position: relative;
   width: 100%;
-  border-radius: 14px;
+  border-radius: 2px;
   background: rgba(10, 15, 25, 0.65);
   border: 1px solid rgba(255,255,255,0.08);
   backdrop-filter: blur(6px);
@@ -385,14 +385,14 @@ th.sortable .arrow{ margin-left:6px; color: var(--muted); font-weight:900; }
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding: 8px 10px 6px 10px;      /* ✅ tighter */
+  padding: 4px;      /* ✅ tighter */
   border-bottom: 1px solid rgba(255,255,255,0.06);
 }
 
 .pitch-pos .pos-code {
   font-weight: 700;
   letter-spacing: 0.02em;
-  font-size: 13px;                 /* ✅ a touch smaller */
+  font-size: 10px;                 /* ✅ a touch smaller */
 }
 
 .pitch-pos .count {
@@ -404,7 +404,7 @@ th.sortable .arrow{ margin-left:6px; color: var(--muted); font-weight:900; }
 .pitch-pos ul {
   list-style: none;
   margin: 0;
-  padding: 6px 10px 10px 10px;     /* ✅ tighter */
+  padding: 4px 4px;     /* ✅ tighter */
   display: grid;
   gap: 6px;                        /* ✅ tighter */
 }
@@ -448,18 +448,20 @@ th.sortable .arrow{ margin-left:6px; color: var(--muted); font-weight:900; }
   align-items: baseline;
   justify-content: space-between;
   gap: 10px;
-  font-size: 12px;
+  font-size: 10px;
   white-space: nowrap;
 }
 
 .pitch-pos .name {
   overflow: hidden;
   text-overflow: ellipsis;
+  width: 70px;
 }
 
 .pitch-pos .meta {
   opacity: 0.8;
   font-variant-numeric: tabular-nums;
+  font-size: 10px;
 }
 
 /* make empty slots look intentional */
