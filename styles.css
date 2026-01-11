@@ -331,7 +331,7 @@ th.sortable .arrow{ margin-left:6px; color: var(--muted); font-weight:900; }
   grid-template-areas:
     ".   .    st   .   ."
     "lm . cam . rm"
-    ".   .    cm   .   ."
+    ".  cml . cmr  ."
     ".   .    cdm  .   ."
     "lb  cbl  .    cbr rb"
     ".   .    gk   .   .";
