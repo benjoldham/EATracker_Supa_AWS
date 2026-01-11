@@ -186,6 +186,7 @@ th:first-child, td:first-child {
   left: 0;
   z-index: 2;
   background:#0e1424;
+  font-weight: bold;
 }
 
 td .cell-contain{
@@ -197,6 +198,10 @@ td .cell-contain{
 
 td .cell-contain.wide{
   width: 88px;
+}
+
+td .cell-contain.hidden{
+  display:none;
 }
 
 @keyframes flashRow{
