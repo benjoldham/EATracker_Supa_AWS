@@ -170,7 +170,7 @@ thead th{
   white-space:nowrap;
 }
 tbody td{
-  padding:0px 5px;
+  padding: 2px 4px;
   border-bottom:1px solid rgba(255,255,255,.06);
   vertical-align:middle;
   font-size:14px;
@@ -189,13 +189,14 @@ th:first-child, td:first-child {
 }
 
 td .cell-contain{
-  font-size:12px;
+  font-size: 12px;
   width:30px;
+  text-overflow: ellipsis;
+  overflow: hidden;
 }
 
 td .cell-contain.wide{
-  font-size:12px;
-  width:100px;
+  width: 88px;
 }
 
 @keyframes flashRow{
