@@ -211,12 +211,16 @@
     <section class="card" id="pitch-card">
   <div class="card-head">
     <h2>Squad on pitch</h2>
-    
+
     <div class="actions">
       <div class="segmented" role="tablist" aria-label="Pitch sort">
         <button class="seg-btn active" data-pitch-sort="ovr" type="button">Overall</button>
         <button class="seg-btn" data-pitch-sort="potential" type="button">Potential</button>
       </div>
+
+      <select id="formation-select" class="select" aria-label="Formation">
+       <!-- options injected by JS from formations.js -->
+      </select>
 
       <div class="segmented" role="tablist" aria-label="Pitch seniority">
         <button class="seg-btn active" data-pitch-seniority="Senior" type="button">Senior</button>
