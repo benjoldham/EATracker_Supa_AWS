@@ -301,6 +301,14 @@ const sortableHeaders = Array.from(document.querySelectorAll("th.sortable"));
 
 const btnEditSaveTitle = document.getElementById("edit-save-title");
 
+// ---------- pitch ----------
+const pitchEl = document.getElementById("pitch");
+const pitchSortSeg = document.querySelector('.segmented[aria-label="Pitch sort"]');
+
+let pitchSortKey = "ovr"; // "ovr" | "potential"
+
+// ---------- pitch end ----------
+
 btnEditSaveTitle?.addEventListener("click", async () => {
   if (!CURRENT_SAVE) return;
 
@@ -428,6 +436,21 @@ function matchesSeniority(p){
   // Normal filters
   return s === seniorityFilter;
 }
+
+// ---------- Pitch seg ----------
+
+if (pitchSortSeg){
+  pitchSortSeg.addEventListener("click", (e)=>{
+    const btn = e.target.closest("button.seg-btn");
+    if(!btn) return;
+    pitchSortKey = (btn.dataset.pitchSort === "potential") ? "potential" : "ovr";
+    for (const b of Array.from(pitchSortSeg.querySelectorAll(".seg-btn"))){
+      b.classList.toggle("active", b.dataset.pitchSort === pitchSortKey);
+    }
+    renderPitch(); // only re-render pitch
+  });
+}
+
 
 // ---------- show ex-players toggle (players list only) ----------
 if (toggleExEl){
@@ -596,6 +619,7 @@ function render(){
   }
 
   renderTotals();
+  renderPitch();
 }
 
 function renderTotals(){
@@ -619,6 +643,133 @@ function renderTotals(){
   tRoi.classList.remove("val-pos","val-neg");
   if(avgRoi!=null) tRoi.classList.add(avgRoi>=0 ? "val-pos":"val-neg");
 }
+
+// Simple formation layout using your supported positions.
+// Positions in tracker.html are limited to: GK,RB,CB,LB,CDM,CM,CAM,LM,RM,ST :contentReference[oaicite:3]{index=3}
+const PITCH_LAYOUT = [
+  // x and y are percentages
+  { pos: "ST",  x: 50, y: 12 },
+  { pos: "CAM", x: 50, y: 28 },
+  { pos: "LM",  x: 22, y: 30 },
+  { pos: "RM",  x: 78, y: 30 },
+  { pos: "CM",  x: 50, y: 46 },
+  { pos: "CDM", x: 50, y: 60 },
+  { pos: "LB",  x: 20, y: 70 },
+  { pos: "CB",  x: 42, y: 74 },
+  { pos: "CB",  x: 58, y: 74 },
+  { pos: "RB",  x: 80, y: 70 },
+  { pos: "GK",  x: 50, y: 88 },
+];
+
+function pitchSortValue(p){
+  if (pitchSortKey === "potential"){
+    const a = potAvg(p);
+    return a == null ? -1 : a; // higher is better
+  }
+  return asInt(p.intl, 0); // overall
+}
+
+function pitchPlayerLine(p){
+  const name = displayName(p) || fullName(p.firstName, p.surname) || "Unnamed";
+  const ovr = asInt(p.intl, 0);
+  const pot = potAvg(p);
+  const potText = (pot == null) ? "—" : String(Math.trunc(pot));
+  return {
+    name,
+    meta: pitchSortKey === "potential"
+      ? `Pot ${potText} · Ovr ${ovr}`
+      : `Ovr ${ovr} · Pot ${potText}`
+  };
+}
+
+function renderPitch(){
+  if (!pitchEl) return;
+
+  // Mirror the same filters as render() uses
+  const q = (searchEl?.value || "").trim().toLowerCase();
+  const activeFilter = filterActiveEl?.value || "ALL";
+
+  let filtered = players
+    .filter(matchesSeniority)
+    .filter(p=>{
+      if(!showExPlayers && p.active !== "Y") return false;
+      if(showExPlayers && activeFilter !== "ALL" && p.active !== activeFilter) return false;
+      if(!q) return true;
+      return (displayName(p)||"").toLowerCase().includes(q) || (p.pos||"").toLowerCase().includes(q);
+    });
+
+  // Group by position
+  const byPos = new Map();
+  for (const p of filtered){
+    const key = String(p.pos || "").toUpperCase();
+    if (!byPos.has(key)) byPos.set(key, []);
+    byPos.get(key).push(p);
+  }
+
+  // Sort each position list by chosen key, then tie-break on name
+  for (const [pos, list] of byPos){
+    list.sort((a,b)=>{
+      const A = pitchSortValue(a);
+      const B = pitchSortValue(b);
+      if (A === B) return tieBreakName(a,b);
+      return (B > A) ? 1 : -1; // desc
+    });
+  }
+
+  // Render panels on the pitch
+  pitchEl.innerHTML = "";
+  for (const slot of PITCH_LAYOUT){
+    const list = byPos.get(slot.pos) || [];
+
+    const panel = document.createElement("div");
+    panel.className = "pitch-pos" + (list.length ? "" : " empty");
+
+    // translate(-50%, -50%) centers the panel on the coordinate
+    panel.style.left = slot.x + "%";
+    panel.style.top = slot.y + "%";
+    panel.style.transform = "translate(-50%, -50%)";
+
+    const head = document.createElement("div");
+    head.className = "head";
+    head.innerHTML = `
+      <div class="pos-code">${escapeHtml(slot.pos)}</div>
+      <div class="count">${list.length}</div>
+    `;
+    panel.appendChild(head);
+
+    const ul = document.createElement("ul");
+
+    if (!list.length){
+      const li = document.createElement("li");
+      li.textContent = "No players";
+      ul.appendChild(li);
+    } else {
+      // Show up to N; you can increase if you want.
+      const MAX = 8;
+      const shown = list.slice(0, MAX);
+
+      for (const p of shown){
+        const line = pitchPlayerLine(p);
+        const li = document.createElement("li");
+        li.innerHTML = `
+          <span class="name">${escapeHtml(line.name)}</span>
+          <span class="meta">${escapeHtml(line.meta)}</span>
+        `;
+        ul.appendChild(li);
+      }
+
+      if (list.length > MAX){
+        const li = document.createElement("li");
+        li.innerHTML = `<span class="name">+${list.length - MAX} more</span><span class="meta"></span>`;
+        ul.appendChild(li);
+      }
+    }
+
+    panel.appendChild(ul);
+    pitchEl.appendChild(panel);
+  }
+}
+
 
 // ---------- events ----------
 btnAdd.addEventListener("click", async ()=>{
