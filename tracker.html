@@ -164,17 +164,13 @@
       <div class="card-head">
         <h2>Players</h2>
         <div class="actions">
-          <label class="toggle">
-            <input type="checkbox" id="toggle-ex" checked>
-            <span>Show ex-players</span>
-          </label>
           <div class="segmented" role="tablist" aria-label="Seniority filter">
             <button class="seg-btn active" data-seniority="Senior" type="button">Senior</button>
             <button class="seg-btn" data-seniority="Youth" type="button">Youth</button>
             <button class="seg-btn" data-seniority="Watchlist" type="button">Watchlist</button>
             <button class="seg-btn" data-seniority="All" type="button">All</button>
           </div>
-          <input id="search" class="search" placeholder="Search name / position…" />
+          
           <select id="filter-active" class="select">
             <option value="ALL" selected>All</option>
             <option value="Y">Active (Y)</option>
@@ -182,6 +178,11 @@
           </select>
         </div>
       </div>
+      <input id="search" class="search" placeholder="Search name / position…" />
+      <label class="toggle">
+        <input type="checkbox" id="toggle-ex" checked>
+        <span>Show ex-players</span>
+      </label>
 
       <div class="table-wrap">
         <table>
