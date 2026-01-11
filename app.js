@@ -699,19 +699,19 @@ function renderTotals(){
 // Simple formation layout using your supported positions.
 // Positions in tracker.html are limited to: GK,RB,CB,LB,CDM,CM,CAM,LM,RM,ST :contentReference[oaicite:3]{index=3}
 const PITCH_LAYOUT = [
-  // x and y are percentages
-  { pos: "ST",  x: 50, y: 12 },
-  { pos: "CAM", x: 50, y: 28 },
-  { pos: "LM",  x: 22, y: 30 },
-  { pos: "RM",  x: 78, y: 30 },
-  { pos: "CM",  x: 50, y: 46 },
-  { pos: "CDM", x: 50, y: 60 },
-  { pos: "LB",  x: 20, y: 70 },
-  { pos: "CB",  x: 42, y: 74 },
-  { pos: "CB",  x: 58, y: 74 },
-  { pos: "RB",  x: 80, y: 70 },
-  { pos: "GK",  x: 50, y: 88 },
+  { pos: "ST",  area: "st"  },
+  { pos: "LM",  area: "lm"  },
+  { pos: "CAM", area: "cam" },
+  { pos: "RM",  area: "rm"  },
+  { pos: "CM",  area: "cm"  },
+  { pos: "CDM", area: "cdm" },
+  { pos: "LB",  area: "lb"  },
+  { pos: "CB",  area: "cbl" },
+  { pos: "CB",  area: "cbr" },
+  { pos: "RB",  area: "rb"  },
+  { pos: "GK",  area: "gk"  },
 ];
+
 
 function pitchSortValue(p){
   if (pitchSortKey === "potential"){
@@ -774,11 +774,7 @@ function renderPitch(){
 
     const panel = document.createElement("div");
     panel.className = "pitch-pos" + (list.length ? "" : " empty");
-
-    // translate(-50%, -50%) centers the panel on the coordinate
-    panel.style.left = slot.x + "%";
-    panel.style.top = slot.y + "%";
-    panel.style.transform = "translate(-50%, -50%)";
+    panel.style.gridArea = slot.area;
 
     const head = document.createElement("div");
     head.className = "head";
