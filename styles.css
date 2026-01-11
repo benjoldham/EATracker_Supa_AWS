@@ -303,7 +303,7 @@ th.sortable .arrow{ margin-left:6px; color: var(--muted); font-weight:900; }
 .save-name-input{ width:100%; font-weight:700; }
 
 /* =========================
-   Pitch view (GRID version — no overlap)
+   Pitch view (GRID, auto height, compact)
 ========================= */
 
 .pitch-wrap {
@@ -311,22 +311,23 @@ th.sortable .arrow{ margin-left:6px; color: var(--muted); font-weight:900; }
   overflow: auto;
 }
 
-/* Pitch container becomes a formation grid */
+/* Let the pitch grow in height with content */
 .pitch {
   position: relative;
   width: 100%;
-  min-width: 860px;          /* usable on smaller screens via horizontal scroll */
-  aspect-ratio: 16 / 10;     /* controls pitch shape */
+  min-width: 720px;          /* ✅ was 860; reduces overall pitch width on small screens */
+  overflow: scroll;
+  aspect-ratio: auto;        /* ✅ allow height to grow */
   border-radius: 16px;
   border: 1px solid rgba(255,255,255,0.08);
   background:
     radial-gradient(circle at 50% 50%, rgba(255,255,255,0.06), transparent 55%),
     linear-gradient(180deg, rgba(30, 140, 80, 0.22), rgba(10, 70, 40, 0.22));
 
-  /* ✅ GRID LAYOUT */
+  /* ✅ tighter grid */
   display: grid;
-  grid-template-columns: 1fr 1.2fr 1.4fr 1.2fr 1fr;
-  grid-template-rows: 0.9fr 1fr 1fr 0.9fr 1.2fr 0.9fr;
+   /* ✅ narrower & controlled */
+  grid-auto-rows: minmax(min-content, max-content);
   grid-template-areas:
     ".   .    st   .   ."
     "lm  .    cam  .   rm"
@@ -334,9 +335,11 @@ th.sortable .arrow{ margin-left:6px; color: var(--muted); font-weight:900; }
     ".   .    cdm  .   ."
     "lb  cbl  .    cbr rb"
     ".   .    gk   .   .";
-  gap: 18px;
-  padding: 22px;
+  gap: 14px;                 /* ✅ was 18 */
+  padding: 16px;             /* ✅ was 22 */
   box-sizing: border-box;
+  justify-content: center;    /* ✅ keeps grid centered instead of stretching wide */
+  align-content: start;
 }
 
 /* midfield line */
@@ -364,49 +367,77 @@ th.sortable .arrow{ margin-left:6px; color: var(--muted); font-weight:900; }
   pointer-events: none;
 }
 
-/* Position panels now live in grid cells (set via JS: panel.style.gridArea = "...") */
+/* Position panels in grid cells */
 .pitch-pos {
-  position: relative;         /* ✅ no absolute */
+  position: relative;
   width: 100%;
-  max-height: 100%;           /* stay inside the grid cell */
-  overflow: hidden;
   border-radius: 14px;
   background: rgba(10, 15, 25, 0.65);
   border: 1px solid rgba(255,255,255,0.08);
   backdrop-filter: blur(6px);
   box-sizing: border-box;
+  overflow: hidden;
 }
 
+/* Slightly tighter header */
 .pitch-pos .head {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding: 10px 10px 6px 10px;
+  padding: 8px 10px 6px 10px;      /* ✅ tighter */
   border-bottom: 1px solid rgba(255,255,255,0.06);
 }
 
 .pitch-pos .pos-code {
   font-weight: 700;
   letter-spacing: 0.02em;
+  font-size: 13px;                 /* ✅ a touch smaller */
 }
 
 .pitch-pos .count {
   opacity: 0.75;
-  font-size: 12px;
+  font-size: 11px;                 /* ✅ smaller */
 }
 
-/* ✅ Key change: the list scrolls instead of growing into other positions */
+/* ✅ list hugs content (no max-height, no scroll) */
 .pitch-pos ul {
   list-style: none;
   margin: 0;
-  padding: 6px 10px 10px 10px;
+  padding: 6px 10px 10px 10px;     /* ✅ tighter */
   display: grid;
-  gap: 6px;
-
-  overflow: auto;
-  max-height: 170px;          /* prevents overlap when there are many players */
+  gap: 6px;                        /* ✅ tighter */
 }
+
+/* ✅ compact row */
+.pitch-pos li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 12px;                 /* ✅ requested */
+  white-space: nowrap;
+}
+
+/* Name takes available space */
+.pitch-pos .name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Score kept short and aligned */
+.pitch-pos .meta {
+  opacity: 0.85;
+  font-variant-numeric: tabular-nums;
+}
+
+/* empty slots */
+.pitch-pos.empty ul {
+  padding: 10px;
+  opacity: 0.75;
+  font-size: 12px;
+}
+
 
 @media (min-width: 1200px){
   .pitch-pos ul { max-height: 220px; }
@@ -417,7 +448,7 @@ th.sortable .arrow{ margin-left:6px; color: var(--muted); font-weight:900; }
   align-items: baseline;
   justify-content: space-between;
   gap: 10px;
-  font-size: 13px;
+  font-size: 12px;
   white-space: nowrap;
 }
 
