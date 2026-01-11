@@ -247,6 +247,16 @@ function setSeniorityFilter(next){
   render();
 }
 
+function setPitchSeniorityFilter(next){
+  const allowed = ["Senior","Youth","All"];
+  pitchSeniorityFilter = allowed.includes(next) ? next : "Senior";
+  if (!pitchSenioritySeg) return;
+
+  for (const b of Array.from(pitchSenioritySeg.querySelectorAll(".seg-btn"))){
+    b.classList.toggle("active", b.dataset.pitchSeniority === pitchSeniorityFilter);
+  }
+}
+
 let currency = "GBP";           // shared
 let showExPlayers = true;       // players list only
 
@@ -306,6 +316,13 @@ const pitchEl = document.getElementById("pitch");
 const pitchSortSeg = document.querySelector('.segmented[aria-label="Pitch sort"]');
 
 let pitchSortKey = "ovr"; // "ovr" | "potential"
+
+const pitchSenioritySeg = document.querySelector('.segmented[aria-label="Pitch seniority"]');
+const pitchWatchlistEl = document.getElementById("pitch-watchlist");
+
+let pitchSeniorityFilter = "Senior";   // "Senior" | "Youth" | "All"
+let includePitchWatchlist = false;
+
 
 // ---------- pitch end ----------
 
@@ -437,6 +454,18 @@ function matchesSeniority(p){
   return s === seniorityFilter;
 }
 
+function matchesPitchSeniority(p){
+  const s = p.seniority || "Senior";
+
+  // Watchlist inclusion is controlled by its own checkbox
+  if (s === "Watchlist") return includePitchWatchlist;
+
+  // Otherwise use pitch segmented filter
+  if (pitchSeniorityFilter === "All") return s !== "Watchlist"; // Senior+Youth
+  return s === pitchSeniorityFilter;
+}
+
+
 // ---------- Pitch seg ----------
 
 if (pitchSortSeg){
@@ -450,6 +479,29 @@ if (pitchSortSeg){
     renderPitch(); // only re-render pitch
   });
 }
+
+// ---------- Pitch seniority seg ----------
+if (pitchSenioritySeg){
+  pitchSenioritySeg.addEventListener("click", (e)=>{
+    const btn = e.target.closest("button.seg-btn");
+    if(!btn) return;
+
+    const next = btn.dataset.pitchSeniority;
+    if(!next) return;
+
+    setPitchSeniorityFilter(next);
+    renderPitch();
+  });
+}
+
+
+if (pitchWatchlistEl){
+  pitchWatchlistEl.addEventListener("change", ()=>{
+    includePitchWatchlist = !!pitchWatchlistEl.checked;
+    renderPitch();
+  });
+}
+
 
 
 // ---------- show ex-players toggle (players list only) ----------
@@ -687,16 +739,15 @@ function renderPitch(){
 
   // Mirror the same filters as render() uses
   const q = (searchEl?.value || "").trim().toLowerCase();
-  const activeFilter = filterActiveEl?.value || "ALL";
 
   let filtered = players
-    .filter(matchesSeniority)
+    .filter(p => p.active === "Y")      // ✅ always exclude sold players on pitch
+    .filter(matchesPitchSeniority)      // ✅ pitch’s own Senior/Youth/All + watchlist checkbox
     .filter(p=>{
-      if(!showExPlayers && p.active !== "Y") return false;
-      if(showExPlayers && activeFilter !== "ALL" && p.active !== activeFilter) return false;
       if(!q) return true;
       return (displayName(p)||"").toLowerCase().includes(q) || (p.pos||"").toLowerCase().includes(q);
     });
+
 
   // Group by position
   const byPos = new Map();
@@ -1049,6 +1100,11 @@ function clearForm(){
 
     if (toggleExEl) toggleExEl.checked = true;
     showExPlayers = true;
+
+    if (pitchWatchlistEl) pitchWatchlistEl.checked = false;
+    includePitchWatchlist = false;
+    setPitchSeniorityFilter("Senior");
+
 
     setCurrency("GBP");
     setSeniorityFilter("Senior");
