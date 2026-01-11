@@ -303,7 +303,7 @@ th.sortable .arrow{ margin-left:6px; color: var(--muted); font-weight:900; }
 .save-name-input{ width:100%; font-weight:700; }
 
 /* =========================
-   Pitch view
+   Pitch view (GRID version — no overlap)
 ========================= */
 
 .pitch-wrap {
@@ -311,16 +311,32 @@ th.sortable .arrow{ margin-left:6px; color: var(--muted); font-weight:900; }
   overflow: auto;
 }
 
+/* Pitch container becomes a formation grid */
 .pitch {
   position: relative;
   width: 100%;
-  min-width: 860px;         /* makes it usable on smaller screens via horizontal scroll */
-  aspect-ratio: 16 / 10;    /* controls pitch shape */
+  min-width: 860px;          /* usable on smaller screens via horizontal scroll */
+  aspect-ratio: 16 / 10;     /* controls pitch shape */
   border-radius: 16px;
   border: 1px solid rgba(255,255,255,0.08);
   background:
     radial-gradient(circle at 50% 50%, rgba(255,255,255,0.06), transparent 55%),
     linear-gradient(180deg, rgba(30, 140, 80, 0.22), rgba(10, 70, 40, 0.22));
+
+  /* ✅ GRID LAYOUT */
+  display: grid;
+  grid-template-columns: 1fr 1.2fr 1.4fr 1.2fr 1fr;
+  grid-template-rows: 0.9fr 1fr 1fr 0.9fr 1.2fr 0.9fr;
+  grid-template-areas:
+    ".   .    st   .   ."
+    "lm  .    cam  .   rm"
+    ".   .    cm   .   ."
+    ".   .    cdm  .   ."
+    "lb  cbl  .    cbr rb"
+    ".   .    gk   .   .";
+  gap: 18px;
+  padding: 22px;
+  box-sizing: border-box;
 }
 
 /* midfield line */
@@ -331,6 +347,7 @@ th.sortable .arrow{ margin-left:6px; color: var(--muted); font-weight:900; }
   top: 50%;
   height: 2px;
   background: rgba(255,255,255,0.10);
+  pointer-events: none;
 }
 
 /* centre circle */
@@ -344,17 +361,20 @@ th.sortable .arrow{ margin-left:6px; color: var(--muted); font-weight:900; }
   border-radius: 999px;
   transform: translate(-50%, -50%);
   border: 2px solid rgba(255,255,255,0.10);
+  pointer-events: none;
 }
 
+/* Position panels now live in grid cells (set via JS: panel.style.gridArea = "...") */
 .pitch-pos {
-  position: absolute;
-  width: 180px;
-  max-height: 34%;
+  position: relative;         /* ✅ no absolute */
+  width: 100%;
+  max-height: 100%;           /* stay inside the grid cell */
   overflow: hidden;
   border-radius: 14px;
   background: rgba(10, 15, 25, 0.65);
   border: 1px solid rgba(255,255,255,0.08);
   backdrop-filter: blur(6px);
+  box-sizing: border-box;
 }
 
 .pitch-pos .head {
@@ -376,12 +396,20 @@ th.sortable .arrow{ margin-left:6px; color: var(--muted); font-weight:900; }
   font-size: 12px;
 }
 
+/* ✅ Key change: the list scrolls instead of growing into other positions */
 .pitch-pos ul {
   list-style: none;
   margin: 0;
   padding: 6px 10px 10px 10px;
   display: grid;
   gap: 6px;
+
+  overflow: auto;
+  max-height: 170px;          /* prevents overlap when there are many players */
+}
+
+@media (min-width: 1200px){
+  .pitch-pos ul { max-height: 220px; }
 }
 
 .pitch-pos li {
@@ -408,5 +436,6 @@ th.sortable .arrow{ margin-left:6px; color: var(--muted); font-weight:900; }
   padding: 10px;
   opacity: 0.75;
   font-size: 13px;
+  max-height: none;           /* empty state doesn't need scrolling */
+  overflow: hidden;
 }
-
