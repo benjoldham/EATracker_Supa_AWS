@@ -164,7 +164,7 @@ thead th{
   background: rgba(10,18,32,.95);
   border-bottom:1px solid var(--border);
   text-align:left;
-  padding:10px 10px;
+  padding: 5px;
   font-size:12px;
   color:var(--muted);
   white-space:nowrap;
@@ -253,9 +253,9 @@ td .cell-contain.wide{
 .toggle input{ width:16px; height:16px; accent-color: var(--ok); }
 
 /* v7: ex-players styling */
-tbody tr.inactive td{
-  opacity: .5;
+tbody tr.inactive td .cell-contain{
   font-style: italic;
+  opacity:.2;
 }
 
 /* v7: sortable headers */
