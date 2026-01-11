@@ -1,4 +1,5 @@
 import * as aws from "./awsClient.js";
+import { FORMATIONS, DEFAULT_FORMATION } from "./formations.js";
 
 // FC26 Transfer Tracker (v7) — v6 UI + correct sorting + ex-player toggle
 // Exchange rates source: exchangerate-api.com (open.er-api.com) base GBP.
@@ -314,6 +315,7 @@ const btnEditSaveTitle = document.getElementById("edit-save-title");
 // ---------- pitch ----------
 const pitchEl = document.getElementById("pitch");
 const pitchSortSeg = document.querySelector('.segmented[aria-label="Pitch sort"]');
+const formationSelect = document.getElementById("formation-select");
 
 let pitchSortKey = "ovr"; // "ovr" | "potential"
 
@@ -322,6 +324,39 @@ const pitchWatchlistEl = document.getElementById("pitch-watchlist");
 
 let pitchSeniorityFilter = "Senior";   // "Senior" | "Youth" | "All"
 let includePitchWatchlist = false;
+
+// ---------- formation state ----------
+let currentFormationKey = DEFAULT_FORMATION;
+let currentPitchLayout = (FORMATIONS[currentFormationKey]?.layout) || [];
+
+function applyFormation(key){
+  const f = FORMATIONS[key];
+  if (!f || !pitchEl) return;
+
+  currentFormationKey = key;
+  currentPitchLayout = Array.isArray(f.layout) ? f.layout : [];
+
+  // Dynamically apply the CSS grid layout (areas) from JS
+  if (typeof f.areas === "string"){
+    pitchEl.style.gridTemplateAreas = f.areas.trim();
+  }
+
+  renderPitch();
+}
+
+// ---------- formation selector ----------
+if (formationSelect){
+  formationSelect.innerHTML = Object.keys(FORMATIONS)
+    .map(k => `<option value="${k}">${FORMATIONS[k].label || k}</option>`)
+    .join("");
+
+  formationSelect.value = DEFAULT_FORMATION;
+
+  formationSelect.addEventListener("change", ()=>{
+    applyFormation(formationSelect.value);
+  });
+}
+
 
 
 // ---------- pitch end ----------
@@ -696,23 +731,6 @@ function renderTotals(){
   if(avgRoi!=null) tRoi.classList.add(avgRoi>=0 ? "val-pos":"val-neg");
 }
 
-// Simple formation layout using your supported positions.
-// Positions in tracker.html are limited to: GK,RB,CB,LB,CDM,CM,CAM,LM,RM,ST :contentReference[oaicite:3]{index=3}
-const PITCH_LAYOUT = [
-  { pos: "ST",  area: "st"  },
-  { pos: "LM",  area: "lm"  },
-  { pos: "CAM", area: "cam" },
-  { pos: "RM",  area: "rm"  },
-  { pos: "CM",  area: "cml" },
-  { pos: "CM",  area: "cmr"  },
-  { pos: "CDM", area: "cdm" },
-  { pos: "LB",  area: "lb"  },
-  { pos: "CB",  area: "cbl" },
-  { pos: "CB",  area: "cbr" },
-  { pos: "RB",  area: "rb"  },
-  { pos: "GK",  area: "gk"  },
-];
-
 
 function pitchSortValue(p){
   if (pitchSortKey === "potential"){
@@ -745,6 +763,7 @@ function splitAlternating(list, slots){
 
 function renderPitch(){
   if (!pitchEl) return;
+  if (!currentPitchLayout.length) return;
 
   // Mirror the same filters as render() uses
   const q = (searchEl?.value || "").trim().toLowerCase();
@@ -778,9 +797,10 @@ function renderPitch(){
 
     // Count how many times each position appears on the pitch (e.g., CB=2, CM=2)
   const slotCounts = new Map();
-  for (const slot of PITCH_LAYOUT){
-    slotCounts.set(slot.pos, (slotCounts.get(slot.pos) || 0) + 1);
-  }
+  for (const slot of currentPitchLayout){
+  slotCounts.set(slot.pos, (slotCounts.get(slot.pos) || 0) + 1);
+}
+
 
   // Pre-split lists for positions that have multiple slots
   const perSlotLists = new Map(); // pos -> [bucket0, bucket1, ...]
@@ -799,7 +819,7 @@ function renderPitch(){
 
   // Render panels on the pitch
   pitchEl.innerHTML = "";
-  for (const slot of PITCH_LAYOUT){
+  for (const slot of currentPitchLayout){
   const buckets = perSlotLists.get(slot.pos) || [[]];
   const i = nextBucketIdx.get(slot.pos) || 0;
   nextBucketIdx.set(slot.pos, i + 1);
@@ -1131,6 +1151,8 @@ function clearForm(){
     setCurrency("GBP");
     setSeniorityFilter("Senior");
     updateSortIndicators();
+
+    applyFormation(DEFAULT_FORMATION);
     render();
   }catch(err){
     alert(err?.message || String(err));
