@@ -841,7 +841,7 @@ function clearForm(){
     CURRENT_SAVE = save;
 
     if (saveTitleEl){
-      saveTitleEl.textContent = save.name || "Untitled";
+      saveTitleEl.textContent = save.title || save.name || "Untitled";
       document.title = `${saveTitleEl.textContent} — FC26 Transfer Tracker`;
     }
 
