@@ -725,13 +725,12 @@ function pitchPlayerLine(p){
   const name = displayName(p) || fullName(p.firstName, p.surname) || "Unnamed";
   const ovr = asInt(p.intl, 0);
   const pot = potAvg(p);
-  const potText = (pot == null) ? "—" : String(Math.trunc(pot));
-  return {
-    name,
-    meta: pitchSortKey === "potential"
-      ? `Pot ${potText} · Ovr ${ovr}`
-      : `Ovr ${ovr} · Pot ${potText}`
-  };
+  const potNum = (pot == null) ? null : Math.trunc(pot);
+
+  // Show "OVR/POT" (e.g., 87/89). If pot missing, show just "87".
+  const meta = (potNum == null) ? `${ovr}` : `${ovr}/${potNum}`;
+
+  return { name, meta };
 }
 
 function renderPitch(){
