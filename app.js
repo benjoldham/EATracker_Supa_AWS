@@ -282,6 +282,32 @@ const allSenioritySegs = Array.from(document.querySelectorAll('.segmented[aria-l
 const currencySeg = document.querySelector('.segmented[aria-label="Currency"]');
 const sortableHeaders = Array.from(document.querySelectorAll("th.sortable"));
 
+const btnEditSaveTitle = document.getElementById("edit-save-title");
+
+btnEditSaveTitle?.addEventListener("click", async () => {
+  if (!CURRENT_SAVE) return;
+
+  const current = (saveTitleEl?.textContent || "").trim() || "Untitled";
+  const next = prompt("Edit title", current);
+  if (next == null) return; // user cancelled
+
+  const trimmed = next.trim();
+  if (!trimmed) return alert("Title cannot be empty.");
+
+  // update UI immediately
+  saveTitleEl.textContent = trimmed;
+  document.title = `${trimmed} — FC26 Transfer Tracker`;
+
+  // persist to AWS (you need to implement one of these in awsClient.js)
+  try {
+    await aws.updateSave?.(CURRENT_SAVE_ID, { title: trimmed });
+    // OR: await aws.updateSaveTitle?.(CURRENT_SAVE_ID, trimmed);
+  } catch (err) {
+    alert(err?.message || String(err));
+    console.error(err);
+  }
+});
+
 // ---------- auth/session ----------
 async function requireLoginOrRedirect(){
   const session = await aws.getSession?.();
