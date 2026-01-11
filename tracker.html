@@ -211,12 +211,25 @@
     <section class="card" id="pitch-card">
   <div class="card-head">
     <h2>Squad on pitch</h2>
+    
     <div class="actions">
       <div class="segmented" role="tablist" aria-label="Pitch sort">
         <button class="seg-btn active" data-pitch-sort="ovr" type="button">Overall</button>
         <button class="seg-btn" data-pitch-sort="potential" type="button">Potential</button>
       </div>
+
+      <div class="segmented" role="tablist" aria-label="Pitch seniority">
+        <button class="seg-btn active" data-pitch-seniority="Senior" type="button">Senior</button>
+        <button class="seg-btn" data-pitch-seniority="Youth" type="button">Youth</button>
+        <button class="seg-btn" data-pitch-seniority="All" type="button">Senior+Youth</button>
+      </div>
+
+      <label class="toggle" style="margin-left:8px;">
+        <input type="checkbox" id="pitch-watchlist">
+        <span>Include watchlist</span>
+      </label>
     </div>
+
   </div>
 
   <p class="subtle">
