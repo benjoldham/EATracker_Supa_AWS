@@ -208,6 +208,28 @@
       </div>
     </section>
 
+    <section class="card" id="pitch-card">
+  <div class="card-head">
+    <h2>Squad on pitch</h2>
+    <div class="actions">
+      <div class="segmented" role="tablist" aria-label="Pitch sort">
+        <button class="seg-btn active" data-pitch-sort="ovr" type="button">Overall</button>
+        <button class="seg-btn" data-pitch-sort="potential" type="button">Potential</button>
+      </div>
+    </div>
+  </div>
+
+  <p class="subtle">
+    Uses the same Seniority / Active / Search filters as the table above. Players are grouped by position.
+  </p>
+
+  <div class="pitch-wrap">
+    <div class="pitch" id="pitch">
+      <!-- JS injects position panels here -->
+    </div>
+  </div>
+</section>
+
     <footer class="footer">
       <p>Tip: your saves are tied to your login, so you can access them on any device.</p>
     </footer>
