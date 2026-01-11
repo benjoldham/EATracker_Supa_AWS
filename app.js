@@ -703,7 +703,8 @@ const PITCH_LAYOUT = [
   { pos: "LM",  area: "lm"  },
   { pos: "CAM", area: "cam" },
   { pos: "RM",  area: "rm"  },
-  { pos: "CM",  area: "cm"  },
+  { pos: "CM",  area: "cml" },
+  { pos: "CM",  area: "cmr"  },
   { pos: "CDM", area: "cdm" },
   { pos: "LB",  area: "lb"  },
   { pos: "CB",  area: "cbl" },
@@ -732,6 +733,15 @@ function pitchPlayerLine(p){
 
   return { name, meta };
 }
+
+function splitAlternating(list, slots){
+  const buckets = Array.from({ length: slots }, ()=>[]);
+  for(let i=0; i<list.length; i++){
+    buckets[i % slots].push(list[i]);
+  }
+  return buckets;
+}
+
 
 function renderPitch(){
   if (!pitchEl) return;
@@ -766,10 +776,34 @@ function renderPitch(){
     });
   }
 
+    // Count how many times each position appears on the pitch (e.g., CB=2, CM=2)
+  const slotCounts = new Map();
+  for (const slot of PITCH_LAYOUT){
+    slotCounts.set(slot.pos, (slotCounts.get(slot.pos) || 0) + 1);
+  }
+
+  // Pre-split lists for positions that have multiple slots
+  const perSlotLists = new Map(); // pos -> [bucket0, bucket1, ...]
+  for (const [pos, count] of slotCounts){
+    const full = byPos.get(pos) || [];
+    if (count <= 1){
+      perSlotLists.set(pos, [full]);
+    } else {
+      perSlotLists.set(pos, splitAlternating(full, count));
+    }
+  }
+
+  // Keep track of which bucket we’ve used as we render each slot
+  const nextBucketIdx = new Map();
+
+
   // Render panels on the pitch
   pitchEl.innerHTML = "";
   for (const slot of PITCH_LAYOUT){
-    const list = byPos.get(slot.pos) || [];
+  const buckets = perSlotLists.get(slot.pos) || [[]];
+  const i = nextBucketIdx.get(slot.pos) || 0;
+  nextBucketIdx.set(slot.pos, i + 1);
+  const list = buckets[i] || [];
 
     const panel = document.createElement("div");
     panel.className = "pitch-pos" + (list.length ? "" : " empty");
@@ -791,8 +825,7 @@ function renderPitch(){
       ul.appendChild(li);
     } else {
       // Show up to N; you can increase if you want.
-      const MAX = 8;
-      const shown = list.slice(0, MAX);
+      const shown = list;
 
       for (const p of shown){
         const line = pitchPlayerLine(p);
@@ -801,12 +834,6 @@ function renderPitch(){
           <span class="name">${escapeHtml(line.name)}</span>
           <span class="meta">${escapeHtml(line.meta)}</span>
         `;
-        ul.appendChild(li);
-      }
-
-      if (list.length > MAX){
-        const li = document.createElement("li");
-        li.innerHTML = `<span class="name">+${list.length - MAX} more</span><span class="meta"></span>`;
         ul.appendChild(li);
       }
     }
