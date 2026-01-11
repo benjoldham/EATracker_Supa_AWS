@@ -34,6 +34,9 @@ h1{ margin:10px 0 6px; font-size:28px; }
   padding:14px;
   margin:16px 0;
   transition: box-shadow .2s ease, border-color .2s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 .card.editing{
   border-color: rgba(45,212,191,.45);
