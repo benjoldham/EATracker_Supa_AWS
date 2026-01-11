@@ -36,9 +36,6 @@
 
           <button id="btn-clear" class="btn btn-secondary" type="button">Clear</button>
 
-
-
-
         </div>
       </div>
 
@@ -82,7 +79,7 @@
           </label>
 
           <label>
-            OVR (initial)
+            Overall
             <input id="f-intl" type="number" min="1" max="99" step="1" required placeholder="65" />
           </label>
 
@@ -97,10 +94,10 @@
           </label>
 
           <label>
-            Active?
+            Current player?
             <select id="f-active">
-              <option value="Y" selected>Y (Current squad)</option>
-              <option value="N">N (Sold)</option>
+              <option value="Y" selected>Yes</option>
+              <option value="N">No (Sold)</option>
             </select>
           </label>
 
@@ -113,12 +110,6 @@
             Sale
             <input id="f-sale" type="text" inputmode="numeric" placeholder="0" />
           </label>
-        </div>
-
-        <div class="hint">
-          Display name is auto-abbreviated: <span class="mono">Joe Bloggs → J. Bloggs</span> •
-          Potential average & status are calculated automatically •
-          Status: <span class="mono">90+ Special</span>, <span class="mono">85+ Exciting</span>, <span class="mono">80+ Great</span>, else <span class="mono">Sell</span>.
         </div>
       </form>
 
