@@ -208,7 +208,7 @@ td .cell-contain.hidden{
   0%{ background: rgba(45,212,191,.22); }
   100%{ background: rgba(255,255,255,0); }
 }
-.num{ text-align:right; }
+.num{/* text-align:right; */}
 
 .badge{
   font-size:12px;
