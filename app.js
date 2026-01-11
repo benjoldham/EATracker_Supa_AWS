@@ -111,7 +111,9 @@ function fromAwsPlayer(row){
     // UI fields
     firstName: row.firstName ?? "",
     surname: row.surname ?? "",
-    seniority: (row.seniority === "Youth") ? "Youth" : "Senior",
+    seniority: ["Senior", "Youth", "Watchlist"].includes(row.seniority)
+  ? row.seniority
+  : "Senior",
     active: (row.active === "N") ? "N" : "Y",
 
     pos: (row.position ?? "").toString().toUpperCase(),
@@ -146,7 +148,9 @@ function toAwsPlayer(p){
 
     firstName: String(p.firstName ?? "").trim(),
     surname: String(p.surname ?? "").trim(),
-    seniority: (p.seniority === "Youth") ? "Youth" : "Senior",
+    seniority: ["Senior", "Youth", "Watchlist"].includes(p.seniority)
+  ? p.seniority
+  : "Senior",
     position: (p.pos ?? "").toString().toUpperCase(),
 
     ovrInitial: Number.isFinite(Number(p.intl)) ? Number(p.intl) : null,
@@ -229,7 +233,18 @@ let CURRENT_SAVE = null;
 let players = []; // loaded from backend in boot()
 let editingId = null;
 
-let seniorityFilter = "Senior"; // shared
+function setSeniorityFilter(next){
+  const allowed = ["Senior", "Youth", "Watchlist", "All"];
+  seniorityFilter = allowed.includes(next) ? next : "Senior";
+
+  for(const seg of allSenioritySegs){
+    for(const b of Array.from(seg.querySelectorAll(".seg-btn"))){
+      b.classList.toggle("active", b.dataset.seniority === seniorityFilter);
+    }
+  }
+  render();
+}
+
 let currency = "GBP";           // shared
 let showExPlayers = true;       // players list only
 
@@ -356,11 +371,12 @@ fSurname.addEventListener("input", updateEditName);
 
 // ---------- seniority (form) ----------
 function applySeniorityToForm(){
-  const s = fSeniority.value === "Youth" ? "Youth" : "Senior";
-  if(s === "Youth"){
+  const s = fSeniority.value;
+
+  if (s === "Youth"){
     fCost.value = "0";
     fCost.disabled = true;
-  }else{
+  } else {
     fCost.disabled = false;
   }
 }
@@ -409,7 +425,14 @@ for(const seg of allSenioritySegs){
 }
 function matchesSeniority(p){
   const s = p.seniority || "Senior";
-  if(seniorityFilter === "All") return true;
+
+  // Only show Watchlist players when Watchlist filter is selected
+  if (seniorityFilter === "Watchlist") return s === "Watchlist";
+
+  // "All" means Senior + Youth ONLY (explicitly exclude Watchlist)
+  if (seniorityFilter === "All") return s !== "Watchlist";
+
+  // Normal filters
   return s === seniorityFilter;
 }
 
@@ -795,7 +818,9 @@ form.addEventListener("keydown", (e)=>{
 function readForm(){
   const firstName = (fFirst.value||"").trim();
   const surname = (fSurname.value||"").trim();
-  const seniority = (fSeniority.value==="Youth" ? "Youth" : "Senior");
+  const seniority = ["Senior", "Youth", "Watchlist"].includes(fSeniority.value)
+  ? fSeniority.value
+  : "Senior";
   const pos = (fPos.value||"").trim().toUpperCase();
 
   if(!firstName) return alert("Forename is required."), null;
