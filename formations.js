@@ -34,7 +34,6 @@ export const FORMATIONS = {
       ".   stl  .   str   ."
       "lm  .    cam   .   rm"
       ".   cml  .   cmr   ."
-      ".   .   cdm   .    ."
       ".  cbl  cbm  cbr   ."
       ".   .    gk   .    ."
     `,
@@ -46,7 +45,6 @@ export const FORMATIONS = {
       { pos:"CAM", area:"cam" },
       { pos:"CM",  area:"cml" },
       { pos:"CM",  area:"cmr" },
-      { pos:"CDM", area:"cdm" },
       { pos:"CB",  area:"cbl" },
       { pos:"CB",  area:"cbm" },
       { pos:"CB",  area:"cbr" },
