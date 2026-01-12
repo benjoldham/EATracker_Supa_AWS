@@ -309,15 +309,17 @@ th.sortable .arrow{ margin-left:6px; color: var(--muted); font-weight:900; }
 .pitch-wrap {
   width: 100%;
   overflow: auto;
+  display: flex;
+  justify-content: center;
 }
 
 /* Let the pitch grow in height with content */
 .pitch {
   position: relative;
   width: 100%;
-  /* min-width: 375px; */          /* âœ… was 860; reduces overall pitch width on small screens */
+  max-width: 375px;          /* âœ… was 860; reduces overall pitch width on small screens */
   overflow: scroll;
-  /* aspect-ratio: auto; */        /* âœ… allow height to grow */
+          /* âœ… allow height to grow */
   border-radius: 16px;
   border: 1px solid rgba(255,255,255,0.08);
   background:
@@ -336,7 +338,7 @@ th.sortable .arrow{ margin-left:6px; color: var(--muted); font-weight:900; }
     "lb  cbl  .    cbr rb"
     ".   .    gk   .   .";
   gap: 12px 10px;                 /* âœ… was 18 */
-  padding: 4px;             /* âœ… was 22 */
+  padding: 20px 4px;             /* âœ… was 22 */
   box-sizing: border-box;
   justify-content: center;    /* âœ… keeps grid centered instead of stretching wide */
   align-content: start;
@@ -349,8 +351,8 @@ th.sortable .arrow{ margin-left:6px; color: var(--muted); font-weight:900; }
   left: 0;
   right: 0;
   top: 50%;
-  height: 2px;
-  background: rgba(255,255,255,0.10);
+  height: 1px;
+  background: rgba(255,255,255,0.05);
   pointer-events: none;
   /* z-index: -1; */
 }
@@ -361,11 +363,11 @@ th.sortable .arrow{ margin-left:6px; color: var(--muted); font-weight:900; }
   position: absolute;
   left: 50%;
   top: 50%;
-  width: 22%;
+  width: 28%;
   aspect-ratio: 1 / 1;
   border-radius: 999px;
   transform: translate(-50%, -50%);
-  border: 2px solid rgba(255,255,255,0.10);
+  border: 1px solid rgba(255,255,255,0.05);
   pointer-events: none;
 }
 
@@ -410,6 +412,7 @@ th.sortable .arrow{ margin-left:6px; color: var(--muted); font-weight:900; }
   display: grid;
   gap: 0px;                        /* âœ… tighter */
   background: #050d20;
+  border-radius: 0 0 2px 2px;
 }
 
 /* âœ… compact row */
@@ -423,10 +426,10 @@ th.sortable .arrow{ margin-left:6px; color: var(--muted); font-weight:900; }
 }
 
 .pitch-pos li:nth-child(odd) {
-  background-color: rgb(255 255 255 / 8%);
+  background-color: rgb(19 25 44);
 }
 .pitch-pos li:nth-child(even) {
-  background-color: rgb(255 255 255 / 5%);
+  background-color:  rgb(19 25 44 / 60%);
 }
 
 /* Name takes available space */
@@ -443,9 +446,9 @@ th.sortable .arrow{ margin-left:6px; color: var(--muted); font-weight:900; }
 
 /* empty slots */
 .pitch-pos.empty ul {
-  padding: 10px;
-  opacity: 0.75;
-  font-size: 12px;
+  /* padding: 10px; */
+  /* opacity: 0.75; */
+  /* font-size: 12px; */
 }
 
 
@@ -479,9 +482,9 @@ th.sortable .arrow{ margin-left:6px; color: var(--muted); font-weight:900; }
 
 /* make empty slots look intentional */
 .pitch-pos.empty ul {
-  padding: 10px;
-  opacity: 0.75;
-  font-size: 13px;
-  max-height: none;           /* empty state doesn't need scrolling */
-  overflow: hidden;
+  /* padding: 10px; */
+  /* opacity: 0.75; */
+  /* font-size: 13px; */
+  /* max-height: none; */           /* empty state doesn't need scrolling */
+  /* overflow: hidden; */
 }
