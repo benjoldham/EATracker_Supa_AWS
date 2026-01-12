@@ -81,7 +81,7 @@ export const FORMATIONS = {
     label: "4-1-3-2",
     areas: `
       ".   stl  .   str   ."
-      "lm  .    cam   .   rm"
+      "lm  .    .    .   rm"
       ".   .    cm    .    ."
       ".   .   cdm   .    ."
       "lb  cbl  .   cbr   rb"
@@ -92,7 +92,6 @@ export const FORMATIONS = {
       { pos:"ST",  area:"str" },
       { pos:"LM",  area:"lm"  },
       { pos:"RM",  area:"rm"  },
-      { pos:"CAM", area:"cam" },
       { pos:"CM",  area:"cm"  },
       { pos:"CDM", area:"cdm" },
       { pos:"LB",  area:"lb"  },
