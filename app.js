@@ -48,13 +48,10 @@ function fullName(firstName,surname){
   return (f+" "+s).trim();
 }
 function displayName(p){
-  const first=(p.firstName||"").trim();
-  const sur=(p.surname||p.lastName||"").trim();
-  if(!first && !sur) return "";
-  const initial = first ? first[0].toUpperCase()+"." : "";
-  const space = initial && sur ? " " : "";
-  return initial + space + sur;
+  const sur = (p.surname || p.lastName || "").trim();
+  return sur;
 }
+
 function potAvg(p){
   const min=asInt(p.potMin,0);
   const max=asInt(p.potMax,0);
