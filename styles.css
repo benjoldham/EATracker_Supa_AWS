@@ -19,7 +19,7 @@ body{
   font-family:var(--sans);
 }
 
-.container{ max-width:1100px; margin:0 auto; padding:16px; }
+.container{max-width:1100px;margin:0 auto;padding: 8px;}
 .app-header{
   border-bottom:1px solid var(--border);
   background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,0));
@@ -31,7 +31,7 @@ h1{ margin:10px 0 6px; font-size:28px; }
   background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,0));
   border:1px solid var(--border);
   border-radius:16px;
-  padding:14px;
+  padding: 8px;
   margin:16px 0;
   transition: box-shadow .2s ease, border-color .2s ease;
   display: flex;
@@ -315,18 +315,18 @@ th.sortable .arrow{ margin-left:6px; color: var(--muted); font-weight:900; }
 .pitch {
   position: relative;
   width: 100%;
-  min-width: 720px;          /* ✅ was 860; reduces overall pitch width on small screens */
+  /* min-width: 375px; */          /* âœ… was 860; reduces overall pitch width on small screens */
   overflow: scroll;
-  aspect-ratio: auto;        /* ✅ allow height to grow */
+  /* aspect-ratio: auto; */        /* âœ… allow height to grow */
   border-radius: 16px;
   border: 1px solid rgba(255,255,255,0.08);
   background:
     radial-gradient(circle at 50% 50%, rgba(255,255,255,0.06), transparent 55%),
     linear-gradient(180deg, rgba(30, 140, 80, 0.22), rgba(10, 70, 40, 0.22));
 
-  /* ✅ tighter grid */
+  /* âœ… tighter grid */
   display: grid;
-   /* ✅ narrower & controlled */
+   /* âœ… narrower & controlled */
   grid-auto-rows: minmax(min-content, max-content);
   grid-template-areas:
     ".   .    st   .   ."
@@ -335,10 +335,10 @@ th.sortable .arrow{ margin-left:6px; color: var(--muted); font-weight:900; }
     ".   .    cdm  .   ."
     "lb  cbl  .    cbr rb"
     ".   .    gk   .   .";
-  gap: 12px 4px;                 /* ✅ was 18 */
-  padding: 4px;             /* ✅ was 22 */
+  gap: 12px 10px;                 /* âœ… was 18 */
+  padding: 4px;             /* âœ… was 22 */
   box-sizing: border-box;
-  justify-content: center;    /* ✅ keeps grid centered instead of stretching wide */
+  justify-content: center;    /* âœ… keeps grid centered instead of stretching wide */
   align-content: start;
 }
 
@@ -386,39 +386,39 @@ th.sortable .arrow{ margin-left:6px; color: var(--muted); font-weight:900; }
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 4px;      /* ✅ tighter */
+  padding: 4px;      /* âœ… tighter */
   background: #050d20;
 }
 
 .pitch-pos .pos-code {
   font-weight: 700;
   letter-spacing: 0.02em;
-  font-size: 9px;                 /* ✅ a touch smaller */
+  font-size: 9px;                 /* âœ… a touch smaller */
 }
 
 .pitch-pos .count {
   opacity: 0.75;
-  font-size: 10px;                 /* ✅ smaller */
+  font-size: 10px;                 /* âœ… smaller */
   display: none;
 }
 
-/* ✅ list hugs content (no max-height, no scroll) */
+/* âœ… list hugs content (no max-height, no scroll) */
 .pitch-pos ul {
   list-style: none;
   margin: 0;
-  padding: 0;     /* ✅ tighter */
+  padding: 0;     /* âœ… tighter */
   display: grid;
-  gap: 0px;                        /* ✅ tighter */
+  gap: 0px;                        /* âœ… tighter */
   background: #050d20;
 }
 
-/* ✅ compact row */
+/* âœ… compact row */
 .pitch-pos li {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
   gap: 10px;
-  font-size: 12px;                 /* ✅ requested */
+  font-size: 12px;                 /* âœ… requested */
   white-space: nowrap;
 }
 
