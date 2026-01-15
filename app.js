@@ -113,7 +113,7 @@ function fromAwsPlayer(row){
   ? row.seniority
   : "Senior",
     active: (row.active === "N") ? "N" : "Y",
-
+    homegrown: !!row.homegrown,
     pos: (row.position ?? "").toString().toUpperCase(),
     intl: row.ovrInitial ?? "",
     potMin: row.potentialMin ?? "",
@@ -156,6 +156,7 @@ function toAwsPlayer(p){
     potentialMax: Number.isFinite(Number(p.potMax)) ? Number(p.potMax) : null,
 
     active: (p.active === "N") ? "N" : "Y",
+    homegrown: !!p.homegrown,
 
     // Store GBP values in the backend. (Your UI already converts between currencies.)
     cost: Number(asInt(p.cost_gbp, 0)),
@@ -284,6 +285,7 @@ const fPotMax = $("f-potmax");
 const fActive = $("f-active");
 const fCost = $("f-cost");
 const fSale = $("f-sale");
+const fHomegrown = $("f-homegrown");
 
 const btnAdd = $("btn-add");
 const btnUpdate = $("btn-update");
@@ -570,6 +572,7 @@ function sortValue(p, key){
     case "cost": return asInt(p.cost_gbp, 0);
     case "sale": return asInt(p.sale_gbp, 0);
     case "profit": return profitGBP(p);
+    case "homegrown": return p.homegrown ? 1 : 0;
     case "roi": {
       const r = roi(p);
       return Number.isFinite(r) ? r : -Infinity;
@@ -678,7 +681,7 @@ function render(){
       <td><div class="cell-contain">${avgDisplay}</div></td>
       <td><div class="cell-contain wide"><span class="badge ${badgeClass(status)}">${status}</span></div></td>
       <td><div class="cell-contain wide">${escapeHtml(p.seniority || "Senior")}</div></td>
-
+      <td><div class="cell-contain">${p.homegrown ? "🌱" : ""}</div></td>
       <td class="num"><div class="cell-contain"><span class="val-neg">${fmtMoneyAbbrevFromGBP(p.cost_gbp || 0, currency)}</span></div></td>
       <td class="num"><div class="cell-contain">${saleCell}</div></td>
       <td class="num"><div class="cell-contain"><span class="${valClassFromNumber(profGBP)}">${fmtMoneyAbbrevFromGBP(profGBP, currency)}</span></div></td>
@@ -1072,7 +1075,9 @@ function readForm(){
   const cost_gbp = Math.round(convertToGBP(costInCur, currency));
   const sale_gbp = Math.round(convertToGBP(saleInCur, currency));
 
-  return { id: uid(), firstName, surname, seniority, pos, intl, potMin, potMax, active, cost_gbp, sale_gbp, currency };
+  const homegrown = !!fHomegrown?.checked;
+
+  return { id: uid(), firstName, surname, seniority, pos, intl, potMin, potMax, active, homegrown, cost_gbp, sale_gbp, currency };
 }
 
 function loadIntoForm(p){
@@ -1088,6 +1093,7 @@ function loadIntoForm(p){
   fPotMin.value = p.potMin ?? "";
   fPotMax.value = p.potMax ?? "";
   fActive.value = (p.active==="N"?"N":"Y");
+  if (fHomegrown) fHomegrown.checked = !!p.homegrown;
 
   fCost.value = fmtNumberForInput(Math.round(convertFromGBP(p.cost_gbp ?? 0, currency)));
   fSale.value = fmtNumberForInput(Math.round(convertFromGBP(p.sale_gbp ?? 0, currency)));
@@ -1106,6 +1112,7 @@ function loadIntoForm(p){
 function clearForm(){
   editingId = null;
   form.reset();
+  if (fHomegrown) fHomegrown.checked = false;
   fActive.value = "Y";
   fCost.value = "";
   fSale.value = "";
