@@ -28,6 +28,7 @@ const schema = a.schema({
       potentialMin: a.integer(),
       potentialMax: a.integer(),
       active: a.string(), // "Y" | "N"
+      homegrown: a.boolean(),
       cost: a.float(),
       sale: a.float(),
       currency: a.string(), // "GBP" | "EUR" | "USD"
