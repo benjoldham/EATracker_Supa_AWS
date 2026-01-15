@@ -247,7 +247,7 @@ function setSeniorityFilter(next){
 }
 
 function setPitchSeniorityFilter(next){
-  const allowed = ["Senior","Youth","All"];
+  const allowed = ["Senior","Youth","All","Homegrown"];
   pitchSeniorityFilter = allowed.includes(next) ? next : "Senior";
   if (!pitchSenioritySeg) return;
 
