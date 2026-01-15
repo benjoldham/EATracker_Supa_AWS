@@ -321,7 +321,7 @@ let pitchSortKey = "ovr"; // "ovr" | "potential"
 const pitchSenioritySeg = document.querySelector('.segmented[aria-label="Pitch seniority"]');
 const pitchWatchlistEl = document.getElementById("pitch-watchlist");
 
-let pitchSeniorityFilter = "Senior";   // "Senior" | "Youth" | "All"
+let pitchSeniorityFilter = "Senior";   // "Senior" | "Youth" | "All" | "Homegrown"
 let includePitchWatchlist = false;
 
 // ---------- formation state ----------
@@ -491,10 +491,9 @@ function matchesSeniority(p){
 function matchesPitchSeniority(p){
   const s = p.seniority || "Senior";
 
-  // Watchlist inclusion is controlled by its own checkbox
+  if (pitchSeniorityFilter === "Homegrown") return !!p.homegrown;
   if (s === "Watchlist") return includePitchWatchlist;
 
-  // Otherwise use pitch segmented filter
   if (pitchSeniorityFilter === "All") return s !== "Watchlist"; // Senior+Youth
   return s === pitchSeniorityFilter;
 }
