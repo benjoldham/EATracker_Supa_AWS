@@ -351,11 +351,22 @@ if (formationSelect){
     .map(k => `<option value="${k}">${FORMATIONS[k].label || k}</option>`)
     .join("");
 
-  formationSelect.value = DEFAULT_FORMATION;
+  formationSelect.value = currentFormationKey;
 
-  formationSelect.addEventListener("change", ()=>{
-    applyFormation(formationSelect.value);
+  formationSelect.addEventListener("change", async () => {
+  const next = formationSelect.value;
+  applyFormation(next);
+
+  if (!CURRENT_SAVE) return;
+  try {
+    const updated = await aws.updateSave?.(CURRENT_SAVE_ID, { preferredFormation: next });
+    if (updated) CURRENT_SAVE = updated;
+  } catch (err) {
+    alert(err?.message || String(err));
+    console.error(err);
+  }
   });
+
 }
 
 
@@ -1189,7 +1200,13 @@ function clearForm(){
     setSeniorityFilter("Senior");
     updateSortIndicators();
 
-    applyFormation(DEFAULT_FORMATION);
+    // Apply preferred formation saved on this CareerSave (cross-device), else default.
+const savedKey = (CURRENT_SAVE?.preferredFormation || "").trim();
+const keyToUse = (savedKey && FORMATIONS[savedKey]) ? savedKey : DEFAULT_FORMATION;
+
+if (formationSelect) formationSelect.value = keyToUse;
+applyFormation(keyToUse);
+
     render();
   }catch(err){
     alert(err?.message || String(err));
