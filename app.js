@@ -359,7 +359,7 @@ if (formationSelect){
 
   if (!CURRENT_SAVE) return;
   try {
-    const updated = await aws.updateSave?.(CURRENT_SAVE_ID, { preferredFormation: next });
+    const updated = await aws.updateSave(CURRENT_SAVE_ID, { preferredFormation: next });
     if (updated) CURRENT_SAVE = updated;
   } catch (err) {
     alert(err?.message || String(err));
@@ -1177,7 +1177,7 @@ function clearForm(){
     const save = await fetchSaveOrRedirect();
     if (!save) return;
     CURRENT_SAVE = save;
-
+    console.log("Loaded save:", save);
     if (saveTitleEl){
       saveTitleEl.textContent = save.title || save.name || "Untitled";
       document.title = `${saveTitleEl.textContent} — FC26 Transfer Tracker`;
