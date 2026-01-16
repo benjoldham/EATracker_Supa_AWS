@@ -389,7 +389,7 @@ btnEditSaveTitle?.addEventListener("click", async () => {
 
   // persist to AWS (you need to implement one of these in awsClient.js)
   try {
-    await aws.updateSave?.(CURRENT_SAVE_ID, { title: trimmed });
+    await aws.updateSave(CURRENT_SAVE_ID, { title: trimmed });
     // OR: await aws.updateSaveTitle?.(CURRENT_SAVE_ID, trimmed);
   } catch (err) {
     alert(err?.message || String(err));
