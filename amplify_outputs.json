@@ -146,6 +146,13 @@
               "isRequired": false,
               "attributes": []
             },
+            "foot": {
+              "name": "foot",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false,
+              "attributes": []
+            },
             "ovrInitial": {
               "name": "ovrInitial",
               "isArray": false,
