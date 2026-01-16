@@ -115,6 +115,7 @@ function fromAwsPlayer(row){
     active: (row.active === "N") ? "N" : "Y",
     homegrown: !!row.homegrown,
     pos: (row.position ?? "").toString().toUpperCase(),
+    foot: (row.foot === "L") ? "L" : "R",
     intl: row.ovrInitial ?? "",
     potMin: row.potentialMin ?? "",
     potMax: row.potentialMax ?? "",
@@ -150,7 +151,7 @@ function toAwsPlayer(p){
   ? p.seniority
   : "Senior",
     position: (p.pos ?? "").toString().toUpperCase(),
-
+    foot: (p.foot === "L") ? "L" : "R",
     ovrInitial: Number.isFinite(Number(p.intl)) ? Number(p.intl) : null,
     potentialMin: Number.isFinite(Number(p.potMin)) ? Number(p.potMin) : null,
     potentialMax: Number.isFinite(Number(p.potMax)) ? Number(p.potMax) : null,
@@ -279,6 +280,7 @@ const fFirst = $("f-first");
 const fSurname = $("f-surname");
 const fSeniority = $("f-seniority");
 const fPos = $("f-pos");
+const fFoot = $("f-foot");
 const fIntl = $("f-intl");
 const fPotMin = $("f-potmin");
 const fPotMax = $("f-potmax");
@@ -562,6 +564,7 @@ function sortValue(p, key){
     case "player": return String(p.surname || "");
     case "seniority": return (p.seniority === "Youth") ? 1 : 0; // Senior then Youth (asc)
     case "position": return sortIndex(POS_ORDER, p.pos);
+    case "foot": return (p.foot === "L") ? 0 : 1; // L then R (asc)
     case "ovr": return asInt(p.intl, 0);
     case "potential": {
       const a = potAvg(p);
@@ -676,6 +679,7 @@ function render(){
     tr.innerHTML = `
       <td><div class="cell-contain wide">${escapeHtml(displayName(p))}</div></td>
       <td><div class="cell-contain">${escapeHtml(p.pos || "")}</div></td>
+      <td><div class="cell-contain">${escapeHtml((p.foot === "L") ? "L" : "R")}</div></td>
       <td><div class="cell-contain">${escapeHtml(String(p.intl ?? ""))}</div></td>
       <td><div class="cell-contain">${avgDisplay}</div></td>
       <td><div class="cell-contain wide"><span class="badge ${badgeClass(status)}">${status}</span></div></td>
@@ -759,6 +763,35 @@ function splitAlternating(list, slots){
   return buckets;
 }
 
+function normFoot(p){
+  return (p?.foot === "L") ? "L" : "R";
+}
+
+function hasAny(slotSet, arr){
+  for (const x of arr) if (slotSet.has(x)) return true;
+  return false;
+}
+
+function resolvePitchPos(basePos, foot, slotSet){
+  const pos = String(basePos || "").toUpperCase();
+  const f = (foot === "L") ? "L" : "R";
+
+  // Only remap if the formation actually has these side-specific slots.
+  if (pos === "ST" && hasAny(slotSet, ["STL","STR"])){
+    return (f === "L") ? "STL" : "STR";
+  }
+  if (pos === "CAM" && hasAny(slotSet, ["CAML","CAMR"])){
+    return (f === "L") ? "CAML" : "CAMR";
+  }
+  if (pos === "CM" && hasAny(slotSet, ["CML","CMR"])){
+    return (f === "L") ? "CML" : "CMR";
+  }
+  if (pos === "CB" && hasAny(slotSet, ["CBL","CBR"])){
+    return (f === "L") ? "CBL" : "CBR";
+  }
+
+  return pos;
+}
 
 function renderPitch(){
   if (!pitchEl) return;
@@ -776,13 +809,16 @@ function renderPitch(){
     });
 
 
-  // Group by position
-  const byPos = new Map();
-  for (const p of filtered){
-    const key = String(p.pos || "").toUpperCase();
-    if (!byPos.has(key)) byPos.set(key, []);
-    byPos.get(key).push(p);
-  }
+// Build a set of slot position codes present in this formation
+const slotSet = new Set(currentPitchLayout.map(s => String(s.pos || "").toUpperCase()));
+
+// Group by (resolved) pitch position
+const byPos = new Map();
+for (const p of filtered){
+  const key = resolvePitchPos(p.pos, normFoot(p), slotSet);
+  if (!byPos.has(key)) byPos.set(key, []);
+  byPos.get(key).push(p);
+}
 
   // Sort each position list by chosen key, then tie-break on name
   for (const [pos, list] of byPos){
@@ -1058,25 +1094,21 @@ function readForm(){
   ? fSeniority.value
   : "Senior";
   const pos = (fPos.value||"").trim().toUpperCase();
-
+  const foot = (fFoot?.value === "L") ? "L" : "R";
   if(!firstName) return alert("Forename is required."), null;
   if(!surname) return alert("Surname is required."), null;
   if(!pos) return alert("Position is required."), null;
-
   const intl = clamp(fIntl.value,1,99);
   const potMin = clamp(fPotMin.value,1,99);
   const potMax = clamp(fPotMax.value,1,99);
   const active = (fActive.value==="N"?"N":"Y");
-
   const costInCur = (seniority==="Youth") ? 0 : Math.max(0, parseMoneyInput(fCost.value));
   const saleInCur = Math.max(0, parseMoneyInput(fSale.value));
-
   const cost_gbp = Math.round(convertToGBP(costInCur, currency));
   const sale_gbp = Math.round(convertToGBP(saleInCur, currency));
-
   const homegrown = !!fHomegrown?.checked;
 
-  return { id: uid(), firstName, surname, seniority, pos, intl, potMin, potMax, active, homegrown, cost_gbp, sale_gbp, currency };
+  return { id: uid(), firstName, surname, seniority, pos, foot, intl, potMin, potMax, active, homegrown, cost_gbp, sale_gbp, currency };
 }
 
 function loadIntoForm(p){
@@ -1088,6 +1120,7 @@ function loadIntoForm(p){
   ? p.seniority
   : "Senior";
   fPos.value = p.pos || "";
+  if (fFoot) fFoot.value = (p.foot === "L") ? "L" : "R";
   fIntl.value = p.intl ?? "";
   fPotMin.value = p.potMin ?? "";
   fPotMax.value = p.potMax ?? "";
@@ -1116,6 +1149,7 @@ function clearForm(){
   fCost.value = "";
   fSale.value = "";
   fPos.value = "";
+  if (fFoot) fFoot.value = "R";
   fSeniority.value = "Senior";
   applySeniorityToForm();
   updateEditName();
