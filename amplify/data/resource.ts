@@ -11,6 +11,7 @@ const schema = a.schema({
   CareerSave: a
     .model({
       title: a.string().required(),
+      preferredFormation: a.string(),
       createdAt: a.datetime(),
     })
     .authorization((allow) => [allow.owner()]),
