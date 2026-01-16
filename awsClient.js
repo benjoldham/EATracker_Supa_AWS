@@ -138,6 +138,34 @@ export async function deletePlayer(id) {
    Career Save Title 
 ===================== */
 
+// NEW: generic save updater (supports preferredFormation, title, etc.)
+export async function updateSave(id, patch) {
+  await initAws();
+  if (!id) throw new Error("Missing CareerSave id.");
+
+  const updates = patch && typeof patch === "object" ? patch : {};
+
+  const payload = { id };
+
+  // Allow updating title (optional)
+  if ("title" in updates) {
+    const t = String(updates.title || "").trim();
+    if (!t) throw new Error("Title cannot be empty.");
+    payload.title = t;
+  }
+
+  // Allow updating preferredFormation (optional)
+  if ("preferredFormation" in updates) {
+    const f = String(updates.preferredFormation || "").trim();
+    // allow clearing by sending "" if you ever want; otherwise keep trimmed string
+    payload.preferredFormation = f || null;
+  }
+
+  const { data, errors } = await client.models.CareerSave.update(payload);
+  if (errors?.length) throw new Error(joinErrors(errors));
+  return data;
+}
+
 export async function updateSaveTitle(id, title) {
   await initAws();
   const t = String(title || "").trim();
