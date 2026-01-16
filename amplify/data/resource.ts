@@ -24,6 +24,7 @@ const schema = a.schema({
       surname: a.string().required(),
       seniority: a.string(), // "Senior" | "Youth"
       position: a.string(),
+      foot: a.string(), // "L" | "R"
       ovrInitial: a.integer(),
       potentialMin: a.integer(),
       potentialMax: a.integer(),
