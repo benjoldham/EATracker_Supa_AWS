@@ -340,6 +340,9 @@ let includePitchWatchlist = false;
 // ---------- scan (camera + OCR) ----------
 let scanStream = null;
 let lastScanResult = null; // { firstName, surname, pos, intl, foot, rawText }
+let scanVideoTrack = null; // for camera zoom control
+const scanZoom = $("scan-zoom"); // slider in tracker.html
+
 
 function openScanModal(){
   if (!scanModal) return;
@@ -372,14 +375,49 @@ async function startScanCamera(){
 
   // Prefer rear camera on phones
   const constraints = {
-    video: { facingMode: { ideal: "environment" } },
+    video: {
+      facingMode: { ideal: "environment" },
+      width: { ideal: 1920 },
+      height: { ideal: 1080 }
+    },
     audio: false
   };
+
 
   scanStream = await navigator.mediaDevices.getUserMedia(constraints);
   scanVideo.srcObject = scanStream;
   await scanVideo.play();
   setScanStatus("Camera ready");
+
+    // --- camera zoom (if supported) ---
+  scanVideoTrack = scanStream?.getVideoTracks?.()[0] || null;
+
+  // Stop Safari pinch zoom on the video itself (best-effort)
+  try { scanVideo.style.touchAction = "none"; } catch {}
+
+  const caps = scanVideoTrack?.getCapabilities?.() || {};
+  if (scanZoom && caps.zoom){
+    scanZoom.disabled = false;
+    scanZoom.min = caps.zoom.min;
+    scanZoom.max = caps.zoom.max;
+    scanZoom.step = caps.zoom.step || 0.1;
+
+    // start at current zoom if available
+    const settings = scanVideoTrack.getSettings?.() || {};
+    scanZoom.value = settings.zoom ?? caps.zoom.min;
+
+    scanZoom.oninput = async () => {
+      try{
+        await scanVideoTrack.applyConstraints({ advanced: [{ zoom: Number(scanZoom.value) }] });
+      }catch(e){
+        console.warn("Zoom apply failed", e);
+      }
+    };
+  } else if (scanZoom){
+    scanZoom.disabled = true; // device/browser doesn't support camera zoom constraints
+  }
+
+
 }
 
 function stopScanCamera(){
@@ -388,6 +426,7 @@ function stopScanCamera(){
     for (const t of scanStream.getTracks()) t.stop();
   }
   scanStream = null;
+  scanVideoTrack = null;
 }
 
 function captureScanFrame(){
@@ -453,6 +492,15 @@ function parseEaCardText(raw){
     if (m) out.intl = m[1];
   }
 
+    // 1b) Potential range: "Potential 81 - 87" (or similar)
+  {
+    const m = joined.match(/potential\s*([1-9][0-9])\s*[-–]\s*([1-9][0-9])/i);
+    if (m){
+      out.potMin = m[1];
+      out.potMax = m[2];
+    }
+  }
+
   // 2) Preferred foot: look for "Pref" / "Foot" then an L/R nearby,
   // else fallback to a single isolated L/R token.
   {
@@ -502,36 +550,34 @@ function parseEaCardText(raw){
     }
   }
 
-  // 4) Name: we’ll look for two adjacent ALLCAPS words (common in the card),
-  // and treat first as firstname, second as surname.
-  // This is a heuristic; if it fails, we don’t overwrite user input.
+  // 4) Name: ignore short tokens like LW/LM/CAM etc; pick two longer ALLCAPS tokens
   {
-    const caps = lines
-      .map(l => l.replace(/[^A-Z\s]/g, " ").replace(/\s+/g, " ").trim())
-      .filter(l => l && /^[A-Z\s]+$/.test(l));
+    const POS_TOKENS = new Set([
+      "GK","RB","CB","LB","CDM","CM","CAM","LM","RM","ST",
+      "LW","RW","CF","LWB","RWB"
+    ]);
 
-    // Find a line with 2 words like "JAEDYN" then another line with "SHAW"
-    // Prefer: first caps line is first name; next caps line is surname.
-    if (caps.length >= 2){
-      const first = caps[0].split(" ")[0];
-      const sur = caps[1].split(" ")[0];
-      if (first && sur){
-        out.firstName = first.charAt(0) + first.slice(1).toLowerCase();
-        out.surname = sur.charAt(0) + sur.slice(1).toLowerCase();
-      }
-    } else {
-      // Fallback: two-word caps line "JAEDYN SHAW"
-      for (const l of caps){
-        const parts = l.split(" ").filter(Boolean);
-        if (parts.length >= 2){
-          const first = parts[0], sur = parts[1];
-          out.firstName = first.charAt(0) + first.slice(1).toLowerCase();
-          out.surname = sur.charAt(0) + sur.slice(1).toLowerCase();
-          break;
-        }
-      }
+    // collect ALLCAPS tokens from the OCR text
+    const tokens = joined.match(/\b[A-Z]{2,}\b/g) || [];
+
+    // remove position-like tokens and very short tokens (2–3 chars)
+    const nameLike = tokens.filter(t => {
+      const u = t.toUpperCase();
+      if (POS_TOKENS.has(u)) return false;
+      if (u.length <= 3) return false;
+      return true;
+    });
+
+    // We expect something like ["JAEDYN","SHAW", ...]
+    if (nameLike.length >= 2){
+      const first = nameLike[0];
+      const sur = nameLike[1];
+
+      out.firstName = first.charAt(0) + first.slice(1).toLowerCase();
+      out.surname = sur.charAt(0) + sur.slice(1).toLowerCase();
     }
   }
+
 
   return out;
 }
@@ -544,7 +590,12 @@ function applyScanToForm(scan){
   if (scan.surname && fSurname) fSurname.value = scan.surname;
   if (scan.pos && fPos) fPos.value = scan.pos;
   if (scan.intl && fIntl) fIntl.value = scan.intl;
+
+  if (scan.potMin && fPotMin) fPotMin.value = scan.potMin;
+  if (scan.potMax && fPotMax) fPotMax.value = scan.potMax;
+
   if (scan.foot && fFoot) fFoot.value = (scan.foot === "L") ? "L" : "R";
+
 
   updateEditName();
 }
@@ -644,15 +695,17 @@ const ocr = await runOcr(dataUrl);
         scanDebug.textContent = rawText;
       }
 
-      // If we found at least 2 key fields, offer “Apply”
-      const confidence = ["intl","pos","surname","firstName","foot"].filter(k => !!parsed[k]).length;
-      if (confidence >= 2){
-        btnScanApply?.classList.remove("hidden");
-        setScanStatus("Scan complete — review and apply");
-      } else {
-        btnScanApply?.classList.add("hidden");
-        setScanStatus("Scan complete — couldn’t confidently detect fields (try closer / steadier)");
-      }
+// If we found enough fields, apply immediately and close the modal
+const confidence = ["intl","pos","surname","firstName","foot","potMin","potMax"].filter(k => !!parsed[k]).length;
+
+if (confidence >= 2){
+  applyScanToForm(parsed);
+  closeScanModal();
+} else {
+  setScanStatus("Scan complete — couldn’t confidently detect fields (try closer / steadier)");
+  // keep modal open so user can try again
+}
+
     }catch(err){
       console.error(err);
       setScanStatus("OCR error: " + (err?.message || String(err)));
@@ -662,12 +715,6 @@ const ocr = await runOcr(dataUrl);
   });
 }
 
-if (btnScanApply){
-  btnScanApply.addEventListener("click", ()=>{
-    applyScanToForm(lastScanResult);
-    closeScanModal();
-  });
-}
 // ---------- scan events end ----------
 
 
