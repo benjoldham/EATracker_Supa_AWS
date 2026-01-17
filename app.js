@@ -1476,9 +1476,14 @@ async function seedPlayerMasterFromCsv(file, version){
     const shortName = String(line[iShort] || "").trim();
     if (!shortName) continue;
 
+    const surnamePart = shortName.includes(".")
+      ? shortName.split(".").slice(1).join(".").trim()
+      : shortName;
+
     const item = {
       shortName,
       nameLower: shortName.toLowerCase(),
+      surnameLower: surnamePart.toLowerCase(),
       playerPositions: String(line[iPos] || "").trim(),
       overall: Number.isFinite(Number(line[iOvr])) ? Number(line[iOvr]) : null,
       potential: Number.isFinite(Number(line[iPot])) ? Number(line[iPot]) : null,
@@ -1500,6 +1505,7 @@ async function seedPlayerMasterFromCsv(file, version){
 
   alert(`Seed complete: ${created} players added to PlayerMaster (version "${v}").`);
 }
+
 
 
 function hasAny(slotSet, arr){
