@@ -275,7 +275,13 @@
         Point your camera at the player overview screen, then tap Capture.
       </p>
 
-      <video id="scan-video" autoplay playsinline></video>
+      <div class="scan-frame">
+        <video id="scan-video" autoplay playsinline></video>
+        <div class="scan-overlay" aria-hidden="true">
+          <div class="scan-box"></div>
+       </div>
+      </div>
+
       <canvas id="scan-canvas" class="hidden"></canvas>
 
       <pre id="scan-debug" class="hidden" style="white-space:pre-wrap; margin-top:10px;"></pre>
