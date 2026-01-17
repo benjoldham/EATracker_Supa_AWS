@@ -155,7 +155,7 @@ export async function searchPlayerMaster(query, want = 8) {
 
   for (let page = 0; page < MAX_PAGES && out.length < MAX_RESULTS; page++) {
     const resp = await client.models.PlayerMaster.list({
-      filter: { nameLower: { beginsWith: q } },
+      filter: { or: [ { nameLower: { beginsWith: q } }, { surnameLower: { beginsWith: q } } ] }
       limit: PAGE_EVAL_LIMIT,
       nextToken
     });
