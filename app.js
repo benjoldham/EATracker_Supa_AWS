@@ -281,6 +281,8 @@ const editNameEl = $("edit-player-name");
 const form = $("player-form");
 const fFirst = $("f-first");
 const fSurname = $("f-surname");
+const fLookup = $("f-lookup");
+const lookupBox = $("lookup-suggestions");
 const fSeniority = $("f-seniority");
 const fPos = $("f-pos");
 const fFoot = $("f-foot");
@@ -665,6 +667,74 @@ function clearAllAutoBadges(){
   setAutoBadge(autoPotMax,false);
 }
 
+function splitShortName(shortName) {
+  const s = String(shortName || "").trim();
+  if (!s) return { firstName: "", surname: "" };
+
+  // Case 1: "J. Bellingham"
+  const m = s.match(/^([A-Z])\.\s+(.+)$/);
+  if (m) return { firstName: m[1], surname: m[2] };
+
+  // Case 2: single-name (Rodri) -> SURNAME only
+  if (!s.includes(" ")) return { firstName: "", surname: s };
+
+  // Case 3: "Bruno Fernandes" -> split last token as surname
+  const parts = s.split(/\s+/);
+  return { firstName: parts.slice(0, -1).join(" "), surname: parts[parts.length - 1] };
+}
+
+function pickPrimaryPosition(playerPositions) {
+  const raw = String(playerPositions || "").split(",")[0]?.trim().toUpperCase() || "";
+  // Map EA positions to your allowed set
+  if (raw === "LW") return "LM";
+  if (raw === "RW") return "RM";
+  if (raw === "CF") return "ST";
+  if (raw === "LWB") return "LB";
+  if (raw === "RWB") return "RB";
+  return raw;
+}
+
+function normFoot(pref) {
+  const v = String(pref || "").trim().toUpperCase();
+  if (v === "L" || v === "LEFT") return "L";
+  return "R";
+}
+
+function applyMasterToForm(m) {
+  if (!m) return;
+
+  // your PlayerMaster fields from schema: shortName, playerPositions, overall, potential, preferredFoot
+  const { firstName, surname } = splitShortName(m.shortName);
+
+  if (fFirst){ fFirst.value = firstName; setAutoBadge(autoFirst, !!firstName); }
+  if (fSurname){ fSurname.value = surname; setAutoBadge(autoSurname, !!surname); }
+
+  const pos = pickPrimaryPosition(m.playerPositions);
+  if (fPos && pos && POS_ORDER.includes(pos)){
+    fPos.value = pos;
+    setAutoBadge(autoPos, true);
+  }
+
+  const foot = normFoot(m.preferredFoot);
+  if (fFoot){
+    fFoot.value = foot;
+    setAutoBadge(autoFoot, true);
+  }
+
+  if (fIntl && Number.isFinite(Number(m.overall))){
+    fIntl.value = String(m.overall);
+    setAutoBadge(autoIntl, true);
+  }
+
+  if (Number.isFinite(Number(m.potential))){
+    if (fPotMin){ fPotMin.value = String(m.potential); setAutoBadge(autoPotMin, true); }
+    if (fPotMax){ fPotMax.value = String(m.potential); setAutoBadge(autoPotMax, true); }
+  }
+
+  updateEditName();
+}
+
+
 function applyScanToForm(scan){
   if (!scan) return;
 
@@ -890,6 +960,92 @@ fFoot.addEventListener("change", ()=>setAutoBadge(autoFoot,false));
 fIntl.addEventListener("input", ()=>setAutoBadge(autoIntl,false));
 fPotMin.addEventListener("input", ()=>setAutoBadge(autoPotMin,false));
 fPotMax.addEventListener("input", ()=>setAutoBadge(autoPotMax,false));
+
+let lookupTimer = null;
+let lastLookupQ = "";
+
+function hideLookup(){
+  if (!lookupBox) return;
+  lookupBox.classList.add("hidden");
+  lookupBox.innerHTML = "";
+}
+
+function renderLookup(items){
+  if (!lookupBox) return;
+
+  if (!items || !items.length){
+    hideLookup();
+    return;
+  }
+
+  lookupBox.innerHTML = items.map((m, i) => {
+    const name = escapeHtml(m.shortName || "");
+    const pos = escapeHtml(pickPrimaryPosition(m.playerPositions || "") || "");
+    const meta = `${pos} • ${m.overall ?? "?"}/${m.potential ?? "?"} • ${(normFoot(m.preferredFoot) === "L") ? "L" : "R"}`;
+    return `
+      <button type="button" data-idx="${i}">
+        <span class="s-main">${name}</span>
+        <span class="s-meta">${escapeHtml(meta)}</span>
+      </button>
+    `;
+  }).join("");
+
+  lookupBox.classList.remove("hidden");
+
+  // click handler (event delegation)
+  lookupBox.onclick = (e) => {
+    const btn = e.target.closest("button[data-idx]");
+    if (!btn) return;
+    const idx = Number(btn.dataset.idx);
+    const chosen = items[idx];
+    applyMasterToForm(chosen);
+    if (fLookup) fLookup.value = chosen?.shortName || "";
+    hideLookup();
+  };
+}
+
+async function runLookup(){
+  const q = String(fLookup?.value || "").trim();
+  const qLower = q.toLowerCase();
+
+  if (qLower.length < 2){
+    hideLookup();
+    return;
+  }
+  if (qLower === lastLookupQ) return;
+  lastLookupQ = qLower;
+
+  try{
+    const results = await aws.searchPlayerMaster?.(qLower, 8);
+    renderLookup(Array.isArray(results) ? results : []);
+  }catch(err){
+    console.error(err);
+    hideLookup();
+  }
+}
+
+if (fLookup){
+  fLookup.addEventListener("input", () => {
+    clearTimeout(lookupTimer);
+    lookupTimer = setTimeout(runLookup, 120);
+  });
+
+  fLookup.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") hideLookup();
+  });
+
+  fLookup.addEventListener("blur", () => {
+    // allow click to register
+    setTimeout(hideLookup, 150);
+  });
+
+  fLookup.addEventListener("focus", () => {
+    // if user focuses again, try render current
+    clearTimeout(lookupTimer);
+    lookupTimer = setTimeout(runLookup, 80);
+  });
+}
+
 
 
 // ---------- seniority (form) ----------
@@ -1556,8 +1712,14 @@ function readForm(){
   : "Senior";
   const pos = (fPos.value||"").trim().toUpperCase();
   const foot = (fFoot?.value === "L") ? "L" : "R";
-  if(!firstName) return alert("Forename is required."), null;
-  if(!surname) return alert("Surname is required."), null;
+  
+    // Allow single-name players (surname only). If user typed only forename, treat it as surname.
+  if (!surname && firstName){
+    surname = firstName;
+    firstName = "";
+  }
+  if (!surname) return alert("Surname is required."), null;
+
   if(!pos) return alert("Position is required."), null;
   const intl = clamp(fIntl.value,1,99);
   const potMin = clamp(fPotMin.value,1,99);
