@@ -135,6 +135,28 @@ export async function deletePlayer(id) {
 }
 
 /* =====================
+   PLAYER MASTER (Autocomplete)
+===================== */
+
+export async function searchPlayerMaster(query, limit = 8) {
+  await initAws();
+
+  const q = String(query || "").trim().toLowerCase();
+  if (q.length < 2) return [];
+
+  const { data, errors } = await client.models.PlayerMaster.list({
+    filter: {
+      nameLower: { beginsWith: q }
+    },
+    limit
+  });
+
+  if (errors?.length) throw new Error(joinErrors(errors));
+  return data ?? [];
+}
+
+
+/* =====================
    Career Save Title 
 ===================== */
 
