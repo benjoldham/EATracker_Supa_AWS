@@ -67,11 +67,13 @@ function statusFromAvg(avg){
 }
 function profitGBP(p){ return asInt(p.sale_gbp,0) - asInt(p.cost_gbp,0); }
 function roi(p){
-  const cost=asInt(p.cost_gbp,0);
-  const sale=asInt(p.sale_gbp,0);
-  if(cost<=0 || sale<=0) return null;
-  return (sale - cost)/cost;
+  const cost = asInt(p.cost_gbp, 0);
+  const sale = asInt(p.sale_gbp, 0);
+  // ROI is based on Cost and Sale; Sale can be 0 (unsold) => negative ROI.
+  if (cost <= 0) return null;
+  return (sale - cost) / cost;
 }
+
 function badgeClass(status){
   switch(status){
     case "Special": return "special";
