@@ -335,6 +335,9 @@ const currencySeg = document.querySelector('.segmented[aria-label="Currency"]');
 const sortableHeaders = Array.from(document.querySelectorAll("th.sortable"));
 
 const btnEditSaveTitle = document.getElementById("edit-save-title");
+const btnSeedMaster = document.getElementById("btn-seed-master");
+const masterFile = document.getElementById("master-file");
+
 
 // ---------- pitch ----------
 const pitchEl = document.getElementById("pitch");
@@ -1383,6 +1386,122 @@ function normFoot(p){
   return (p?.foot === "L") ? "L" : "R";
 }
 
+function parseCsv(text){
+  // Simple CSV parser (supports quoted fields + commas in quotes)
+  const rows = [];
+  let row = [];
+  let cur = "";
+  let inQuotes = false;
+
+  for (let i = 0; i < text.length; i++){
+    const ch = text[i];
+    const next = text[i+1];
+
+    if (ch === '"'){
+      if (inQuotes && next === '"'){ cur += '"'; i++; }
+      else inQuotes = !inQuotes;
+      continue;
+    }
+
+    if (!inQuotes && ch === ","){
+      row.push(cur);
+      cur = "";
+      continue;
+    }
+
+    if (!inQuotes && (ch === "\n" || ch === "\r")){
+      if (ch === "\r" && next === "\n") i++;
+      row.push(cur);
+      rows.push(row);
+      row = [];
+      cur = "";
+      continue;
+    }
+
+    cur += ch;
+  }
+
+  if (cur.length || row.length){
+    row.push(cur);
+    rows.push(row);
+  }
+
+  return rows;
+}
+
+function normMasterFootForSeed(v){
+  const s = String(v || "").trim().toUpperCase();
+  if (s === "L" || s === "LEFT") return "L";
+  return "R";
+}
+
+async function seedPlayerMasterFromCsv(file, version){
+  await requireLoginOrRedirect();
+
+  const v = String(version || "").trim();
+  if (!v) throw new Error("Missing version string for PlayerMaster seed.");
+
+  const already = await aws.playerMasterHasVersion?.(v);
+  if (already){
+    alert(`PlayerMaster version "${v}" already exists in AWS. Seeding is a one-time job.`);
+    return;
+  }
+
+  const text = await file.text();
+  const rows = parseCsv(text).filter(r => r.some(x => String(x || "").trim() !== ""));
+  if (rows.length < 2) throw new Error("CSV looks empty.");
+
+  const headers = rows[0].map(h => String(h || "").trim());
+  const idx = (name) => headers.indexOf(name);
+
+  // Your trimmed CSV columns (exact names)
+  const iShort = idx("short_name");
+  const iPos   = idx("player_positions");
+  const iOvr   = idx("overall");
+  const iPot   = idx("potential");
+  const iAge   = idx("age");
+  const iClubP = idx("club_position");
+  const iNat   = idx("nationality_name");
+  const iFoot  = idx("preferred_foot");
+
+  if (iShort < 0 || iPos < 0){
+    throw new Error("CSV missing required columns: short_name and player_positions.");
+  }
+
+  let created = 0;
+
+  for (let r = 1; r < rows.length; r++){
+    const line = rows[r];
+
+    const shortName = String(line[iShort] || "").trim();
+    if (!shortName) continue;
+
+    const item = {
+      shortName,
+      nameLower: shortName.toLowerCase(),
+      playerPositions: String(line[iPos] || "").trim(),
+      overall: Number.isFinite(Number(line[iOvr])) ? Number(line[iOvr]) : null,
+      potential: Number.isFinite(Number(line[iPot])) ? Number(line[iPot]) : null,
+      age: Number.isFinite(Number(line[iAge])) ? Number(line[iAge]) : null,
+      clubPosition: String(line[iClubP] || "").trim() || null,
+      nationalityName: String(line[iNat] || "").trim() || null,
+      preferredFoot: normMasterFootForSeed(line[iFoot]),
+      version: v,
+    };
+
+    await aws.createPlayerMaster?.(item);
+    created++;
+
+    // Light throttling to avoid rate limits
+    if (created % 25 === 0){
+      await new Promise(res => setTimeout(res, 150));
+    }
+  }
+
+  alert(`Seed complete: ${created} players added to PlayerMaster (version "${v}").`);
+}
+
+
 function hasAny(slotSet, arr){
   for (const x of arr) if (slotSet.has(x)) return true;
   return false;
@@ -1705,14 +1824,14 @@ form.addEventListener("keydown", (e)=>{
 
 // ---------- form ----------
 function readForm(){
-  const firstName = (fFirst.value||"").trim();
-  const surname = (fSurname.value||"").trim();
+  let firstName = (fFirst.value||"").trim();
+  let surname = (fSurname.value||"").trim();
   const seniority = ["Senior", "Youth", "Watchlist"].includes(fSeniority.value)
   ? fSeniority.value
   : "Senior";
   const pos = (fPos.value||"").trim().toUpperCase();
   const foot = (fFoot?.value === "L") ? "L" : "R";
-  
+
     // Allow single-name players (surname only). If user typed only forename, treat it as surname.
   if (!surname && firstName){
     surname = firstName;
@@ -1787,6 +1906,34 @@ function clearForm(){
   if (btnRescan) btnRescan.classList.add("hidden");
 }
 
+// ---------- Seed Player DB button wiring ----------
+if (btnSeedMaster && masterFile){
+  // Local-only by default. Also allow manual enable via ?seed=1
+  const isLocal =
+    location.hostname === "localhost" ||
+    location.hostname === "127.0.0.1";
+
+  const allowSeed = isLocal || new URL(location.href).searchParams.get("seed") === "1";
+  if (allowSeed) btnSeedMaster.classList.remove("hidden");
+
+  btnSeedMaster.addEventListener("click", ()=>{
+    masterFile.click();
+  });
+
+  masterFile.addEventListener("change", async ()=>{
+    const file = masterFile.files?.[0];
+    masterFile.value = "";
+    if (!file) return;
+
+    try{
+      // Change this version string when you update the dataset
+      await seedPlayerMasterFromCsv(file, "FC26");
+    }catch(err){
+      console.error(err);
+      alert(err?.message || String(err));
+    }
+  });
+}
 
 
 // ---------- init ----------
