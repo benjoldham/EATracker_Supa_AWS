@@ -445,6 +445,21 @@ function captureScanFrame(){
   const ctx = scanCanvas.getContext("2d");
   ctx.drawImage(scanVideo, 0, 0, targetW, targetH);
 
+  // Crop to the overlay guide area (matches .scan-box: left 6%, top 6%, width 88%, height 30%)
+  const cropX = Math.round(targetW * 0.06);
+  const cropY = Math.round(targetH * 0.06);
+  const cropW = Math.round(targetW * 0.88);
+  const cropH = Math.round(targetH * 0.30);
+
+  const cropped = ctx.getImageData(cropX, cropY, cropW, cropH);
+
+  // Replace canvas with the cropped region so OCR uses only the header box
+  scanCanvas.width = cropW;
+  scanCanvas.height = cropH;
+  const ctx2 = scanCanvas.getContext("2d");
+  ctx2.putImageData(cropped, 0, 0);
+
+
   return true;
 }
 
@@ -505,6 +520,11 @@ function parseEaCardText(raw){
       out.potMin = m1[1];
       out.potMax = m1[2];
     }
+    // Edge case: if the UI shows "Peak" instead of a range, use Overall for both
+  if ((!out.potMin || !out.potMax) && /peak/i.test(joined) && out.intl){
+    out.potMin = out.intl;
+    out.potMax = out.intl;
+  }
   }
 
   // Fallback: any "NN - NN" range, but avoid accidental matches
@@ -632,7 +652,7 @@ function applyScanToForm(scan){
   if (scan.potMin && fPotMin) fPotMin.value = scan.potMin;
   if (scan.potMax && fPotMax) fPotMax.value = scan.potMax;
 
-  if (scan.foot && fFoot) fFoot.value = (scan.foot === "L") ? "Left" : "Right";
+  if (scan.foot && fFoot) fFoot.value = (scan.foot === "L") ? "L" : "R";
 
 
 
