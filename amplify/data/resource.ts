@@ -14,7 +14,15 @@ const schema = a.schema({
       preferredFormation: a.string(),
       createdAt: a.datetime(),
     })
-    .authorization((allow) => [allow.owner()]),
+    
+    .authorization((allow) => [
+      // Any signed-in user can read PlayerMaster (autocomplete)
+      allow.authenticated().to(["read"]),
+
+      // Only the owner can create/update/delete (seeding & maintenance)
+      allow.owner().to(["create", "update", "delete"]),
+    ]),
+
 
   Player: a
     .model({
