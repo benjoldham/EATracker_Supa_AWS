@@ -34,6 +34,8 @@
             <button class="seg-btn" data-currency="USD" type="button">$</button>
           </div>
           <button id="btn-scan" class="btn btn-secondary" type="button">Scan from camera</button>
+          <button id="btn-rescan" class="btn btn-secondary hidden" type="button">Rescan header</button>
+
           <button id="btn-clear" class="btn btn-secondary" type="button">Clear</button>
 
         </div>
@@ -46,11 +48,13 @@
           <label>
             Forename
             <input id="f-first" required placeholder="New" />
+            <span id="auto-first" class="auto-badge hidden">Auto-detected</span>
           </label>
 
           <label>
             Surname
             <input id="f-surname" required placeholder="Player" />
+            <span id="auto-surname" class="auto-badge hidden">Auto-detected</span>
           </label>
 
           <label>
@@ -82,6 +86,8 @@
               <option value="RM">RM</option>
               <option value="ST">ST</option>
             </select>
+            <span id="auto-pos" class="auto-badge hidden">Auto-detected</span>
+
           </label>
 
           <label>
@@ -90,21 +96,29 @@
              <option value="R" selected>Right</option>
              <option value="L">Left</option>
            </select>
+           <span id="auto-foot" class="auto-badge hidden">Auto-detected</span>
+
           </label>
 
           <label>
             Overall
             <input id="f-intl" type="number" min="1" max="99" step="1" required placeholder="65" />
+            <span id="auto-intl" class="auto-badge hidden">Auto-detected</span>
+
           </label>
 
           <label>
             Potential Min.
             <input id="f-potmin" type="number" min="1" max="99" step="1" required placeholder="65" />
+            <span id="auto-potmin" class="auto-badge hidden">Auto-detected</span>
+
           </label>
 
           <label>
             Potential Max.
             <input id="f-potmax" type="number" min="1" max="99" step="1" required placeholder="90" />
+            <span id="auto-potmax" class="auto-badge hidden">Auto-detected</span>
+
           </label>
 
           <label>
