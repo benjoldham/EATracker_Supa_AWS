@@ -14,8 +14,7 @@ const schema = a.schema({
       preferredFormation: a.string(),
       createdAt: a.datetime(),
     })
-    
-    .authorization((allow) => [
+        .authorization((allow) => [
       // Any signed-in user can read PlayerMaster (autocomplete)
       allow.authenticated().to(["read"]),
 
@@ -56,6 +55,7 @@ const schema = a.schema({
       // Raw CSV columns (keep them “dataset-native”)
       shortName: a.string().required(),          // short_name
       nameLower: a.string().required(),          // shortName lowercased for search
+      surnameLower: a.string(),                  // surname-only lowercased for search (e.g. "stones")
       playerPositions: a.string().required(),    // player_positions (e.g. "CM,CDM")
       overall: a.integer(),                      // overall
       potential: a.integer(),                    // potential
