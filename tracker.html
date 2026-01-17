@@ -264,27 +264,28 @@
 <!-- Scan modal -->
 <div id="scan-modal" class="modal hidden" role="dialog" aria-modal="true" aria-label="Scan player card">
   <div class="modal-backdrop" data-scan-close></div>
-  <div class="modal-panel">
+    <div class="modal-panel">
     <div class="modal-head">
       <h3 style="margin:0;">Scan player</h3>
       <button class="btn btn-secondary" type="button" data-scan-close>Close</button>
     </div>
 
-    <p class="subtle" style="margin-top:8px;">
-      Point your camera at the player overview screen, then tap Capture.
-    </p>
+    <div class="modal-body">
+      <p class="subtle" style="margin-top:8px;">
+        Point your camera at the player overview screen, then tap Capture.
+      </p>
 
-    <video id="scan-video" autoplay playsinline style="width:100%; border-radius:12px; background:#000;"></video>
-    <canvas id="scan-canvas" class="hidden"></canvas>
+      <video id="scan-video" autoplay playsinline></video>
+      <canvas id="scan-canvas" class="hidden"></canvas>
 
-    <div style="display:flex; gap:8px; margin-top:10px; align-items:center; flex-wrap:wrap;">
-      <button id="btn-scan-capture" class="btn btn-primary" type="button">Capture</button>
-      <input id="scan-zoom" type="range" min="1" max="1" step="0.1" value="1" />
-      <button id="btn-scan-apply" class="btn btn-secondary hidden" type="button">Apply to form</button>
-      <div id="scan-status" class="subtle" style="margin-left:auto;">Camera idle</div>
+      <pre id="scan-debug" class="hidden" style="white-space:pre-wrap; margin-top:10px;"></pre>
     </div>
 
-    <pre id="scan-debug" class="hidden" style="white-space:pre-wrap; margin-top:10px;"></pre>
+    <div class="modal-foot">
+      <button id="btn-scan-capture" class="btn btn-primary" type="button">Capture</button>
+      <input id="scan-zoom" type="range" min="1" max="1" step="0.1" value="1" />
+      <div id="scan-status" class="subtle">Camera idle</div>
+    </div>
   </div>
 </div>
 
