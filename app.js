@@ -694,7 +694,7 @@ function pickPrimaryPosition(playerPositions) {
   return raw;
 }
 
-function normFoot(pref) {
+function normMasterFoot(pref) {
   const v = String(pref || "").trim().toUpperCase();
   if (v === "L" || v === "LEFT") return "L";
   return "R";
@@ -715,7 +715,7 @@ function applyMasterToForm(m) {
     setAutoBadge(autoPos, true);
   }
 
-  const foot = normFoot(m.preferredFoot);
+  const foot = normMasterFoot(m.preferredFoot);
   if (fFoot){
     fFoot.value = foot;
     setAutoBadge(autoFoot, true);
@@ -981,7 +981,7 @@ function renderLookup(items){
   lookupBox.innerHTML = items.map((m, i) => {
     const name = escapeHtml(m.shortName || "");
     const pos = escapeHtml(pickPrimaryPosition(m.playerPositions || "") || "");
-    const meta = `${pos} • ${m.overall ?? "?"}/${m.potential ?? "?"} • ${(normFoot(m.preferredFoot) === "L") ? "L" : "R"}`;
+    const meta = `${pos} • ${m.overall ?? "?"}/${m.potential ?? "?"} • ${(normMasterFoot(m.preferredFoot) === "L") ? "L" : "R"}`;
     return `
       <button type="button" data-idx="${i}">
         <span class="s-main">${name}</span>
