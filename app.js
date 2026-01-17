@@ -1,5 +1,6 @@
 import * as aws from "./awsClient.js";
 import { FORMATIONS, DEFAULT_FORMATION } from "./formations.js";
+import Tesseract from "https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.esm.min.js";
 
 // FC26 Transfer Tracker (v7) — v6 UI + correct sorting + ex-player toggle
 // Exchange rates source: exchangerate-api.com (open.er-api.com) base GBP.
@@ -294,6 +295,14 @@ const fHomegrown = $("f-homegrown");
 const btnAdd = $("btn-add");
 const btnUpdate = $("btn-update");
 const btnClear = $("btn-clear");
+const btnScan = $("btn-scan");
+const scanModal = $("scan-modal");
+const scanVideo = $("scan-video");
+const scanCanvas = $("scan-canvas");
+const btnScanCapture = $("btn-scan-capture");
+const btnScanApply = $("btn-scan-apply");
+const scanStatus = $("scan-status");
+const scanDebug = $("scan-debug");
 const btnCancel = $("btn-cancel");
 const btnReset = $("btn-reset");
 const btnExport = $("btn-export");
@@ -327,6 +336,214 @@ const pitchWatchlistEl = document.getElementById("pitch-watchlist");
 
 let pitchSeniorityFilter = "Senior";   // "Senior" | "Youth" | "All" | "Homegrown"
 let includePitchWatchlist = false;
+
+// ---------- scan (camera + OCR) ----------
+let scanStream = null;
+let lastScanResult = null; // { firstName, surname, pos, intl, foot, rawText }
+
+function openScanModal(){
+  if (!scanModal) return;
+  scanModal.classList.remove("hidden");
+  btnScanApply?.classList.add("hidden");
+  setScanStatus("Requesting camera…");
+  startScanCamera().catch(err=>{
+    console.error(err);
+    setScanStatus("Camera error: " + (err?.message || String(err)));
+    alert("Could not open camera. Make sure you're on HTTPS and have granted camera permission.");
+  });
+}
+
+function closeScanModal(){
+  if (!scanModal) return;
+  scanModal.classList.add("hidden");
+  stopScanCamera();
+  lastScanResult = null;
+  btnScanApply?.classList.add("hidden");
+  setScanStatus("Camera idle");
+}
+
+function setScanStatus(msg){
+  if (scanStatus) scanStatus.textContent = msg;
+}
+
+async function startScanCamera(){
+  if (!scanVideo) return;
+  stopScanCamera();
+
+  // Prefer rear camera on phones
+  const constraints = {
+    video: { facingMode: { ideal: "environment" } },
+    audio: false
+  };
+
+  scanStream = await navigator.mediaDevices.getUserMedia(constraints);
+  scanVideo.srcObject = scanStream;
+  await scanVideo.play();
+  setScanStatus("Camera ready");
+}
+
+function stopScanCamera(){
+  if (scanVideo) scanVideo.srcObject = null;
+  if (scanStream){
+    for (const t of scanStream.getTracks()) t.stop();
+  }
+  scanStream = null;
+}
+
+function captureScanFrame(){
+  if (!scanVideo || !scanCanvas) return null;
+  const w = scanVideo.videoWidth || 1280;
+  const h = scanVideo.videoHeight || 720;
+
+  scanCanvas.width = w;
+  scanCanvas.height = h;
+
+  const ctx = scanCanvas.getContext("2d");
+  ctx.drawImage(scanVideo, 0, 0, w, h);
+
+  return ctx.getImageData(0, 0, w, h);
+}
+
+// Very light preprocessing: increase contrast a bit by converting to grayscale.
+// (Keeps it fast; you can improve later with cropping / thresholding.)
+function toGrayscaleImageData(img){
+  const d = img.data;
+  for (let i=0; i<d.length; i+=4){
+    const r=d[i], g=d[i+1], b=d[i+2];
+    const y = (0.299*r + 0.587*g + 0.114*b);
+    d[i]=d[i+1]=d[i+2]=y;
+  }
+  return img;
+}
+
+async function runOcr(imgData){
+  // Tesseract can accept ImageData directly in modern browsers
+  const res = await Tesseract.recognize(imgData, "eng", {
+    logger: m => {
+      if (m?.status === "recognizing text" && Number.isFinite(m?.progress)){
+        setScanStatus(`OCR ${(m.progress*100).toFixed(0)}%`);
+      }
+    }
+  });
+  return res;
+}
+
+// Parse OCR text for your specific mapping rules.
+// We keep this conservative and only fill fields we’re confident about.
+function parseEaCardText(raw){
+  const text = String(raw || "");
+  const lines = text
+    .split(/\r?\n/)
+    .map(s => s.trim())
+    .filter(Boolean);
+
+  const joined = lines.join(" ");
+  const out = { rawText: text };
+
+  // 1) Overall: first standalone 2-digit number near the start
+  // (EA OVR is 1–99; we bias to 10–99.)
+  {
+    const m = joined.match(/\b([1-9][0-9])\b/);
+    if (m) out.intl = m[1];
+  }
+
+  // 2) Preferred foot: look for "Pref" / "Foot" then an L/R nearby,
+  // else fallback to a single isolated L/R token.
+  {
+    const prefIdx = joined.toLowerCase().indexOf("pref");
+    if (prefIdx !== -1){
+      const tail = joined.slice(prefIdx, prefIdx + 80);
+      const m = tail.match(/\b([LR])\b/);
+      if (m) out.foot = m[1];
+    }
+    if (!out.foot){
+      const m2 = joined.match(/\b([LR])\b/);
+      if (m2) out.foot = m2[1];
+    }
+  }
+
+  // 3) Position: in the EA header it appears like "75 | LW · LM · CAM"
+  // We accept ONLY your app's allowed positions.
+  // If OCR returns LW/LM/CAM etc, we’ll map to the nearest supported:
+  // LW/LM/RW/RM -> LM/RM, CAM stays CAM, ST stays ST, etc.
+  {
+    const allowed = new Set(["GK","RB","CB","LB","CDM","CM","CAM","LM","RM","ST"]);
+    const mapPos = (p) => {
+      const u = String(p||"").toUpperCase();
+      if (allowed.has(u)) return u;
+      // common EA positions seen on card:
+      if (u === "LW") return "LM";
+      if (u === "RW") return "RM";
+      if (u === "CF") return "ST";
+      return null;
+    };
+
+    // Try pattern: number then position token
+    // e.g. "75 LW" or "75 | LW"
+    const m = joined.match(/\b[1-9][0-9]\b\s*(?:\||I|l)?\s*([A-Z]{2,3})\b/);
+    if (m){
+      const pos = mapPos(m[1]);
+      if (pos) out.pos = pos;
+    }
+
+    // Fallback: first position-like token in the text
+    if (!out.pos){
+      const tokens = joined.match(/\b[A-Z]{2,3}\b/g) || [];
+      for (const t of tokens){
+        const pos = mapPos(t);
+        if (pos){ out.pos = pos; break; }
+      }
+    }
+  }
+
+  // 4) Name: we’ll look for two adjacent ALLCAPS words (common in the card),
+  // and treat first as firstname, second as surname.
+  // This is a heuristic; if it fails, we don’t overwrite user input.
+  {
+    const caps = lines
+      .map(l => l.replace(/[^A-Z\s]/g, " ").replace(/\s+/g, " ").trim())
+      .filter(l => l && /^[A-Z\s]+$/.test(l));
+
+    // Find a line with 2 words like "JAEDYN" then another line with "SHAW"
+    // Prefer: first caps line is first name; next caps line is surname.
+    if (caps.length >= 2){
+      const first = caps[0].split(" ")[0];
+      const sur = caps[1].split(" ")[0];
+      if (first && sur){
+        out.firstName = first.charAt(0) + first.slice(1).toLowerCase();
+        out.surname = sur.charAt(0) + sur.slice(1).toLowerCase();
+      }
+    } else {
+      // Fallback: two-word caps line "JAEDYN SHAW"
+      for (const l of caps){
+        const parts = l.split(" ").filter(Boolean);
+        if (parts.length >= 2){
+          const first = parts[0], sur = parts[1];
+          out.firstName = first.charAt(0) + first.slice(1).toLowerCase();
+          out.surname = sur.charAt(0) + sur.slice(1).toLowerCase();
+          break;
+        }
+      }
+    }
+  }
+
+  return out;
+}
+
+function applyScanToForm(scan){
+  if (!scan) return;
+
+  // Only set fields if we actually found them (don’t clobber user edits)
+  if (scan.firstName && fFirst) fFirst.value = scan.firstName;
+  if (scan.surname && fSurname) fSurname.value = scan.surname;
+  if (scan.pos && fPos) fPos.value = scan.pos;
+  if (scan.intl && fIntl) fIntl.value = scan.intl;
+  if (scan.foot && fFoot) fFoot.value = (scan.foot === "L") ? "L" : "R";
+
+  updateEditName();
+}
+// ---------- scan end ----------
+
 
 // ---------- formation state ----------
 let currentFormationKey = DEFAULT_FORMATION;
@@ -375,7 +592,76 @@ if (formationSelect){
 
 // ---------- pitch end ----------
 
+// ---------- scan events ----------
+if (btnScan){
+  btnScan.addEventListener("click", ()=>{
+    if (!navigator.mediaDevices?.getUserMedia){
+      alert("Camera not supported on this browser.");
+      return;
+    }
+    openScanModal();
+  });
+}
+
+if (scanModal){
+  // Close when clicking backdrop or Close button
+  scanModal.addEventListener("click", (e)=>{
+    const closeEl = e.target.closest("[data-scan-close]");
+    if (closeEl) closeScanModal();
+  });
+}
+
+if (btnScanCapture){
+  btnScanCapture.addEventListener("click", async ()=>{
+    try{
+      setScanStatus("Capturing…");
+      const img = captureScanFrame();
+      if (!img) return;
+
+      setScanStatus("Preprocessing…");
+      const gray = toGrayscaleImageData(img);
+
+      setScanStatus("Starting OCR…");
+      const ocr = await runOcr(gray);
+
+      const rawText = ocr?.data?.text || "";
+      const parsed = parseEaCardText(rawText);
+
+      lastScanResult = parsed;
+
+      // Optional debug (keep hidden unless you want it visible)
+      if (scanDebug){
+        scanDebug.textContent = rawText;
+      }
+
+      // If we found at least 2 key fields, offer “Apply”
+      const confidence = ["intl","pos","surname","firstName","foot"].filter(k => !!parsed[k]).length;
+      if (confidence >= 2){
+        btnScanApply?.classList.remove("hidden");
+        setScanStatus("Scan complete — review and apply");
+      } else {
+        btnScanApply?.classList.add("hidden");
+        setScanStatus("Scan complete — couldn’t confidently detect fields (try closer / steadier)");
+      }
+    }catch(err){
+      console.error(err);
+      setScanStatus("OCR error: " + (err?.message || String(err)));
+      alert("OCR failed. Try again with better lighting and keep the card centered.");
+    }
+  });
+}
+
+if (btnScanApply){
+  btnScanApply.addEventListener("click", ()=>{
+    applyScanToForm(lastScanResult);
+    closeScanModal();
+  });
+}
+// ---------- scan events end ----------
+
+
 btnEditSaveTitle?.addEventListener("click", async () => {
+
   if (!CURRENT_SAVE) return;
 
   const current = (saveTitleEl?.textContent || "").trim() || "Untitled";
