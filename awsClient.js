@@ -138,22 +138,42 @@ export async function deletePlayer(id) {
    PLAYER MASTER (Autocomplete)
 ===================== */
 
-export async function searchPlayerMaster(query, limit = 8) {
+export async function searchPlayerMaster(query, want = 8) {
   await initAws();
 
   const q = String(query || "").trim().toLowerCase();
   if (q.length < 2) return [];
 
-  const { data, errors } = await client.models.PlayerMaster.list({
-    filter: {
-      nameLower: { beginsWith: q }
-    },
-    limit
-  });
+  const out = [];
+  let nextToken = null;
 
-  if (errors?.length) throw new Error(joinErrors(errors));
-  return data ?? [];
+  // Scan in pages until we collect enough matches.
+  // Safety cap so we don't scan forever on every keystroke.
+  const PAGE_EVAL_LIMIT = 250;     // items evaluated per request
+  const MAX_PAGES = 10;            // max scan pages per search
+  const MAX_RESULTS = Math.max(1, Math.min(25, Number(want) || 8));
+
+  for (let page = 0; page < MAX_PAGES && out.length < MAX_RESULTS; page++) {
+    const resp = await client.models.PlayerMaster.list({
+      filter: { nameLower: { beginsWith: q } },
+      limit: PAGE_EVAL_LIMIT,
+      nextToken
+    });
+
+    const { data, errors } = resp || {};
+    if (errors?.length) throw new Error(joinErrors(errors));
+
+    if (Array.isArray(data) && data.length) {
+      out.push(...data);
+    }
+
+    nextToken = resp?.nextToken || null;
+    if (!nextToken) break;
+  }
+
+  return out.slice(0, MAX_RESULTS);
 }
+
 
 export async function playerMasterHasVersion(version) {
   await initAws();
