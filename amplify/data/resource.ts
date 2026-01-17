@@ -42,6 +42,35 @@ const schema = a.schema({
       index("careerSaveId").sortKeys(["createdAt"]),
     ])
     .authorization((allow) => [allow.owner()]),
+
+  PlayerMaster: a
+    .model({
+      // Raw CSV columns (keep them “dataset-native”)
+      shortName: a.string().required(),          // short_name
+      nameLower: a.string().required(),          // shortName lowercased for search
+      playerPositions: a.string().required(),    // player_positions (e.g. "CM,CDM")
+      overall: a.integer(),                      // overall
+      potential: a.integer(),                    // potential
+      age: a.integer(),                          // age
+      clubPosition: a.string(),                  // club_position
+      nationalityName: a.string(),               // nationality_name
+      preferredFoot: a.string(),                 // preferred_foot ("R"|"L")
+
+      // Optional helpful metadata
+      version: a.string(),                       // e.g. "FC26"
+      createdAt: a.datetime(),
+    })
+    .secondaryIndexes((index) => [
+      // For fast typeahead (filter beginsWith on nameLower)
+      index("nameLower").sortKeys(["shortName"]),
+    ])
+    .authorization((allow) => [
+      // Your existing data is owner-only; keep that for now.
+      // This means only YOUR login can read the master dataset.
+      // If later you want all users to read it, we’ll loosen this rule safely.
+      allow.owner(),
+    ]),
+  
 });
 
 export type Schema = ClientSchema<typeof schema>;
