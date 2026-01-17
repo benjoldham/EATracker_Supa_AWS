@@ -287,6 +287,14 @@ const fFoot = $("f-foot");
 const fIntl = $("f-intl");
 const fPotMin = $("f-potmin");
 const fPotMax = $("f-potmax");
+const autoFirst = $("auto-first");
+const autoSurname = $("auto-surname");
+const autoPos = $("auto-pos");
+const autoFoot = $("auto-foot");
+const autoIntl = $("auto-intl");
+const autoPotMin = $("auto-potmin");
+const autoPotMax = $("auto-potmax");
+
 const fActive = $("f-active");
 const fCost = $("f-cost");
 const fSale = $("f-sale");
@@ -296,6 +304,8 @@ const btnAdd = $("btn-add");
 const btnUpdate = $("btn-update");
 const btnClear = $("btn-clear");
 const btnScan = $("btn-scan");
+const btnRescan = $("btn-rescan");
+
 const scanModal = $("scan-modal");
 const scanVideo = $("scan-video");
 const scanCanvas = $("scan-canvas");
@@ -520,11 +530,6 @@ function parseEaCardText(raw){
       out.potMin = m1[1];
       out.potMax = m1[2];
     }
-    // Edge case: if the UI shows "Peak" instead of a range, use Overall for both
-  if ((!out.potMin || !out.potMax) && /peak/i.test(joined) && out.intl){
-    out.potMin = out.intl;
-    out.potMax = out.intl;
-  }
   }
 
   // Fallback: any "NN - NN" range, but avoid accidental matches
@@ -542,6 +547,12 @@ function parseEaCardText(raw){
         break;
       }
     }
+  }
+
+   // Edge case: if the UI shows "Peak" instead of a range, use Overall for both
+  if ((!out.potMin || !out.potMax) && /peak/i.test(joined) && out.intl){
+    out.potMin = out.intl;
+    out.potMax = out.intl;
   }
 }
 
@@ -640,21 +651,36 @@ function parseEaCardText(raw){
   return out;
 }
 
+function setAutoBadge(el, on){
+  if (!el) return;
+  el.classList.toggle("hidden", !on);
+}
+function clearAllAutoBadges(){
+  setAutoBadge(autoFirst,false);
+  setAutoBadge(autoSurname,false);
+  setAutoBadge(autoPos,false);
+  setAutoBadge(autoFoot,false);
+  setAutoBadge(autoIntl,false);
+  setAutoBadge(autoPotMin,false);
+  setAutoBadge(autoPotMax,false);
+}
+
 function applyScanToForm(scan){
   if (!scan) return;
 
   // Only set fields if we actually found them (don’t clobber user edits)
-  if (scan.firstName && fFirst) fFirst.value = scan.firstName;
-  if (scan.surname && fSurname) fSurname.value = scan.surname;
-  if (scan.pos && fPos) fPos.value = scan.pos;
-  if (scan.intl && fIntl) fIntl.value = scan.intl;
+  if (scan.firstName && fFirst){ fFirst.value = scan.firstName; setAutoBadge(autoFirst,true); }
+if (scan.surname && fSurname){ fSurname.value = scan.surname; setAutoBadge(autoSurname,true); }
+if (scan.pos && fPos){ fPos.value = scan.pos; setAutoBadge(autoPos,true); }
+if (scan.intl && fIntl){ fIntl.value = scan.intl; setAutoBadge(autoIntl,true); }
 
-  if (scan.potMin && fPotMin) fPotMin.value = scan.potMin;
-  if (scan.potMax && fPotMax) fPotMax.value = scan.potMax;
+if (scan.potMin && fPotMin){ fPotMin.value = scan.potMin; setAutoBadge(autoPotMin,true); }
+if (scan.potMax && fPotMax){ fPotMax.value = scan.potMax; setAutoBadge(autoPotMax,true); }
 
-  if (scan.foot && fFoot) fFoot.value = (scan.foot === "L") ? "L" : "R";
+if (scan.foot && fFoot){ fFoot.value = (scan.foot === "L") ? "L" : "R"; setAutoBadge(autoFoot,true); }
 
 
+if (btnRescan) btnRescan.classList.remove("hidden");
 
   updateEditName();
 }
@@ -711,6 +737,16 @@ if (formationSelect){
 // ---------- scan events ----------
 if (btnScan){
   btnScan.addEventListener("click", ()=>{
+    if (!navigator.mediaDevices?.getUserMedia){
+      alert("Camera not supported on this browser.");
+      return;
+    }
+    openScanModal();
+  });
+}
+
+if (btnRescan){
+  btnRescan.addEventListener("click", ()=>{
     if (!navigator.mediaDevices?.getUserMedia){
       alert("Camera not supported on this browser.");
       return;
@@ -847,6 +883,14 @@ function updateEditName(){
 }
 fFirst.addEventListener("input", updateEditName);
 fSurname.addEventListener("input", updateEditName);
+fFirst.addEventListener("input", ()=>setAutoBadge(autoFirst,false));
+fSurname.addEventListener("input", ()=>setAutoBadge(autoSurname,false));
+fPos.addEventListener("change", ()=>setAutoBadge(autoPos,false));
+fFoot.addEventListener("change", ()=>setAutoBadge(autoFoot,false));
+fIntl.addEventListener("input", ()=>setAutoBadge(autoIntl,false));
+fPotMin.addEventListener("input", ()=>setAutoBadge(autoPotMin,false));
+fPotMax.addEventListener("input", ()=>setAutoBadge(autoPotMax,false));
+
 
 // ---------- seniority (form) ----------
 function applySeniorityToForm(){
@@ -1378,6 +1422,7 @@ btnClear.addEventListener("click", ()=>{
   fSeniority.value = "Senior";
   applySeniorityToForm();
   updateEditName();
+  clearAllAutoBadges();
 });
 
 btnCancel.addEventListener("click", ()=>clearForm());
@@ -1573,8 +1618,14 @@ function clearForm(){
   editCard.classList.remove("editing");
   btnCancel.classList.add("hidden");
   btnUpdate.classList.add("hidden");
-  btnAdd.classList.remove("hidden");
+    btnAdd.classList.remove("hidden");
+
+  // Reset scan UI state
+  clearAllAutoBadges();
+  if (btnRescan) btnRescan.classList.add("hidden");
 }
+
+
 
 // ---------- init ----------
 (async function boot(){
