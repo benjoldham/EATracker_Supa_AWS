@@ -391,18 +391,24 @@ function stopScanCamera(){
 }
 
 function captureScanFrame(){
-  if (!scanVideo || !scanCanvas) return null;
-  const w = scanVideo.videoWidth || 1280;
-  const h = scanVideo.videoHeight || 720;
+  if (!scanVideo || !scanCanvas) return false;
 
-  scanCanvas.width = w;
-  scanCanvas.height = h;
+  // iPhone Safari can struggle with huge frames — cap capture size for OCR
+  const vw = scanVideo.videoWidth || 1280;
+  const vh = scanVideo.videoHeight || 720;
+
+  const targetW = Math.min(1280, vw);
+  const targetH = Math.round(targetW * (vh / vw));
+
+  scanCanvas.width = targetW;
+  scanCanvas.height = targetH;
 
   const ctx = scanCanvas.getContext("2d");
-  ctx.drawImage(scanVideo, 0, 0, w, h);
+  ctx.drawImage(scanVideo, 0, 0, targetW, targetH);
 
-  return ctx.getImageData(0, 0, w, h);
+  return true;
 }
+
 
 // Very light preprocessing: increase contrast a bit by converting to grayscale.
 // (Keeps it fast; you can improve later with cropping / thresholding.)
@@ -416,9 +422,9 @@ function toGrayscaleImageData(img){
   return img;
 }
 
-async function runOcr(imgData){
-  // Tesseract can accept ImageData directly in modern browsers
-  const res = await Tesseract.recognize(imgData, "eng", {
+async function runOcr(image){
+  // Use a PNG dataURL from the canvas (more reliable on iPhone Safari)
+  const res = await Tesseract.recognize(image, "eng", {
     logger: m => {
       if (m?.status === "recognizing text" && Number.isFinite(m?.progress)){
         setScanStatus(`OCR ${(m.progress*100).toFixed(0)}%`);
@@ -615,14 +621,18 @@ if (btnScanCapture){
   btnScanCapture.addEventListener("click", async ()=>{
     try{
       setScanStatus("Capturing…");
-      const img = captureScanFrame();
-      if (!img) return;
+const ok = captureScanFrame();
+if (!ok) return;
 
-      setScanStatus("Preprocessing…");
-      const gray = toGrayscaleImageData(img);
 
-      setScanStatus("Starting OCR…");
-      const ocr = await runOcr(gray);
+if (!scanCanvas) return;
+
+setScanStatus("Preparing image…");
+const dataUrl = scanCanvas.toDataURL("image/png");
+
+setScanStatus("Starting OCR…");
+const ocr = await runOcr(dataUrl);
+
 
       const rawText = ocr?.data?.text || "";
       const parsed = parseEaCardText(rawText);
@@ -646,7 +656,8 @@ if (btnScanCapture){
     }catch(err){
       console.error(err);
       setScanStatus("OCR error: " + (err?.message || String(err)));
-      alert("OCR failed. Try again with better lighting and keep the card centered.");
+      alert("OCR failed: " + (err?.message || String(err)));
+      console.error(err?.stack || err);
     }
   });
 }
