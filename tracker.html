@@ -45,6 +45,11 @@
 
       <form id="player-form" autocomplete="off">
         <div class="grid">
+          <label class="suggest-box" style="grid-column: 1 / -1;">
+            Search player database
+            <input id="f-lookup" placeholder="Type a name… (e.g. Bellingham)" />
+            <div id="lookup-suggestions" class="suggestions hidden"></div>
+          </label>
           <label>
             Forename
             <input id="f-first" required placeholder="New" />
