@@ -492,29 +492,67 @@ function parseEaCardText(raw){
     if (m) out.intl = m[1];
   }
 
-    // 1b) Potential range: "Potential 81 - 87" (or similar)
-  {
-    const m = joined.match(/potential\s*([1-9][0-9])\s*[-–]\s*([1-9][0-9])/i);
-    if (m){
-      out.potMin = m[1];
-      out.potMax = m[2];
+ // 1b) Potential range: robust parse (OCR often misspells "Potential")
+{
+  const lower = joined.toLowerCase();
+
+  // First try: look near a fuzzy "poten" anchor
+  const idx = lower.search(/poten/); // matches potential/potentlal/etc.
+  if (idx !== -1){
+    const window = joined.slice(Math.max(0, idx - 20), idx + 120);
+    const m1 = window.match(/([1-9][0-9])\s*[-–]\s*([1-9][0-9])/);
+    if (m1){
+      out.potMin = m1[1];
+      out.potMax = m1[2];
     }
   }
 
-  // 2) Preferred foot: look for "Pref" / "Foot" then an L/R nearby,
-  // else fallback to a single isolated L/R token.
-  {
-    const prefIdx = joined.toLowerCase().indexOf("pref");
-    if (prefIdx !== -1){
-      const tail = joined.slice(prefIdx, prefIdx + 80);
-      const m = tail.match(/\b([LR])\b/);
-      if (m) out.foot = m[1];
-    }
-    if (!out.foot){
-      const m2 = joined.match(/\b([LR])\b/);
-      if (m2) out.foot = m2[1];
+  // Fallback: any "NN - NN" range, but avoid accidental matches
+  // (e.g. skip height/weight "56/127" because that's a slash, not a hyphen)
+  if (!out.potMin || !out.potMax){
+    const ranges = joined.match(/([1-9][0-9])\s*[-–]\s*([1-9][0-9])/g) || [];
+    for (const r of ranges){
+      const m2 = r.match(/([1-9][0-9])\s*[-–]\s*([1-9][0-9])/);
+      if (!m2) continue;
+      const a = Number(m2[1]), b = Number(m2[2]);
+      // Potential should be within normal EA ranges and not wildly far apart
+      if (a >= 40 && b <= 99 && a <= b && (b - a) <= 30){
+        out.potMin = m2[1];
+        out.potMax = m2[2];
+        break;
+      }
     }
   }
+}
+
+
+// 2) Preferred foot: ONLY trust an L/R that appears right next to "Pref" + "Foot"
+{
+  const lower = joined.toLowerCase();
+
+  // Prefer the exact label region
+  const idx = lower.search(/pref\s*\.?\s*foot/);
+  if (idx !== -1){
+    const window = joined.slice(idx, idx + 50); // tighter window than before
+    // In the game UI it's typically: "Pref. Foot  R"
+    const m = window.match(/pref\s*\.?\s*foot[^LR]*\b([LR])\b/i);
+    if (m) out.foot = m[1].toUpperCase();
+  }
+
+  // Fallback: look for "pref" then a nearby isolated L/R, but still within a tight window
+  if (!out.foot){
+    const idx2 = lower.indexOf("pref");
+    if (idx2 !== -1){
+      const window2 = joined.slice(idx2, idx2 + 60);
+      const m2 = window2.match(/\b([LR])\b/);
+      if (m2) out.foot = m2[1].toUpperCase();
+    }
+  }
+
+  // IMPORTANT: do NOT global-fallback to any lone L/R in the whole text
+  // (that causes wrong foot when OCR finds random 'L' elsewhere)
+}
+
 
   // 3) Position: in the EA header it appears like "75 | LW · LM · CAM"
   // We accept ONLY your app's allowed positions.
@@ -594,7 +632,8 @@ function applyScanToForm(scan){
   if (scan.potMin && fPotMin) fPotMin.value = scan.potMin;
   if (scan.potMax && fPotMax) fPotMax.value = scan.potMax;
 
-  if (scan.foot && fFoot) fFoot.value = (scan.foot === "L") ? "L" : "R";
+  if (scan.foot && fFoot) fFoot.value = (scan.foot === "L") ? "Left" : "Right";
+
 
 
   updateEditName();
