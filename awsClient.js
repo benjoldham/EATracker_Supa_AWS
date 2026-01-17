@@ -155,6 +155,30 @@ export async function searchPlayerMaster(query, limit = 8) {
   return data ?? [];
 }
 
+export async function playerMasterHasVersion(version) {
+  await initAws();
+
+  const v = String(version || "").trim();
+  if (!v) return false;
+
+  const { data, errors } = await client.models.PlayerMaster.list({
+    filter: { version: { eq: v } },
+    limit: 1
+  });
+
+  if (errors?.length) throw new Error(joinErrors(errors));
+  return Array.isArray(data) && data.length > 0;
+}
+
+export async function createPlayerMaster(item) {
+  await initAws();
+
+  const { data, errors } = await client.models.PlayerMaster.create(item);
+  if (errors?.length) throw new Error(joinErrors(errors));
+  return data;
+}
+
+
 
 /* =====================
    Career Save Title 
