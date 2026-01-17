@@ -302,6 +302,22 @@ th.sortable .arrow{ margin-left:6px; color: var(--muted); font-weight:900; }
 /* Dashboard: inline save name editor */
 .save-name-input{ width:100%; font-weight:700; }
 
+.modal.hidden { display:none; }
+.modal { position:fixed; inset:0; z-index:9999; }
+.modal-backdrop { position:absolute; inset:0; background:rgba(0,0,0,0.6); }
+.modal-panel {
+  position:relative;
+  max-width:720px;
+  margin:6vh auto;
+  background:#111;
+  border:1px solid rgba(255,255,255,0.12);
+  border-radius:16px;
+  padding:14px;
+  box-shadow:0 20px 60px rgba(0,0,0,0.55);
+}
+.modal-head { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+
+
 /* =========================
    Pitch view (GRID, auto height, compact)
 ========================= */
