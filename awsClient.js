@@ -199,7 +199,36 @@ export async function searchPlayerMaster(query, want = 8) {
     // Next: name starts with query (typing "j." / "j. b" etc)
     if (nl.startsWith(q)) return 1;
 
-    // Next: s
+    // Next: surname starts with raw query
+    if (sl.startsWith(q)) return 2;
+
+    // Next: contains surname after a space
+    if (surnameQuery && nl.includes(" " + surnameQuery)) return 3;
+    if (nl.includes(" " + q)) return 4;
+
+    return 9;
+  };
+
+  collected.sort((a, b) => {
+    const ra = rank(a);
+    const rb = rank(b);
+    if (ra !== rb) return ra - rb;
+    return String(a?.shortName || "").localeCompare(String(b?.shortName || ""));
+  });
+
+  // De-dupe (in case multiple pages return overlaps)
+  const seen = new Set();
+  const out = [];
+  for (const m of collected) {
+    const id = m?.id || m?.shortName;
+    if (!id || seen.has(id)) continue;
+    seen.add(id);
+    out.push(m);
+    if (out.length >= MAX_RESULTS) break;
+  }
+
+  return out;
+}
 
 
 
