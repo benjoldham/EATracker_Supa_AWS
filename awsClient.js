@@ -181,10 +181,11 @@ async function loadPlayerMasterAll(version = "FC26") {
   // try static JSON next (fast, no AWS). If it fails, fall back to AWS.
   try{
     if (await pmLoadFromJson(version)){
-      // persist into IndexedDB so refreshes are instant
-      pmSaveToIdb(version);
-      return _pmCache;
-    }
+  console.log("[PlayerMaster] Loaded from JSON");
+  pmSaveToIdb(version);
+  return _pmCache;
+}
+
   }catch(e){
     console.warn("[PlayerMaster] JSON load failed, falling back to AWS:", e);
   }
