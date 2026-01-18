@@ -14,49 +14,110 @@ let client = null;
 // -------- PlayerMaster cache (in-memory) --------
 const _pmCache = {
   version: null,
-  items: [],
+
+  // lightweight search index
+  names: [],          // array of nameLower strings
+  byFirstChar: {},    // { "a": [idx, idx...], "j": [...], ".": [...] }
+  meta: [],           // parallel array: minimal object for dropdown (id, shortName, etc.)
+
+  // loading/progress
   loading: null,
+  loadedCount: 0,
+  expectedTotal: 0,
+  lastError: null,
 };
 
 async function loadPlayerMasterAll(version = "FC26") {
-  if (_pmCache.version === version && _pmCache.items.length) return _pmCache.items;
+  if (_pmCache.version === version && _pmCache.names.length) return _pmCache;
   if (_pmCache.loading) return _pmCache.loading;
 
+  // reset progress
+  _pmCache.loadedCount = 0;
+  _pmCache.expectedTotal = 0;
+  _pmCache.lastError = null;
+
   _pmCache.loading = (async () => {
-    const out = [];
-    let nextToken = null;
+    try {
+      let nextToken = null;
 
-    // Pull the entire version set once (18K rows). After that, search is local + instant.
-    for (let i = 0; i < 200; i++) {
-      const resp = await client.models.PlayerMaster.list({
-        filter: { version: { eq: version } },
-        limit: 1000,
-        nextToken,
-      });
+      // reset index
+      _pmCache.version = version;
+      _pmCache.names = [];
+      _pmCache.meta = [];
+      _pmCache.byFirstChar = {};
 
-      const { data, errors } = resp || {};
-      if (errors?.length) throw new Error(joinErrors(errors));
-      if (Array.isArray(data) && data.length) out.push(...data);
+      // Pull the entire version set once.
+      for (let i = 0; i < 200; i++) {
+        const resp = await client.models.PlayerMaster.list({
+          filter: { version: { eq: version } },
+          limit: 1000,
+          nextToken,
+        });
 
-      nextToken = resp?.nextToken || null;
-      if (!nextToken) break;
+        const { data, errors } = resp || {};
+        if (errors?.length) throw new Error(joinErrors(errors));
+
+        if (Array.isArray(data) && data.length) {
+          for (const m of data) {
+            const nl = String(m?.nameLower || "").toLowerCase();
+            if (!nl) continue;
+
+            const idx = _pmCache.names.length;
+            _pmCache.names.push(nl);
+
+            // minimal metadata for dropdown + selection
+            _pmCache.meta.push({
+              id: m?.id,
+              shortName: m?.shortName,
+              playerPositions: m?.playerPositions,
+              overall: m?.overall,
+              potential: m?.potential,
+              age: m?.age,
+              nationalityName: m?.nationalityName,
+              preferredFoot: m?.preferredFoot,
+              // add more fields only if you need them for autopopulate
+            });
+
+            const c = nl[0] || "?";
+            (_pmCache.byFirstChar[c] ||= []).push(idx);
+          }
+
+          _pmCache.loadedCount = _pmCache.names.length;
+        }
+
+        nextToken = resp?.nextToken || null;
+        if (!nextToken) break;
+      }
+
+      _pmCache.loading = null;
+      return _pmCache;
+    } catch (e) {
+      _pmCache.lastError = e;
+      _pmCache.loading = null;
+      throw e;
     }
-
-    _pmCache.version = version;
-    _pmCache.items = out;
-    _pmCache.loading = null;
-    return out;
   })();
 
   return _pmCache.loading;
 }
 
-// Optional: allow app.js to pre-warm the cache on focus
+
 export async function warmPlayerMasterCache(version = "FC26") {
   await initAws();
-  await loadPlayerMasterAll(version);
+  return await loadPlayerMasterAll(version);
 }
 
+
+export function getPlayerMasterCacheStatus() {
+  return {
+    version: _pmCache.version,
+    loaded: _pmCache.names.length > 0,
+    loading: !!_pmCache.loading,
+    loadedCount: _pmCache.loadedCount,
+    expectedTotal: _pmCache.expectedTotal,
+    lastError: _pmCache.lastError ? String(_pmCache.lastError?.message || _pmCache.lastError) : null,
+  };
+}
 
 async function loadOutputs() {
   const res = await fetch("./amplify_outputs.json", { cache: "no-store" });
@@ -189,70 +250,51 @@ export async function searchPlayerMaster(query, want = 8, version = "FC26") {
   await initAws();
 
   const raw = String(query || "").trim().toLowerCase();
+  const q0 = raw.replace(/\s+/g, " ").trim();
 
   // Require 3+ chars, but allow "j." initial searches (2 chars incl dot)
-  const q0 = raw.replace(/\s+/g, " ").trim();
   const isInitialSearch = /^[a-z]\.$/.test(q0);
   if (!isInitialSearch && q0.length < 3) return [];
 
-
   const MAX_RESULTS = Math.max(1, Math.min(25, Number(want) || 8));
 
-  // Load once, then search locally.
-  const items = await loadPlayerMasterAll(version);
+  // Ensure cache loaded (one-time)
+  const cache = await loadPlayerMasterAll(version);
 
-  // Normalize input:
-  // - "J. " -> "j."
-  // - allow searching by surname without requiring initial
   const q = q0;
-  const surnameQuery = q.replace(/^([a-z])\.\s*/, "").trim(); // drop "j. " if present
+  const firstChar = q[0] || "?";
+  const bucket = cache.byFirstChar[firstChar] || [];
 
-  const rank = (m) => {
-    const nl = String(m?.nameLower || "").toLowerCase();
-    const sl = String(m?.surnameLower || "").toLowerCase();
-    const sn = String(m?.shortName || "").toLowerCase();
+  // Filter only within bucket (massive speedup)
+  const hits = [];
+  for (let i = 0; i < bucket.length; i++) {
+    const idx = bucket[i];
+    const nl = cache.names[idx];
 
-    // Best: surname beginsWith typed surname ("bell" => bellingham)
-    if (surnameQuery && sl && sl.startsWith(surnameQuery)) return 0;
-
-    // Next: nameLower beginsWith "j." or "j. b"
-    if (nl && nl.startsWith(q)) return 1;
-
-    // Next: shortName beginsWith q (covers some weird rows)
-    if (sn && sn.startsWith(q)) return 2;
-
-    // Next: name contains " bell"
-    if (surnameQuery && nl.includes(" " + surnameQuery)) return 3;
-    if (nl.includes(" " + q)) return 4;
-
-    return 99;
-  };
-
-  const filtered = [];
-  for (const m of items) {
-    const nl = String(m?.nameLower || "").toLowerCase();
-    const sl = String(m?.surnameLower || "").toLowerCase();
-    const sn = String(m?.shortName || "").toLowerCase();
-
-    if (
-      (sl && sl.startsWith(surnameQuery || q)) ||
-      (nl && (nl.startsWith(q) || nl.includes(" " + (surnameQuery || q)))) ||
-      (sn && sn.includes(q))
-    ) {
-      filtered.push(m);
-      // stop early to keep it snappy even on slow devices
-      if (filtered.length > 400) break;
+    // match: startsWith or contains after space (so "bell" matches "j. bellingham" if user types "bellingham")
+    if (nl.startsWith(q) || nl.includes(" " + q)) {
+      hits.push(cache.meta[idx]);
+      if (hits.length >= 300) break; // early cap
     }
   }
 
-  filtered.sort((a, b) => {
-    const ra = rank(a);
-    const rb = rank(b);
-    if (ra !== rb) return ra - rb;
-    return String(a?.shortName || "").localeCompare(String(b?.shortName || ""));
+  // If bucket is tiny or user typed something like "belli" but first char bucket misses due to punctuation,
+  // do a fallback scan of all names (still capped)
+  if (hits.length < MAX_RESULTS && firstChar === "j" && q.startsWith("j.")) {
+    for (let idx = 0; idx < cache.names.length && hits.length < 300; idx++) {
+      const nl = cache.names[idx];
+      if (nl.startsWith(q)) hits.push(cache.meta[idx]);
+    }
+  }
+
+  // Simple ranking: startsWith beats contains
+  hits.sort((a, b) => {
+    const na = String(a?.shortName || "");
+    const nb = String(b?.shortName || "");
+    return na.localeCompare(nb);
   });
 
-  return filtered.slice(0, MAX_RESULTS);
+  return hits.slice(0, MAX_RESULTS);
 }
 
 
