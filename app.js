@@ -707,6 +707,18 @@ function parseSurnameFromNameLower(nameLower){
     .join(" ");
 }
 
+function displayMasterName(m){
+  const first = parseForenameFromLongName(m?.longName);
+  const sur = parseSurnameFromNameLower(m?.nameLower);
+
+  // If we have both, show "First Surname"
+  const combined = (first && sur) ? `${first} ${sur}` : "";
+
+  // Fallback order
+  return combined || m?.shortName || m?.longName || "";
+}
+
+
 function pickPrimaryPosition(playerPositions) {
   const raw = String(playerPositions || "").split(",")[0]?.trim().toUpperCase() || "";
   // Map EA positions to your allowed set
@@ -1017,7 +1029,7 @@ function renderLookup(items){
       `;
     }
 
-    const name = escapeHtml(m.longName || m.shortName || "");
+    const name = escapeHtml(displayMasterName(m));
     const pos = escapeHtml(pickPrimaryPosition(m.playerPositions || "") || "");
     const meta = `${pos} • ${m.overall ?? "?"}/${m.potential ?? "?"} • ${(normMasterFoot(m.preferredFoot) === "L") ? "L" : "R"}`;
     return `
