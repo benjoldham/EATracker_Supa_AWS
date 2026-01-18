@@ -707,17 +707,32 @@ function parseSurnameFromNameLower(nameLower){
     .join(" ");
 }
 
+function foldNameForCompare(s){
+  return String(s || "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, ""); // strip accents
+}
+
 function displayMasterName(m){
   const first = parseForenameFromLongName(m?.longName);
   const sur = parseSurnameFromNameLower(m?.nameLower);
 
-  // If we have both, show "First Surname"
-  const combined = (first && sur) ? `${first} ${sur}` : "";
+  if (first && sur){
+    // Avoid duplication when nameLower already contains the first name
+    // e.g. "rúben dias" + first "rúben" => "rúben rúben dias"
+    const f = foldNameForCompare(first);
+    const s = foldNameForCompare(sur);
 
-  // Fallback order
-  return combined || m?.shortName || m?.longName || "";
+    if (s === f || s.startsWith(f + " ")){
+      return sur; // already includes forename
+    }
+    return `${first} ${sur}`;
+  }
+
+  return sur || first || m?.shortName || m?.longName || "";
 }
-
 
 function pickPrimaryPosition(playerPositions) {
   const raw = String(playerPositions || "").split(",")[0]?.trim().toUpperCase() || "";
