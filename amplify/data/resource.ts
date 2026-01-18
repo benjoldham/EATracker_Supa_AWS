@@ -15,12 +15,10 @@ const schema = a.schema({
       createdAt: a.datetime(),
     })
         .authorization((allow) => [
-      // Any signed-in user can read PlayerMaster (autocomplete)
-      allow.authenticated().to(["read"]),
+  allow.private().to(["read"]),
+  allow.owner().to(["create", "update", "delete"]),
+]),
 
-      // Only the owner can create/update/delete (seeding & maintenance)
-      allow.owner().to(["create", "update", "delete"]),
-    ]),
 
 
   Player: a
@@ -74,15 +72,13 @@ const schema = a.schema({
     ])
 
     .authorization((allow) => [
-      // Signed-in users (Cognito User Pool) can read for autocomplete
-     allow.private().to(["read"]),
+  // Any signed-in user can read (autocomplete reference data)
+  allow.private().to(["read"]),
 
-     // Allow IAM read as well (optional, but safe)
-     allow.authenticated().to(["read"]),
+  // Only the seeding/owner user can write
+  allow.owner().to(["create", "update", "delete"]),
+])
 
-     // Lock writes down
-     allow.owner().to(["create", "update", "delete"]),
-      ])  
 });
 
 export type Schema = ClientSchema<typeof schema>;
