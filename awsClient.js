@@ -11,6 +11,93 @@ import { generateClient } from "https://esm.sh/aws-amplify@6/data";
 let configured = false;
 let client = null;
 
+// -------- IndexedDB cache (PlayerMaster) --------
+const PM_IDB_DB = "eafc_tracker_cache_v1";
+const PM_IDB_STORE = "kv";
+const PM_IDB_KEY = (version) => `PlayerMasterCache:${String(version || "FC26")}`;
+
+function openPmIdb(){
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(PM_IDB_DB, 1);
+    req.onupgradeneeded = () => {
+      const db = req.result;
+      if (!db.objectStoreNames.contains(PM_IDB_STORE)){
+        db.createObjectStore(PM_IDB_STORE, { keyPath: "k" });
+      }
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error || new Error("IndexedDB open failed"));
+  });
+}
+
+async function idbGet(k){
+  const db = await openPmIdb();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(PM_IDB_STORE, "readonly");
+    const store = tx.objectStore(PM_IDB_STORE);
+    const req = store.get(k);
+    req.onsuccess = () => resolve(req.result?.v ?? null);
+    req.onerror = () => reject(req.error || new Error("IndexedDB get failed"));
+  });
+}
+
+async function idbSet(k, v){
+  const db = await openPmIdb();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(PM_IDB_STORE, "readwrite");
+    const store = tx.objectStore(PM_IDB_STORE);
+    store.put({ k, v, t: Date.now() });
+    tx.oncomplete = () => resolve(true);
+    tx.onerror = () => reject(tx.error || new Error("IndexedDB set failed"));
+  });
+}
+
+// Load PlayerMaster cache from IndexedDB into memory (returns true if loaded)
+async function pmLoadFromIdb(version){
+  try{
+    const payload = await idbGet(PM_IDB_KEY(version));
+    if (!payload || payload.cacheSchema !== 1) return false;
+
+    // hydrate in-memory cache
+    _pmCache.version = payload.version || version;
+    _pmCache.names = Array.isArray(payload.names) ? payload.names : [];
+    _pmCache.meta = Array.isArray(payload.meta) ? payload.meta : [];
+
+    // rebuild bucket index (fast)
+    _pmCache.byFirstChar = {};
+    for (let idx = 0; idx < _pmCache.names.length; idx++){
+      const nl = _pmCache.names[idx];
+      const c = (nl && nl[0]) ? nl[0] : "?";
+      (_pmCache.byFirstChar[c] ||= []).push(idx);
+    }
+
+    _pmCache.loadedCount = _pmCache.names.length;
+    _pmCache.lastError = null;
+    _pmCache.loading = null;
+
+    return _pmCache.names.length > 0;
+  }catch(e){
+    // if IDB blocked/unavailable, silently ignore and fall back to network
+    return false;
+  }
+}
+
+async function pmSaveToIdb(version){
+  try{
+    const payload = {
+      cacheSchema: 1,
+      version,
+      savedAt: Date.now(),
+      names: _pmCache.names,
+      meta: _pmCache.meta,
+    };
+    await idbSet(PM_IDB_KEY(version), payload);
+  }catch{
+    // ignore (private mode / quota / blocked)
+  }
+}
+
+
 // -------- PlayerMaster cache (in-memory) --------
 const _pmCache = {
   version: null,
@@ -28,8 +115,14 @@ const _pmCache = {
 };
 
 async function loadPlayerMasterAll(version = "FC26") {
+  // already in-memory
   if (_pmCache.version === version && _pmCache.names.length) return _pmCache;
   if (_pmCache.loading) return _pmCache.loading;
+
+  // try IndexedDB first (instant on refresh)
+  if (await pmLoadFromIdb(version)){
+    return _pmCache;
+  }
 
   // reset progress
   _pmCache.loadedCount = 0;
@@ -66,17 +159,20 @@ async function loadPlayerMasterAll(version = "FC26") {
             _pmCache.names.push(nl);
 
             // minimal metadata for dropdown + selection
-            _pmCache.meta.push({
+              _pmCache.meta.push({
               id: m?.id,
               shortName: m?.shortName,
+              nameLower: m?.nameLower,
+              longName: m?.longName || m?.long_name || "",
+
               playerPositions: m?.playerPositions,
               overall: m?.overall,
               potential: m?.potential,
               age: m?.age,
               nationalityName: m?.nationalityName,
               preferredFoot: m?.preferredFoot,
-              // add more fields only if you need them for autopopulate
             });
+
 
             const c = nl[0] || "?";
             (_pmCache.byFirstChar[c] ||= []).push(idx);
@@ -90,7 +186,13 @@ async function loadPlayerMasterAll(version = "FC26") {
       }
 
       _pmCache.loading = null;
+
+      // Persist for future refreshes (avoids re-downloading 18K rows)
+      pmSaveToIdb(version);
+
       return _pmCache;
+
+
     } catch (e) {
       _pmCache.lastError = e;
       _pmCache.loading = null;
