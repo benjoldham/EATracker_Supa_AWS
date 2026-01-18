@@ -11,6 +11,53 @@ import { generateClient } from "https://esm.sh/aws-amplify@6/data";
 let configured = false;
 let client = null;
 
+// -------- PlayerMaster cache (in-memory) --------
+const _pmCache = {
+  version: null,
+  items: [],
+  loading: null,
+};
+
+async function loadPlayerMasterAll(version = "FC26") {
+  if (_pmCache.version === version && _pmCache.items.length) return _pmCache.items;
+  if (_pmCache.loading) return _pmCache.loading;
+
+  _pmCache.loading = (async () => {
+    const out = [];
+    let nextToken = null;
+
+    // Pull the entire version set once (18K rows). After that, search is local + instant.
+    for (let i = 0; i < 200; i++) {
+      const resp = await client.models.PlayerMaster.list({
+        filter: { version: { eq: version } },
+        limit: 1000,
+        nextToken,
+      });
+
+      const { data, errors } = resp || {};
+      if (errors?.length) throw new Error(joinErrors(errors));
+      if (Array.isArray(data) && data.length) out.push(...data);
+
+      nextToken = resp?.nextToken || null;
+      if (!nextToken) break;
+    }
+
+    _pmCache.version = version;
+    _pmCache.items = out;
+    _pmCache.loading = null;
+    return out;
+  })();
+
+  return _pmCache.loading;
+}
+
+// Optional: allow app.js to pre-warm the cache on focus
+export async function warmPlayerMasterCache(version = "FC26") {
+  await initAws();
+  await loadPlayerMasterAll(version);
+}
+
+
 async function loadOutputs() {
   const res = await fetch("./amplify_outputs.json", { cache: "no-store" });
   if (!res.ok) throw new Error("Failed to load amplify_outputs.json");
@@ -138,99 +185,75 @@ export async function deletePlayer(id) {
    PLAYER MASTER (Autocomplete)
 ===================== */
 
-export async function searchPlayerMaster(query, want = 8) {
+export async function searchPlayerMaster(query, want = 8, version = "FC26") {
   await initAws();
 
   const raw = String(query || "").trim().toLowerCase();
-  if (raw.length < 2) return [];
+
+  // Require 3+ chars, but allow "j." initial searches (2 chars incl dot)
+  const q0 = raw.replace(/\s+/g, " ").trim();
+  const isInitialSearch = /^[a-z]\.$/.test(q0);
+  if (!isInitialSearch && q0.length < 3) return [];
+
 
   const MAX_RESULTS = Math.max(1, Math.min(25, Number(want) || 8));
 
+  // Load once, then search locally.
+  const items = await loadPlayerMasterAll(version);
+
   // Normalize input:
   // - "J. " -> "j."
-  // - "J. B" -> surnameQuery = "b"
-  // - "Bell" -> surnameQuery = "bell"
-  const q = raw.replace(/\s+/g, " ").trim();
+  // - allow searching by surname without requiring initial
+  const q = q0;
   const surnameQuery = q.replace(/^([a-z])\.\s*/, "").trim(); // drop "j. " if present
 
-  // Build filter:
-  // - beginsWith surnameLower for proper last-name search (bellingham)
-  // - beginsWith nameLower for "j." style search
-  // - contains on nameLower for cases where surnameLower was seeded as full name (e.g. "bruno fernandes")
-  const or = [
-    { surnameLower: { beginsWith: q } },
-    { nameLower: { beginsWith: q } },
-    { nameLower: { contains: " " + q } },
-  ];
-
-  if (surnameQuery && surnameQuery.length >= 2 && surnameQuery !== q) {
-    or.push({ surnameLower: { beginsWith: surnameQuery } });
-    or.push({ nameLower: { contains: " " + surnameQuery } });
-  }
-
-  // IMPORTANT: list+filter is paginated. We must keep paging until we gather enough matches.
-  let nextToken = null;
-  const collected = [];
-
-  for (let page = 0; page < 15 && collected.length < MAX_RESULTS * 6; page++) {
-    const resp = await client.models.PlayerMaster.list({
-      filter: { or },
-      limit: 200,
-      nextToken,
-    });
-
-    const { data, errors } = resp || {};
-    if (errors?.length) throw new Error(joinErrors(errors));
-
-    if (Array.isArray(data) && data.length) collected.push(...data);
-
-    nextToken = resp?.nextToken || null;
-    if (!nextToken) break;
-  }
-
-  // Rank results
   const rank = (m) => {
     const nl = String(m?.nameLower || "").toLowerCase();
     const sl = String(m?.surnameLower || "").toLowerCase();
+    const sn = String(m?.shortName || "").toLowerCase();
 
-    // Best: surname starts with surnameQuery (typing "bell" should find "j. bellingham")
-    if (surnameQuery && sl.startsWith(surnameQuery)) return 0;
+    // Best: surname beginsWith typed surname ("bell" => bellingham)
+    if (surnameQuery && sl && sl.startsWith(surnameQuery)) return 0;
 
-    // Next: name starts with query (typing "j." / "j. b" etc)
-    if (nl.startsWith(q)) return 1;
+    // Next: nameLower beginsWith "j." or "j. b"
+    if (nl && nl.startsWith(q)) return 1;
 
-    // Next: surname starts with raw query
-    if (sl.startsWith(q)) return 2;
+    // Next: shortName beginsWith q (covers some weird rows)
+    if (sn && sn.startsWith(q)) return 2;
 
-    // Next: contains surname after a space
+    // Next: name contains " bell"
     if (surnameQuery && nl.includes(" " + surnameQuery)) return 3;
     if (nl.includes(" " + q)) return 4;
 
-    return 9;
+    return 99;
   };
 
-  collected.sort((a, b) => {
+  const filtered = [];
+  for (const m of items) {
+    const nl = String(m?.nameLower || "").toLowerCase();
+    const sl = String(m?.surnameLower || "").toLowerCase();
+    const sn = String(m?.shortName || "").toLowerCase();
+
+    if (
+      (sl && sl.startsWith(surnameQuery || q)) ||
+      (nl && (nl.startsWith(q) || nl.includes(" " + (surnameQuery || q)))) ||
+      (sn && sn.includes(q))
+    ) {
+      filtered.push(m);
+      // stop early to keep it snappy even on slow devices
+      if (filtered.length > 400) break;
+    }
+  }
+
+  filtered.sort((a, b) => {
     const ra = rank(a);
     const rb = rank(b);
     if (ra !== rb) return ra - rb;
     return String(a?.shortName || "").localeCompare(String(b?.shortName || ""));
   });
 
-  // De-dupe (in case multiple pages return overlaps)
-  const seen = new Set();
-  const out = [];
-  for (const m of collected) {
-    const id = m?.id || m?.shortName;
-    if (!id || seen.has(id)) continue;
-    seen.add(id);
-    out.push(m);
-    if (out.length >= MAX_RESULTS) break;
-  }
-
-  return out;
+  return filtered.slice(0, MAX_RESULTS);
 }
-
-
 
 
 export async function playerMasterHasVersion(version) {
