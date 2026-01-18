@@ -304,6 +304,20 @@
               "isRequired": true,
               "attributes": []
             },
+            "playerId": {
+              "name": "playerId",
+              "isArray": false,
+              "type": "Int",
+              "isRequired": true,
+              "attributes": []
+            },
+            "longName": {
+              "name": "longName",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false,
+              "attributes": []
+            },
             "surnameLower": {
               "name": "surnameLower",
               "isArray": false,
