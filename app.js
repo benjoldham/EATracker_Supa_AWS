@@ -1032,7 +1032,11 @@ async function runLookup(){
   }
 
 
-  if (qLower === lastLookupQ) return;
+    // If we are mid-cache-load, we need to allow polling even if the query hasn't changed
+  const st0 = aws.getPlayerMasterCacheStatus?.();
+  const isPollingWhileLoading = !!(st0?.loading && !st0?.loaded);
+
+  if (!isPollingWhileLoading && qLower === lastLookupQ) return;
   lastLookupQ = qLower;
 
   try{
@@ -1053,7 +1057,7 @@ async function runLookup(){
       return;
     }
 
-    const results = await aws.searchPlayerMaster?.(qLower, 8);
+    const results = await aws.searchPlayerMaster?.(qLower, 50);
 
 
     console.log("[lookup]", { qLower, got: Array.isArray(results) ? results.length : results });
