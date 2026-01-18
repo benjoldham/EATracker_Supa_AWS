@@ -270,9 +270,14 @@ td .cell-contain.hidden{
     background: rgba(20,20,20,0.98);
     border: 1px solid rgba(255,255,255,0.10);
     border-radius: 12px;
-    overflow: hidden;
+    /* fixed height + scroll */
+    max-height: 320px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
     box-shadow: 0 10px 30px rgba(0,0,0,0.35);
   }
+
+
   .suggestions.hidden{ display:none; }
   .suggestions button{
     width: 100%;
