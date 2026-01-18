@@ -1011,10 +1011,14 @@ async function runLookup(){
   const q = String(fLookup?.value || "").trim();
   const qLower = q.toLowerCase();
 
-  if (qLower.length < 2){
+    // Require 3+ chars to reduce work, but allow "j." initial searches (2 chars incl dot)
+  const isInitialSearch = /^[a-z]\.$/.test(qLower);
+  if (!isInitialSearch && qLower.length < 3){
     hideLookup();
     return;
   }
+
+
   if (qLower === lastLookupQ) return;
   lastLookupQ = qLower;
 
@@ -1035,7 +1039,8 @@ async function runLookup(){
 if (fLookup){
   fLookup.addEventListener("input", () => {
     clearTimeout(lookupTimer);
-    lookupTimer = setTimeout(runLookup, 120);
+    lookupTimer = setTimeout(runLookup, 220);
+
   });
 
   fLookup.addEventListener("keydown", (e) => {
@@ -1047,11 +1052,14 @@ if (fLookup){
     setTimeout(hideLookup, 150);
   });
 
-  fLookup.addEventListener("focus", () => {
-    // if user focuses again, try render current
-    clearTimeout(lookupTimer);
-    lookupTimer = setTimeout(runLookup, 80);
-  });
+  fLookup.addEventListener("focus", async () => {
+  // Preload PlayerMaster once per session (makes typeahead instant)
+  try { await aws.warmPlayerMasterCache?.("FC26"); } catch(e){ console.warn(e); }
+
+  clearTimeout(lookupTimer);
+    lookupTimer = setTimeout(runLookup, 220);
+});
+
 }
 
 
