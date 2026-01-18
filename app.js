@@ -1662,9 +1662,12 @@ btnAdd.addEventListener("click", async ()=>{
     clearForm();
     render();
   }catch(err){
-    alert(err?.message || String(err));
-    console.error(err);
+  console.error(err);
+  if (lookupBox){
+    lookupBox.innerHTML = `<div class="s-err">Lookup error: ${escapeHtml(err?.message || String(err))}</div>`;
+    lookupBox.classList.remove("hidden");
   }
+}
 });
 
 btnUpdate.addEventListener("click", async ()=>{
