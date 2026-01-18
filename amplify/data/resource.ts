@@ -15,7 +15,7 @@ const schema = a.schema({
       createdAt: a.datetime(),
     })
         .authorization((allow) => [
-  allow.private().to(["read"]),
+  allow.authenticated().to(["read"]),
   allow.owner().to(["create", "update", "delete"]),
 ]),
 
@@ -73,7 +73,7 @@ const schema = a.schema({
 
     .authorization((allow) => [
   // Any signed-in user can read (autocomplete reference data)
-  allow.private().to(["read"]),
+  allow.authenticated().to(["read"]),
 
   // Only the seeding/owner user can write
   allow.owner().to(["create", "update", "delete"]),
@@ -87,7 +87,6 @@ export const data = defineData({
   schema,
   authorizationModes: {
     defaultAuthorizationMode: "userPool",
-    additionalAuthorizationModes: ["iam"],
   },
 });
 
