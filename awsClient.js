@@ -10,8 +10,6 @@ import { generateClient } from "https://esm.sh/aws-amplify@6/data";
 
 let configured = false;
 let client = null;
-let clientIam = null;
-
 
 async function loadOutputs() {
   const res = await fetch("./amplify_outputs.json", { cache: "no-store" });
@@ -24,7 +22,6 @@ export async function initAws() {
   const outputs = await loadOutputs();
   Amplify.configure(outputs);
   client = generateClient({ authMode: "userPool" }); // default for the app
-  clientIam = generateClient({ authMode: "iam" });
   configured = true;
 }
 
@@ -157,7 +154,7 @@ export async function searchPlayerMaster(query, want = 8) {
 
   // We page because an index query can still return many matches (e.g. "a")
   for (let page = 0; page < 5 && out.length < MAX_RESULTS; page++) {
-    const resp = await clientIam.models.PlayerMaster.listPlayerMasterByNameLowerAndShortName({
+    const resp = await client.models.PlayerMaster.listPlayerMasterByNameLowerAndShortName({
       nameLower: q,
       limit: Math.min(50, MAX_RESULTS),
       nextToken,
