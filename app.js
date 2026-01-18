@@ -1020,6 +1020,7 @@ async function runLookup(){
 
   try{
     const results = await aws.searchPlayerMaster?.(qLower, 8);
+    console.log("[lookup]", { qLower, got: Array.isArray(results) ? results.length : results });
     renderLookup(Array.isArray(results) ? results : []);
     }catch(err){
     console.error(err);
