@@ -53,6 +53,8 @@ const schema = a.schema({
       // Raw CSV columns (keep them “dataset-native”)
       shortName: a.string().required(),          // short_name
       nameLower: a.string().required(),          // shortName lowercased for search
+      playerId: a.integer().required(),          // player_id (unique per dataset)
+      longName: a.string(),                      // long_name
       surnameLower: a.string(),                  // surname-only lowercased for search (e.g. "stones")
       playerPositions: a.string().required(),    // player_positions (e.g. "CM,CDM")
       overall: a.integer(),                      // overall
