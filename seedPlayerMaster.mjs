@@ -240,7 +240,8 @@ console.log("Raw header cells:", rows[0]);
   console.log("Normalized headers:", headers);
 
   const idx = (name) => headers.indexOf(name);
-
+  const iPid   = idx("player_id");
+  const iLong  = idx("long_name");
   const iShort = idx("short_name");
   const iPos   = idx("player_positions");
   const iOvr   = idx("overall");
@@ -250,24 +251,32 @@ console.log("Raw header cells:", rows[0]);
   const iNat   = idx("nationality_name");
   const iFoot  = idx("preferred_foot");
 
-  if (iShort < 0 || iPos < 0) {
-    throw new Error("CSV must include headers: short_name and player_positions");
+  if (iPid < 0 || iShort < 0 || iPos < 0) {
+  throw new Error("CSV must include headers: player_id, short_name, player_positions");
   }
+
 
   const items = [];
   for (let r = 1; r < rows.length; r++){
     const line = rows[r];
+    const playerId = toInt(line[iPid]);
+    if (!playerId) continue; // skip bad rows
+
     const shortName = String(line[iShort] || "").trim();
     if (!shortName) continue;
+
+    const longName = String(line[iLong] || "").trim() || null;
 
     const nameLower = shortName.toLowerCase();
     const surnameLower = makeSurnameLower(shortName);
 
-    // Deterministic primary key: prevents duplicates if you rerun the script
-    const id = `PM|${VERSION}|${nameLower}`;
+    // ✅ Unique primary key (no collisions)
+    const id = `PM|${VERSION}|${playerId}`;
 
     items.push({
       id,
+      playerId,
+      longName,
       shortName,
       nameLower,
       surnameLower,
