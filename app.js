@@ -93,7 +93,7 @@ function escapeHtml(str){
     .replaceAll("&","&amp;")
     .replaceAll("<","&lt;")
     .replaceAll(">","&gt;")
-    .replaceAll('"',"quot;")
+    .replaceAll('"',"&quot;")
     .replaceAll("'","&#039;");
 }
 
@@ -981,7 +981,7 @@ function renderLookup(items){
     return;
   }
 
-    lookupBox.innerHTML = items.map((m, i) => {
+  lookupBox.innerHTML = items.map((m, i) => {
     if (m && m.__loading){
       const msg = escapeHtml(m.shortName || "Loading player database…");
       const meta = escapeHtml(m.__meta || "");
@@ -1004,7 +1004,6 @@ function renderLookup(items){
     `;
   }).join("");
 
-
   lookupBox.classList.remove("hidden");
 
   // click handler (event delegation)
@@ -1019,6 +1018,7 @@ function renderLookup(items){
     hideLookup();
   };
 }
+
 
 async function runLookup(){
   const q = String(fLookup?.value || "").trim();
@@ -1037,16 +1037,25 @@ async function runLookup(){
 
   try{
 
-        const st = aws.getPlayerMasterCacheStatus?.();
+        // Kick off cache load (non-blocking) so status becomes "loading" immediately.
+    aws.warmPlayerMasterCache?.("FC26").catch(console.warn);
+
+    const st = aws.getPlayerMasterCacheStatus?.();
     if (st?.loading && !st?.loaded){
       const meta = st.loadedCount
         ? `Loaded ${st.loadedCount.toLocaleString("en-GB")} players…`
         : `Loading player database…`;
       renderLookup([{ __loading: true, shortName: "Loading player database…", __meta: meta }]);
+
+      // Keep polling while it loads, so the UI updates and results appear automatically.
+      clearTimeout(lookupTimer);
+      lookupTimer = setTimeout(runLookup, 300);
       return;
     }
 
     const results = await aws.searchPlayerMaster?.(qLower, 8);
+
+
     console.log("[lookup]", { qLower, got: Array.isArray(results) ? results.length : results });
     renderLookup(Array.isArray(results) ? results : []);
     }catch(err){
@@ -1077,7 +1086,7 @@ if (fLookup){
 
   fLookup.addEventListener("focus", async () => {
   // Preload PlayerMaster once per session (makes typeahead instant)
-  try { await aws.warmPlayerMasterCache?.("FC26"); } catch(e){ console.warn(e); }
+  aws.warmPlayerMasterCache?.("FC26").catch(console.warn);
 
   clearTimeout(lookupTimer);
     lookupTimer = setTimeout(runLookup, 220);
