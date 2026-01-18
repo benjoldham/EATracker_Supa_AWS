@@ -1015,10 +1015,21 @@ function renderLookup(items){
     const chosen = items[idx];
     if (chosen && chosen.__loading) return;
     applyMasterToForm(chosen);
-    if (fLookup) fLookup.value = chosen?.shortName || "";
+
+    // Clear lookup so suggestions fully disengage
+    if (fLookup){
+      fLookup.value = "";
+    }
+
+    // Reset lookup state so it doesn't immediately reopen
+    lastLookupQ = "";
+    clearTimeout(lookupTimer);
+
+    // Hide suggestions
     hideLookup();
-  };
-}
+
+      };
+    }
 
 
 async function runLookup(){
