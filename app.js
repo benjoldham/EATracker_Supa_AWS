@@ -686,6 +686,27 @@ function splitShortName(shortName) {
   return { firstName: parts.slice(0, -1).join(" "), surname: parts[parts.length - 1] };
 }
 
+function parseForenameFromLongName(longName){
+  const s = String(longName || "").trim();
+  if (!s) return "";
+  return s.split(/\s+/)[0] || "";
+}
+
+function parseSurnameFromNameLower(nameLower){
+  const s = String(nameLower || "").trim();
+  if (!s) return "";
+
+  // remove leading "j. " / "f. " etc
+  const stripped = s.replace(/^[a-z]\.\s+/i, "").trim();
+
+  // Title Case each token
+  return stripped
+    .split(/\s+/)
+    .filter(Boolean)
+    .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
+}
+
 function pickPrimaryPosition(playerPositions) {
   const raw = String(playerPositions || "").split(",")[0]?.trim().toUpperCase() || "";
   // Map EA positions to your allowed set
@@ -707,10 +728,12 @@ function applyMasterToForm(m) {
   if (!m) return;
 
   // your PlayerMaster fields from schema: shortName, playerPositions, overall, potential, preferredFoot
-  const { firstName, surname } = splitShortName(m.shortName);
+  const firstName = parseForenameFromLongName(m.longName);
+  const surname = parseSurnameFromNameLower(m.nameLower);
 
   if (fFirst){ fFirst.value = firstName; setAutoBadge(autoFirst, !!firstName); }
   if (fSurname){ fSurname.value = surname; setAutoBadge(autoSurname, !!surname); }
+
 
   const pos = pickPrimaryPosition(m.playerPositions);
   if (fPos && pos && POS_ORDER.includes(pos)){
@@ -994,7 +1017,7 @@ function renderLookup(items){
       `;
     }
 
-    const name = escapeHtml(m.shortName || "");
+    const name = escapeHtml(m.longName || m.shortName || "");
     const pos = escapeHtml(pickPrimaryPosition(m.playerPositions || "") || "");
     const meta = `${pos} • ${m.overall ?? "?"}/${m.potential ?? "?"} • ${(normMasterFoot(m.preferredFoot) === "L") ? "L" : "R"}`;
     return `
