@@ -1021,10 +1021,14 @@ async function runLookup(){
   try{
     const results = await aws.searchPlayerMaster?.(qLower, 8);
     renderLookup(Array.isArray(results) ? results : []);
-  }catch(err){
+    }catch(err){
     console.error(err);
-    hideLookup();
+    if (lookupBox){
+      lookupBox.innerHTML = `<div class="s-err">Lookup error: ${escapeHtml(err?.message || String(err))}</div>`;
+      lookupBox.classList.remove("hidden");
+    }
   }
+
 }
 
 if (fLookup){
