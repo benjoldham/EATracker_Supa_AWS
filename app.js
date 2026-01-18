@@ -966,6 +966,7 @@ fPotMax.addEventListener("input", ()=>setAutoBadge(autoPotMax,false));
 
 let lookupTimer = null;
 let lastLookupQ = "";
+let lookupWasLoading = false;
 
 function hideLookup(){
   if (!lookupBox) return;
@@ -1031,13 +1032,19 @@ async function runLookup(){
     return;
   }
 
-
-    // If we are mid-cache-load, we need to allow polling even if the query hasn't changed
   const st0 = aws.getPlayerMasterCacheStatus?.();
   const isPollingWhileLoading = !!(st0?.loading && !st0?.loaded);
 
+  // If we just finished loading, we MUST re-run once to replace the loading row with results
+  if (lookupWasLoading && !isPollingWhileLoading){
+    lookupWasLoading = false;
+    lastLookupQ = ""; // bust the "same query" guard
+  }
+  if (isPollingWhileLoading) lookupWasLoading = true;
+
   if (!isPollingWhileLoading && qLower === lastLookupQ) return;
   lastLookupQ = qLower;
+
 
   try{
 
