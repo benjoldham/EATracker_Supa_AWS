@@ -73,11 +73,13 @@ const schema = a.schema({
       index("nameLower").sortKeys(["shortName"]),
     ])
     .authorization((allow) => [
-      // Your existing data is owner-only; keep that for now.
-      // This means only YOUR login can read the master dataset.
-      // If later you want all users to read it, we’ll loosen this rule safely.
-      allow.owner(),
-    ]),
+  // any signed-in user can read for autocomplete
+  allow.private().to(["read"]),
+
+  // writes remain restricted
+  allow.owner().to(["create", "update", "delete"]),
+])
+,
   
 });
 
