@@ -144,28 +144,26 @@ export async function searchPlayerMaster(query, want = 8) {
   const q = String(query || "").trim().toLowerCase();
   if (q.length < 2) return [];
 
-  const out = [];
-  let nextToken = null;
-
-  // Scan in pages until we collect enough matches.
-  // Safety cap so we don't scan forever on every keystroke.
-  const PAGE_EVAL_LIMIT = 250;     // items evaluated per request
-  const MAX_PAGES = 10;            // max scan pages per search
   const MAX_RESULTS = Math.max(1, Math.min(25, Number(want) || 8));
 
-  for (let page = 0; page < MAX_PAGES && out.length < MAX_RESULTS; page++) {
-    const resp = await client.models.PlayerMaster.list({
-      filter: { or: [ { nameLower: { beginsWith: q } }, { surnameLower: { beginsWith: q } } ] },
-      limit: PAGE_EVAL_LIMIT,
-      nextToken
+  // Use the GSI-backed query (fast + complete) instead of scanning.
+  // This index exists per your model introspection:
+  // playerMastersByNameLowerAndShortName (nameLower, shortName)
+  let nextToken = null;
+  const out = [];
+
+  // We page because an index query can still return many matches (e.g. "a")
+  for (let page = 0; page < 5 && out.length < MAX_RESULTS; page++) {
+    const resp = await client.models.PlayerMaster.listPlayerMasterByNameLowerAndShortName({
+      nameLower: q,
+      limit: Math.min(50, MAX_RESULTS),
+      nextToken,
     });
 
     const { data, errors } = resp || {};
     if (errors?.length) throw new Error(joinErrors(errors));
 
-    if (Array.isArray(data) && data.length) {
-      out.push(...data);
-    }
+    if (Array.isArray(data) && data.length) out.push(...data);
 
     nextToken = resp?.nextToken || null;
     if (!nextToken) break;
@@ -173,6 +171,7 @@ export async function searchPlayerMaster(query, want = 8) {
 
   return out.slice(0, MAX_RESULTS);
 }
+
 
 
 export async function playerMasterHasVersion(version) {
