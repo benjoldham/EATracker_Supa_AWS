@@ -146,30 +146,41 @@ export async function searchPlayerMaster(query, want = 8) {
 
   const MAX_RESULTS = Math.max(1, Math.min(25, Number(want) || 8));
 
-  // Use the GSI-backed query (fast + complete) instead of scanning.
-  // This index exists per your model introspection:
-  // playerMastersByNameLowerAndShortName (nameLower, shortName)
-  let nextToken = null;
-  const out = [];
+  // Prefix search via filter. This supports typing ("bel", "belli", etc).
+  // NOTE: This is not an exact-partition-key query; it will work with your current data shape.
+  const { data, errors } = await client.models.PlayerMaster.list({
+    filter: {
+      or: [
+        { nameLower: { beginsWith: q } },
+        { surnameLower: { beginsWith: q } },
+      ],
+    },
+    limit: Math.min(50, MAX_RESULTS * 3), // overfetch a bit so ranking feels good
+  });
 
-  // We page because an index query can still return many matches (e.g. "a")
-  for (let page = 0; page < 5 && out.length < MAX_RESULTS; page++) {
-    const resp = await client.models.PlayerMaster.listPlayerMasterByNameLowerAndShortName({
-      nameLower: q,
-      limit: Math.min(50, MAX_RESULTS),
-      nextToken,
-    });
+  if (errors?.length) throw new Error(joinErrors(errors));
 
-    const { data, errors } = resp || {};
-    if (errors?.length) throw new Error(joinErrors(errors));
+  const items = Array.isArray(data) ? data : [];
 
-    if (Array.isArray(data) && data.length) out.push(...data);
+  // Rank: startsWith nameLower first, then startsWith surnameLower, then contains.
+  const rank = (m) => {
+    const nl = String(m?.nameLower || "").toLowerCase();
+    const sl = String(m?.surnameLower || "").toLowerCase();
+    if (nl.startsWith(q)) return 0;
+    if (sl.startsWith(q)) return 1;
+    if (nl.includes(q)) return 2;
+    if (sl.includes(q)) return 3;
+    return 9;
+  };
 
-    nextToken = resp?.nextToken || null;
-    if (!nextToken) break;
-  }
+  items.sort((a, b) => {
+    const ra = rank(a);
+    const rb = rank(b);
+    if (ra !== rb) return ra - rb;
+    return String(a?.shortName || "").localeCompare(String(b?.shortName || ""));
+  });
 
-  return out.slice(0, MAX_RESULTS);
+  return items.slice(0, MAX_RESULTS);
 }
 
 
