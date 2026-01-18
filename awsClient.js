@@ -141,47 +141,66 @@ export async function deletePlayer(id) {
 export async function searchPlayerMaster(query, want = 8) {
   await initAws();
 
-  const q = String(query || "").trim().toLowerCase();
-  if (q.length < 2) return [];
+  const raw = String(query || "").trim().toLowerCase();
+  if (raw.length < 2) return [];
 
   const MAX_RESULTS = Math.max(1, Math.min(25, Number(want) || 8));
 
-  // Prefix search via filter. This supports typing ("bel", "belli", etc).
-  // NOTE: This is not an exact-partition-key query; it will work with your current data shape.
-  const { data, errors } = await client.models.PlayerMaster.list({
-    filter: {
-      or: [
-        { nameLower: { beginsWith: q } },
-        { surnameLower: { beginsWith: q } },
-      ],
-    },
-    limit: Math.min(50, MAX_RESULTS * 3), // overfetch a bit so ranking feels good
-  });
+  // Normalize input:
+  // - "J. " -> "j."
+  // - "J. B" -> surnameQuery = "b"
+  // - "Bell" -> surnameQuery = "bell"
+  const q = raw.replace(/\s+/g, " ").trim();
+  const surnameQuery = q.replace(/^([a-z])\.\s*/, "").trim(); // drop "j. " if present
 
-  if (errors?.length) throw new Error(joinErrors(errors));
+  // Build filter:
+  // - beginsWith surnameLower for proper last-name search (bellingham)
+  // - beginsWith nameLower for "j." style search
+  // - contains on nameLower for cases where surnameLower was seeded as full name (e.g. "bruno fernandes")
+  const or = [
+    { surnameLower: { beginsWith: q } },
+    { nameLower: { beginsWith: q } },
+    { nameLower: { contains: " " + q } },
+  ];
 
-  const items = Array.isArray(data) ? data : [];
+  if (surnameQuery && surnameQuery.length >= 2 && surnameQuery !== q) {
+    or.push({ surnameLower: { beginsWith: surnameQuery } });
+    or.push({ nameLower: { contains: " " + surnameQuery } });
+  }
 
-  // Rank: startsWith nameLower first, then startsWith surnameLower, then contains.
+  // IMPORTANT: list+filter is paginated. We must keep paging until we gather enough matches.
+  let nextToken = null;
+  const collected = [];
+
+  for (let page = 0; page < 15 && collected.length < MAX_RESULTS * 6; page++) {
+    const resp = await client.models.PlayerMaster.list({
+      filter: { or },
+      limit: 200,
+      nextToken,
+    });
+
+    const { data, errors } = resp || {};
+    if (errors?.length) throw new Error(joinErrors(errors));
+
+    if (Array.isArray(data) && data.length) collected.push(...data);
+
+    nextToken = resp?.nextToken || null;
+    if (!nextToken) break;
+  }
+
+  // Rank results
   const rank = (m) => {
     const nl = String(m?.nameLower || "").toLowerCase();
     const sl = String(m?.surnameLower || "").toLowerCase();
-    if (nl.startsWith(q)) return 0;
-    if (sl.startsWith(q)) return 1;
-    if (nl.includes(q)) return 2;
-    if (sl.includes(q)) return 3;
-    return 9;
-  };
 
-  items.sort((a, b) => {
-    const ra = rank(a);
-    const rb = rank(b);
-    if (ra !== rb) return ra - rb;
-    return String(a?.shortName || "").localeCompare(String(b?.shortName || ""));
-  });
+    // Best: surname starts with surnameQuery (typing "bell" should find "j. bellingham")
+    if (surnameQuery && sl.startsWith(surnameQuery)) return 0;
 
-  return items.slice(0, MAX_RESULTS);
-}
+    // Next: name starts with query (typing "j." / "j. b" etc)
+    if (nl.startsWith(q)) return 1;
+
+    // Next: s
+
 
 
 
