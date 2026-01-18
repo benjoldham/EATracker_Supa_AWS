@@ -111,7 +111,7 @@ export async function warmPlayerMasterCache(version = "FC26") {
 export function getPlayerMasterCacheStatus() {
   return {
     version: _pmCache.version,
-    loaded: _pmCache.names.length > 0,
+    loaded: !_pmCache.loading && _pmCache.names.length > 0,
     loading: !!_pmCache.loading,
     loadedCount: _pmCache.loadedCount,
     expectedTotal: _pmCache.expectedTotal,
@@ -262,28 +262,34 @@ export async function searchPlayerMaster(query, want = 8, version = "FC26") {
   const cache = await loadPlayerMasterAll(version);
 
   const q = q0;
-  const firstChar = q[0] || "?";
-  const bucket = cache.byFirstChar[firstChar] || [];
 
-  // Filter only within bucket (massive speedup)
   const hits = [];
-  for (let i = 0; i < bucket.length; i++) {
-    const idx = bucket[i];
-    const nl = cache.names[idx];
 
-    // match: startsWith or contains after space (so "bell" matches "j. bellingham" if user types "bellingham")
-    if (nl.startsWith(q) || nl.includes(" " + q)) {
-      hits.push(cache.meta[idx]);
-      if (hits.length >= 300) break; // early cap
-    }
-  }
-
-  // If bucket is tiny or user typed something like "belli" but first char bucket misses due to punctuation,
-  // do a fallback scan of all names (still capped)
-  if (hits.length < MAX_RESULTS && firstChar === "j" && q.startsWith("j.")) {
-    for (let idx = 0; idx < cache.names.length && hits.length < 300; idx++) {
+  // Fast path: initial searches like "j." or "j. b" should use the bucket by initial letter
+  const isInitialStyle = /^[a-z]\./.test(q);
+  if (isInitialStyle) {
+    const firstChar = q[0];
+    const bucket = cache.byFirstChar[firstChar] || [];
+    for (let i = 0; i < bucket.length; i++) {
+      const idx = bucket[i];
       const nl = cache.names[idx];
-      if (nl.startsWith(q)) hits.push(cache.meta[idx]);
+      if (nl.startsWith(q)) {
+        hits.push(cache.meta[idx]);
+        if (hits.length >= 300) break;
+      }
+    }
+  } else {
+    // Surname / fragment search ("bell") must scan ALL names because nameLower is "j. bellingham"
+    // (i.e. surname does not control the first character).
+    for (let idx = 0; idx < cache.names.length; idx++) {
+      const nl = cache.names[idx];
+      if (!nl) continue;
+
+      // match anywhere, but bias to word-boundary (space) so "bell" matches "j. bellingham"
+      if (nl.includes(" " + q) || nl.startsWith(q) || nl.includes(q)) {
+        hits.push(cache.meta[idx]);
+        if (hits.length >= 300) break;
+      }
     }
   }
 
