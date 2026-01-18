@@ -360,6 +360,13 @@
               "isRequired": false,
               "attributes": []
             },
+            "searchTag": {
+              "name": "searchTag",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false,
+              "attributes": []
+            },
             "version": {
               "name": "version",
               "isArray": false,
@@ -406,16 +413,21 @@
               "properties": {
                 "rules": [
                   {
+                    "allow": "private",
+                    "operations": [
+                      "read"
+                    ]
+                  },
+                  {
                     "provider": "userPools",
                     "ownerField": "owner",
                     "allow": "owner",
-                    "identityClaim": "cognito:username",
                     "operations": [
                       "create",
                       "update",
-                      "delete",
-                      "read"
-                    ]
+                      "delete"
+                    ],
+                    "identityClaim": "cognito:username"
                   }
                 ]
               }
