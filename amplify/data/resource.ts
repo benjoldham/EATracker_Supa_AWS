@@ -72,14 +72,17 @@ const schema = a.schema({
       // For fast typeahead (filter beginsWith on nameLower)
       index("nameLower").sortKeys(["shortName"]),
     ])
-    .authorization((allow) => [
-  // any signed-in user can read for autocomplete
-  allow.private().to(["read"]),
 
-  // writes remain restricted
-  allow.owner().to(["create", "update", "delete"]),
-]),
-  
+    .authorization((allow) => [
+      // Signed-in users (Cognito User Pool) can read for autocomplete
+     allow.private().to(["read"]),
+
+     // Allow IAM read as well (optional, but safe)
+     allow.authenticated().to(["read"]),
+
+     // Lock writes down
+     allow.owner().to(["create", "update", "delete"]),
+      ])  
 });
 
 export type Schema = ClientSchema<typeof schema>;
