@@ -63,7 +63,7 @@ const schema = a.schema({
       clubPosition: a.string(),                  // club_position
       nationalityName: a.string(),               // nationality_name
       preferredFoot: a.string(),                 // preferred_foot ("R"|"L")
-
+      searchTag: a.string(),
       // Optional helpful metadata
       version: a.string(),                       // e.g. "FC26"
       createdAt: a.datetime(),
