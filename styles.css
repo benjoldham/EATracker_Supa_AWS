@@ -121,6 +121,11 @@ form#player-form{
 
 label{ display:flex; flex-direction:column; gap:7px; color:var(--muted); font-size:12px; }
 
+#lookup-suggestions button.is-loading {
+  opacity: 0.75;
+  cursor: default;
+}
+
 input, select{
   background: rgba(0,0,0,.22);
   border:1px solid var(--border);
