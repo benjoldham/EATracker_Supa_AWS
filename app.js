@@ -754,13 +754,23 @@ function normMasterFoot(pref) {
 function applyMasterToForm(m) {
   if (!m) return;
 
-  // your PlayerMaster fields from schema: shortName, playerPositions, overall, potential, preferredFoot
   const firstName = parseForenameFromLongName(m.longName);
-  const surname = parseSurnameFromNameLower(m.nameLower);
+  let surname = parseSurnameFromNameLower(m.nameLower);
+
+  // If surname already includes the forename (e.g. "Rúben Dias"), remove it so we don't get "Rúben Rúben Dias"
+  if (firstName && surname){
+    const f = foldNameForCompare(firstName);
+    const s = foldNameForCompare(surname);
+    if (s === f){
+      surname = "";
+    } else if (s.startsWith(f + " ")){
+      // remove leading first name token from the displayed surname
+      surname = surname.slice(firstName.length).trim();
+    }
+  }
 
   if (fFirst){ fFirst.value = firstName; setAutoBadge(autoFirst, !!firstName); }
   if (fSurname){ fSurname.value = surname; setAutoBadge(autoSurname, !!surname); }
-
 
   const pos = pickPrimaryPosition(m.playerPositions);
   if (fPos && pos && POS_ORDER.includes(pos)){
@@ -1084,7 +1094,8 @@ function renderLookup(items){
 
 async function runLookup(){
   const q = String(fLookup?.value || "").trim();
-  const qLower = q.toLowerCase();
+  const qLower = foldNameForCompare(q); // lowercased + accent-stripped
+
 
     // Require 3+ chars to reduce work, but allow "j." initial searches (2 chars incl dot)
   const isInitialSearch = /^[a-z]\.$/.test(qLower);
