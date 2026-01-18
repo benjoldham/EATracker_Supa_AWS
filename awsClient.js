@@ -11,6 +11,15 @@ import { generateClient } from "https://esm.sh/aws-amplify@6/data";
 let configured = false;
 let client = null;
 
+// Lowercase + strip accents/diacritics for search (so "ruben" matches "rúben")
+function foldForSearch(s){
+  return String(s || "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
 // -------- IndexedDB cache (PlayerMaster) --------
 const PM_IDB_DB = "eafc_tracker_cache_v1";
 const PM_IDB_STORE = "kv";
@@ -66,10 +75,12 @@ async function pmLoadFromIdb(version){
     // rebuild bucket index (fast)
     _pmCache.byFirstChar = {};
     for (let idx = 0; idx < _pmCache.names.length; idx++){
-      const nl = _pmCache.names[idx];
+      const nl = foldForSearch(_pmCache.names[idx]);
+      _pmCache.names[idx] = nl; // normalize in-place (handles older caches)
       const c = (nl && nl[0]) ? nl[0] : "?";
       (_pmCache.byFirstChar[c] ||= []).push(idx);
     }
+
 
     _pmCache.loadedCount = _pmCache.names.length;
     _pmCache.lastError = null;
@@ -123,7 +134,7 @@ async function pmLoadFromJson(version = "FC26"){
   _pmCache.loading = null;
 
   for (const m of players){
-    const nl = String(m?.nameLower || "").toLowerCase();
+    const nl = foldForSearch(m?.nameLower);
     if (!nl) continue;
 
     const idx = _pmCache.names.length;
@@ -218,7 +229,8 @@ async function loadPlayerMasterAll(version = "FC26") {
 
         if (Array.isArray(data) && data.length) {
           for (const m of data) {
-            const nl = String(m?.nameLower || "").toLowerCase();
+            const nl = foldForSearch(m?.nameLower);
+
             if (!nl) continue;
 
             const idx = _pmCache.names.length;
@@ -417,7 +429,7 @@ export async function deletePlayer(id) {
 export async function searchPlayerMaster(query, want = 8, version = "FC26") {
   await initAws();
 
-  const raw = String(query || "").trim().toLowerCase();
+  const raw = foldForSearch(query);
   const q0 = raw.replace(/\s+/g, " ").trim();
 
   // Require 3+ chars, but allow "j." initial searches (2 chars incl dot)
