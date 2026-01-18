@@ -265,7 +265,7 @@ console.log("Raw header cells:", rows[0]);
     const shortName = String(line[iShort] || "").trim();
     if (!shortName) continue;
 
-    const longName = String(line[iLong] || "").trim() || null;
+    const longName = iLong >= 0 ? (String(line[iLong] || "").trim() || null) : null;
 
     const nameLower = shortName.toLowerCase();
     const surnameLower = makeSurnameLower(shortName);
