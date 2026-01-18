@@ -97,6 +97,60 @@ async function pmSaveToIdb(version){
   }
 }
 
+// Load PlayerMaster cache from a static JSON file (returns true if loaded)
+async function pmLoadFromJson(version = "FC26"){
+  // If you later add FC27 etc, change this to:
+  // const url = `./player_master_${String(version).toLowerCase()}.json`;
+  const url = "./player_master_fc26.json";
+
+  const res = await fetch(url, { cache: "force-cache" });
+  if (!res.ok) throw new Error(`PlayerMaster JSON fetch failed: ${res.status}`);
+
+  const payload = await res.json();
+  const players = Array.isArray(payload?.players)
+    ? payload.players
+    : (Array.isArray(payload) ? payload : null);
+
+  if (!players) throw new Error("PlayerMaster JSON missing 'players' array");
+
+  // hydrate in-memory cache
+  _pmCache.version = payload?.version || version;
+  _pmCache.names = [];
+  _pmCache.meta = [];
+  _pmCache.byFirstChar = {};
+  _pmCache.loadedCount = 0;
+  _pmCache.lastError = null;
+  _pmCache.loading = null;
+
+  for (const m of players){
+    const nl = String(m?.nameLower || "").toLowerCase();
+    if (!nl) continue;
+
+    const idx = _pmCache.names.length;
+    _pmCache.names.push(nl);
+
+    _pmCache.meta.push({
+      id: m?.id,
+      shortName: m?.shortName,
+      nameLower: m?.nameLower,
+      longName: m?.longName || "",
+
+      playerPositions: m?.playerPositions,
+      overall: m?.overall,
+      potential: m?.potential,
+      age: m?.age,
+      nationalityName: m?.nationalityName,
+      preferredFoot: m?.preferredFoot,
+    });
+
+    const c = nl[0] || "?";
+    (_pmCache.byFirstChar[c] ||= []).push(idx);
+  }
+
+  _pmCache.loadedCount = _pmCache.names.length;
+  return _pmCache.names.length > 0;
+}
+
 
 // -------- PlayerMaster cache (in-memory) --------
 const _pmCache = {
@@ -119,9 +173,20 @@ async function loadPlayerMasterAll(version = "FC26") {
   if (_pmCache.version === version && _pmCache.names.length) return _pmCache;
   if (_pmCache.loading) return _pmCache.loading;
 
-  // try IndexedDB first (instant on refresh)
+    // try IndexedDB first (instant on refresh)
   if (await pmLoadFromIdb(version)){
     return _pmCache;
+  }
+
+  // try static JSON next (fast, no AWS). If it fails, fall back to AWS.
+  try{
+    if (await pmLoadFromJson(version)){
+      // persist into IndexedDB so refreshes are instant
+      pmSaveToIdb(version);
+      return _pmCache;
+    }
+  }catch(e){
+    console.warn("[PlayerMaster] JSON load failed, falling back to AWS:", e);
   }
 
   // reset progress
