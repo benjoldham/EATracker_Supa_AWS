@@ -1,9 +1,9 @@
 {
   "auth": {
-    "user_pool_id": "us-east-1_YMVrG133P",
+    "user_pool_id": "us-east-1_kSmuleGrT",
     "aws_region": "us-east-1",
-    "user_pool_client_id": "d38539pcg1ue6efofd88loa7d",
-    "identity_pool_id": "us-east-1:9534a5e8-78aa-4472-a053-747642555f4f",
+    "user_pool_client_id": "6e42fb2ji9q3fegmblqn7cmcsl",
+    "identity_pool_id": "us-east-1:43b08a8b-7f78-4773-9c65-c4b69237fa7e",
     "mfa_methods": [],
     "standard_required_attributes": [
       "email"
@@ -26,7 +26,7 @@
     "unauthenticated_identities_enabled": true
   },
   "data": {
-    "url": "https://ybxmaqgdnrebzj7jvlpvcs4njy.appsync-api.us-east-1.amazonaws.com/graphql",
+    "url": "https://rmgskn6x6vgippm2kdgxmpy6me.appsync-api.us-east-1.amazonaws.com/graphql",
     "aws_region": "us-east-1",
     "default_authorization_type": "AMAZON_COGNITO_USER_POOLS",
     "authorization_types": [
