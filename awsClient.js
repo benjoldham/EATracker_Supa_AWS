@@ -256,7 +256,7 @@ export async function searchPlayerMaster(query, want = 8, version = "FC26") {
   const isInitialSearch = /^[a-z]\.$/.test(q0);
   if (!isInitialSearch && q0.length < 3) return [];
 
-  const MAX_RESULTS = Math.max(1, Math.min(25, Number(want) || 8));
+  const MAX_RESULTS = Math.max(1, Math.min(80, Number(want) || 8));
 
   // Ensure cache loaded (one-time)
   const cache = await loadPlayerMasterAll(version);
