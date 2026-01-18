@@ -981,7 +981,18 @@ function renderLookup(items){
     return;
   }
 
-  lookupBox.innerHTML = items.map((m, i) => {
+    lookupBox.innerHTML = items.map((m, i) => {
+    if (m && m.__loading){
+      const msg = escapeHtml(m.shortName || "Loading player database…");
+      const meta = escapeHtml(m.__meta || "");
+      return `
+        <button type="button" class="is-loading" disabled>
+          <span class="s-main">${msg}</span>
+          ${meta ? `<span class="s-meta">${meta}</span>` : ``}
+        </button>
+      `;
+    }
+
     const name = escapeHtml(m.shortName || "");
     const pos = escapeHtml(pickPrimaryPosition(m.playerPositions || "") || "");
     const meta = `${pos} • ${m.overall ?? "?"}/${m.potential ?? "?"} • ${(normMasterFoot(m.preferredFoot) === "L") ? "L" : "R"}`;
@@ -993,6 +1004,7 @@ function renderLookup(items){
     `;
   }).join("");
 
+
   lookupBox.classList.remove("hidden");
 
   // click handler (event delegation)
@@ -1001,6 +1013,7 @@ function renderLookup(items){
     if (!btn) return;
     const idx = Number(btn.dataset.idx);
     const chosen = items[idx];
+    if (chosen && chosen.__loading) return;
     applyMasterToForm(chosen);
     if (fLookup) fLookup.value = chosen?.shortName || "";
     hideLookup();
@@ -1023,6 +1036,16 @@ async function runLookup(){
   lastLookupQ = qLower;
 
   try{
+
+        const st = aws.getPlayerMasterCacheStatus?.();
+    if (st?.loading && !st?.loaded){
+      const meta = st.loadedCount
+        ? `Loaded ${st.loadedCount.toLocaleString("en-GB")} players…`
+        : `Loading player database…`;
+      renderLookup([{ __loading: true, shortName: "Loading player database…", __meta: meta }]);
+      return;
+    }
+
     const results = await aws.searchPlayerMaster?.(qLower, 8);
     console.log("[lookup]", { qLower, got: Array.isArray(results) ? results.length : results });
     renderLookup(Array.isArray(results) ? results : []);
