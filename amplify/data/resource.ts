@@ -78,8 +78,7 @@ const schema = a.schema({
 
   // writes remain restricted
   allow.owner().to(["create", "update", "delete"]),
-])
-,
+]),
   
 });
 
