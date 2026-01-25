@@ -419,7 +419,15 @@ async function startScanCamera(){
 
     // start at current zoom if available
     const settings = scanVideoTrack.getSettings?.() || {};
-    scanZoom.value = settings.zoom ?? caps.zoom.min;
+    const startZoom = (typeof caps.zoom.max === "number") ? caps.zoom.max : (settings.zoom ?? caps.zoom.min);
+    scanZoom.value = startZoom;
+
+    // Apply zoom immediately so it starts zoomed-in
+    try{
+      await scanVideoTrack.applyConstraints({ advanced: [{ zoom: Number(startZoom) }] });
+    }catch(e){
+      console.warn("Initial zoom apply failed", e);
+    }
 
     scanZoom.oninput = async () => {
       try{
@@ -460,11 +468,12 @@ function captureScanFrame(){
   const ctx = scanCanvas.getContext("2d");
   ctx.drawImage(scanVideo, 0, 0, targetW, targetH);
 
-  // Crop to the overlay guide area (matches .scan-box: left 6%, top 6%, width 88%, height 30%)
+  // Crop to the overlay guide area (include Potential + Pref. Foot line)
+  // left 6%, top 6%, width 88%, height 42%
   const cropX = Math.round(targetW * 0.06);
   const cropY = Math.round(targetH * 0.06);
   const cropW = Math.round(targetW * 0.88);
-  const cropH = Math.round(targetH * 0.30);
+  const cropH = Math.round(targetH * 0.42);
 
   const cropped = ctx.getImageData(cropX, cropY, cropW, cropH);
 
@@ -515,10 +524,15 @@ function parseEaCardText(raw){
   const joined = lines.join(" ");
   const out = { rawText: text };
 
-  // 1) Overall: first standalone 2-digit number near the start
-  // (EA OVR is 1–99; we bias to 10–99.)
+  // 1) Overall: prefer the first line (top-left number) to avoid picking Potential first
   {
-    const m = joined.match(/\b([1-9][0-9])\b/);
+    const firstLine = lines[0] || "";
+    let m = firstLine.match(/\b([1-9][0-9])\b/);
+
+    // Fallback: first 2-digit number in first ~40 chars of the whole capture
+    if (!m){
+      m = joined.slice(0, 40).match(/\b([1-9][0-9])\b/);
+    }
     if (m) out.intl = m[1];
   }
 
@@ -566,24 +580,36 @@ function parseEaCardText(raw){
 {
   const lower = joined.toLowerCase();
 
+    const normFootChar = (ch) => {
+    const c = String(ch || "").toUpperCase();
+    if (c === "R" || c === "L") return c;
+    // common OCR confusions
+    if (c === "P" || c === "K") return "R";
+    if (c === "I" || c === "1") return "L";
+    return "";
+  };
+
   // Prefer the exact label region
   const idx = lower.search(/pref\s*\.?\s*foot/);
   if (idx !== -1){
     const window = joined.slice(idx, idx + 50); // tighter window than before
     // In the game UI it's typically: "Pref. Foot  R"
-    const m = window.match(/pref\s*\.?\s*foot[^LR]*\b([LR])\b/i);
-    if (m) out.foot = m[1].toUpperCase();
+    const m = window.match(/pref\s*\.?\s*foot.*?\b([A-Z0-9])\b/i);
+    const f = normFootChar(m?.[1]);
+    if (f) out.foot = f;
   }
 
   // Fallback: look for "pref" then a nearby isolated L/R, but still within a tight window
-  if (!out.foot){
-    const idx2 = lower.indexOf("pref");
+    if (!out.foot){
+    const idx2 = lower.search(/pref\s*\.?\s*foot/);
     if (idx2 !== -1){
-      const window2 = joined.slice(idx2, idx2 + 60);
-      const m2 = window2.match(/\b([LR])\b/);
-      if (m2) out.foot = m2[1].toUpperCase();
+      const window2 = joined.slice(idx2, idx2 + 70);
+      const m2 = window2.match(/pref\s*\.?\s*foot.*?\b([A-Z0-9])\b/i);
+      const f2 = normFootChar(m2?.[1]);
+      if (f2) out.foot = f2;
     }
   }
+
 
   // IMPORTANT: do NOT global-fallback to any lone L/R in the whole text
   // (that causes wrong foot when OCR finds random 'L' elsewhere)
