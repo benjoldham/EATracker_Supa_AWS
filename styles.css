@@ -376,6 +376,9 @@ th.sortable .arrow{ margin-left:6px; color: var(--muted); font-weight:900; }
 
 
 /* Dashboard: inline save name editor */
+
+#save-rows span.subtle{display: none;}
+
 .save-name-input{ width:100%; font-weight:700; }
 
 .modal.hidden { display:none; }
