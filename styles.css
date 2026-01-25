@@ -11,12 +11,13 @@
 }
 
 *{ box-sizing:border-box; }
-html,body{ height:100%; }
+html,body{ height:100%; overflow-x:hidden;}
 body{
   margin:0;
   background-color: #040d20;
   color:var(--text);
   font-family:var(--sans);
+  overflow-x:hidden;
 }
 
 .container{max-width:1100px;margin:0 auto;padding: 8px;}
@@ -113,6 +114,8 @@ h1{ margin:10px 0 6px; font-size:28px; }
   gap:12px;
 }
 
+.grid > label{ min-width:0; }
+
 form#player-form{
   margin-bottom: 10px;
 }
@@ -135,7 +138,12 @@ input, select{
   font-size:14px;
   outline:none;
   height: 42px;
+  width: 100%;
+  max-width: 100%;
 }
+
+
+
 input:focus, select:focus{ border-color: rgba(110,168,254,.6); }
 input[type="number"]{ color-scheme: dark; }
 input:disabled{ opacity:.55; cursor:not-allowed; }
