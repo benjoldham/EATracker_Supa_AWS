@@ -318,7 +318,7 @@ td .cell-contain.hidden{
 @media (max-width: 900px){
   .grid{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .totals{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  input, select, textarea, button { font-size: 14px; }
+  input, select, textarea, button { font-size: 16px; }
 }
 
 /* v7: ex-players toggle */
