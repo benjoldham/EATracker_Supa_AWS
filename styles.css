@@ -358,7 +358,7 @@ td .cell-contain.hidden{
   font-weight:700;
   border-radius:999px;
   border:1px solid rgba(57, 255, 20, 0.55);
-  color: rgba(57, 255, 20, 0.95);
+  color: var(--green);
   background: rgba(57, 255, 20, 0.08);
   box-shadow: 0 0 10px rgba(57, 255, 20, 0.18);
 }
@@ -373,11 +373,11 @@ td .cell-contain.hidden{
   position: absolute;
   left: 0;
   right: 0;
-  top: calc(100% + 6px);
+  top: calc(100% + 4px);
   z-index: 50;
-  background: rgba(20,20,20,0.98);
-  border: 1px solid rgba(255,255,255,0.10);
-  border-radius: 12px;
+  background: var(--black);
+  border: 1px solid var(--border);
+  border-radius: 2px;
   /* fixed height + scroll */
   max-height: 320px;
   overflow-y: auto;
@@ -392,10 +392,11 @@ td .cell-contain.hidden{
   background: transparent;
   border: 0;
   color: inherit;
-  padding: 10px 12px;
+  padding: 8px 8px;
   cursor: pointer;
   display: flex;
   gap: 10px;
+  font-size:10px;
   justify-content: space-between;
   align-items: baseline;
 }
@@ -403,7 +404,7 @@ td .cell-contain.hidden{
   background: rgba(255,255,255,0.06);
 }
 .s-main{ font-weight: 600; }
-.s-meta{ opacity: 0.75; font-size: 12px; white-space: nowrap; }
+.s-meta{ opacity: 0.75; font-size: 8px; white-space: nowrap; }
 
 /* =========================
    FOOTER
