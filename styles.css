@@ -6,16 +6,23 @@
    CSS VARIABLES / THEME
 ========================= */
 :root{
-  --bg-primary:#04021E;
-  --bg-secondary:#070729;
+  --white: #ffffff;
+  --gray: #979CB4;
+  --black: #04021E;
+  --navy: #070729;
+  --blue: #121A3D;
   --green: #01ff49;
-  --text:#e7eefc;
-  --txt-secondary:#979CB4;
-  --muted:#a8b3cf;
+  --red: #F20091;
+  --bg-primary: var(--black);
+  --bg-secondary: var(--navy);
+  --text: var(--white);
+  --txt-secondary: var(--gray);
+  --muted: var(--gray);
   --border:#283362;
-  --danger: #F20091;
-  --ok:#2dd4bf;
-  --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  --danger: var(--red);
+  --ok: var(--green);
+  --inactive: var();
+  --inactive: var(--blue);
   --heading: "Special Gothic Expanded One", sans-serif;
   --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
 }
@@ -113,7 +120,7 @@ h1{ margin:10px 0 6px; font-size:28px; }
 }
 
 .btn{
-  border: none;
+  border: 1px solid transparent;
   background:rgba(255,255,255,.06);
   color:var(--text);
   padding:9px 12px;
@@ -124,11 +131,12 @@ h1{ margin:10px 0 6px; font-size:28px; }
   text-transform: uppercase;
   font-size: 10px;
   letter-spacing: 0.02em;
+  flex: 1;
 }
 .btn:hover{ border-color:rgba(255,255,255,.18); }
 .btn:active{ transform: translateY(1px); }
-.btn-primary{background: rgba(110,168,254,.18);/* border-color: rgba(110,168,254,.35); */}
-.btn-secondary{ background: rgba(255,255,255,.04); }
+.btn-primary{background:var(--green);color: #04021E;}
+.btn-secondary{background: var(--blue);border: 1px solid var(--border);}
 .btn-danger{ background: rgba(255,107,107,.12); border-color: rgba(255,107,107,.35); }
 .file-btn{ display:inline-flex; align-items:center; }
 
