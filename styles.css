@@ -1,4 +1,10 @@
-/* Minimal, readable UI */
+/* =========================================================
+   EAFC Tracker - styles.css (reorganized, nothing deleted)
+   ========================================================= */
+
+/* =========================
+   CSS VARIABLES / THEME
+========================= */
 :root{
   --bg:#0b1220;
   --text:#e7eefc;
@@ -10,8 +16,13 @@
   --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
 }
 
+/* =========================
+   RESET / GLOBALS
+========================= */
 *{ box-sizing:border-box; }
+
 html,body{ height:100%; overflow-x:hidden;}
+
 body{
   margin:0;
   background-color: #040d20;
@@ -20,14 +31,37 @@ body{
   overflow-x:hidden;
 }
 
+/* =========================
+   LAYOUT / CONTAINERS
+========================= */
 .container{max-width:1100px;margin:0 auto;padding: 8px;}
+
 .app-header{
   border-bottom:1px solid var(--border);
   background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,0));
 }
+
+/* =========================
+   TYPOGRAPHY / HELPERS
+========================= */
 h1{ margin:10px 0 6px; font-size:28px; }
 .sub{ margin:0 0 14px; color:var(--muted); }
 
+.hint{ margin-top:10px; color:var(--muted); font-size:13px; }
+.subtle{ margin:10px 0 0; color:var(--muted); font-size:13px; }
+.mono{ font-family:var(--mono); }
+
+.val-neg{ color: var(--danger);  }
+.val-pos{ color: var(--ok);  }
+.val-muted{ color: var(--muted); }
+
+/* Utility visibility (kept both duplicates; order preserved) */
+.hidden{ display:none !important; }
+.hidden{display: none;}
+
+/* =========================
+   CARDS
+========================= */
 .card{
   background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,0));
   border:1px solid var(--border);
@@ -53,16 +87,18 @@ h1{ margin:10px 0 6px; font-size:28px; }
   gap:12px;
 }
 
+.card h2{ margin:0; font-size:18px; }
+
 .edit-name{
   font-size:16px;
-  
   margin:2px 0 12px;
   letter-spacing:.2px;
   color: rgba(231,238,252,.92);
 }
 
-.card h2{ margin:0; font-size:18px; }
-
+/* =========================
+   BUTTONS / ACTIONS
+========================= */
 .actions{
   display:flex;
   gap:10px;
@@ -85,8 +121,23 @@ h1{ margin:10px 0 6px; font-size:28px; }
 .btn-secondary{ background: rgba(255,255,255,.04); }
 .btn-danger{ background: rgba(255,107,107,.12); border-color: rgba(255,107,107,.35); }
 .file-btn{ display:inline-flex; align-items:center; }
-.hidden{ display:none !important; }
 
+.row-actions{ display:flex; gap:8px; justify-content:flex-end; }
+.icon-btn{
+  border:1px solid var(--border);
+  background: rgba(255,255,255,.05);
+  color:var(--text);
+  padding:6px 10px;
+  border-radius:10px;
+  cursor:pointer;
+  font-weight:700;
+}
+.icon-btn:hover{ border-color: rgba(255,255,255,.18); }
+.icon-btn.danger{ border-color: rgba(255,107,107,.35); background: rgba(255,107,107,.10); }
+
+/* =========================
+   SEGMENTED CONTROL
+========================= */
 .segmented{
   display:inline-flex;
   border:1px solid var(--border);
@@ -100,7 +151,6 @@ h1{ margin:10px 0 6px; font-size:28px; }
   color: var(--muted);
   padding:9px 12px;
   cursor:pointer;
-  
 }
 .seg-btn:hover{ background: rgba(255,255,255,.05); }
 .seg-btn.active{
@@ -108,21 +158,21 @@ h1{ margin:10px 0 6px; font-size:28px; }
   background: rgba(45,212,191,.16);
 }
 
+/* =========================
+   FORMS / INPUTS
+========================= */
+form#player-form{
+  margin-bottom: 10px;
+}
+
+label{ display:flex; flex-direction:column; gap:7px; color:var(--muted); font-size:12px; }
+
 .grid{
   display:grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap:12px;
 }
-
 .grid > label{ min-width:0; }
-
-form#player-form{
-  margin-bottom: 10px;
-}
-
-.hidden{display: none;}
-
-label{ display:flex; flex-direction:column; gap:7px; color:var(--muted); font-size:12px; }
 
 #lookup-suggestions button.is-loading {
   opacity: 0.75;
@@ -142,20 +192,13 @@ input, select{
   max-width: 100%;
 }
 
-
-
 input:focus, select:focus{ border-color: rgba(110,168,254,.6); }
 input[type="number"]{ color-scheme: dark; }
 input:disabled{ opacity:.55; cursor:not-allowed; }
 
-.hint{ margin-top:10px; color:var(--muted); font-size:13px; }
-.subtle{ margin:10px 0 0; color:var(--muted); font-size:13px; }
-.mono{ font-family:var(--mono); }
-
-.val-neg{ color: var(--danger);  }
-.val-pos{ color: var(--ok);  }
-.val-muted{ color: var(--muted); }
-
+/* =========================
+   TOTALS / SUMMARY CARDS
+========================= */
 .totals{
   display:grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -173,6 +216,9 @@ input:disabled{ opacity:.55; cursor:not-allowed; }
 .search{ min-width:260px; }
 .select{ min-width:160px; }
 
+/* =========================
+   TABLE STYLES
+========================= */
 .table-wrap{ overflow:auto; border-radius:14px; border:1px solid var(--border); }
 table{
   width:100%;
@@ -217,11 +263,9 @@ td .cell-contain{
   text-overflow: ellipsis;
   overflow: hidden;
 }
-
 td .cell-contain.wide{
   width: 88px;
 }
-
 td .cell-contain.hidden{
   display:none;
 }
@@ -232,6 +276,9 @@ td .cell-contain.hidden{
 }
 .num{/* text-align:right; */}
 
+/* =========================
+   BADGES
+========================= */
 .badge{
   font-size:12px;
   padding:4px 8px;
@@ -263,71 +310,57 @@ td .cell-contain.hidden{
   box-shadow: 0 0 10px rgba(57, 255, 20, 0.18);
 }
 
-
-/* Auto Complete */
-
-  .suggest-box{
-    position: relative;
-  }
-  .suggestions{
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: calc(100% + 6px);
-    z-index: 50;
-    background: rgba(20,20,20,0.98);
-    border: 1px solid rgba(255,255,255,0.10);
-    border-radius: 12px;
-    /* fixed height + scroll */
-    max-height: 320px;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.35);
-  }
-
-
-  .suggestions.hidden{ display:none; }
-  .suggestions button{
-    width: 100%;
-    text-align: left;
-    background: transparent;
-    border: 0;
-    color: inherit;
-    padding: 10px 12px;
-    cursor: pointer;
-    display: flex;
-    gap: 10px;
-    justify-content: space-between;
-    align-items: baseline;
-  }
-  .suggestions button:hover{
-    background: rgba(255,255,255,0.06);
-  }
-  .s-main{ font-weight: 600; }
-  .s-meta{ opacity: 0.75; font-size: 12px; white-space: nowrap; }
-
-/* Auto Complete End */
-
-.row-actions{ display:flex; gap:8px; justify-content:flex-end; }
-.icon-btn{
-  border:1px solid var(--border);
-  background: rgba(255,255,255,.05);
-  color:var(--text);
-  padding:6px 10px;
-  border-radius:10px;
-  cursor:pointer;
-  font-weight:700;
+/* =========================
+   AUTOCOMPLETE
+========================= */
+.suggest-box{
+  position: relative;
 }
-.icon-btn:hover{ border-color: rgba(255,255,255,.18); }
-.icon-btn.danger{ border-color: rgba(255,107,107,.35); background: rgba(255,107,107,.10); }
+.suggestions{
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 50;
+  background: rgba(20,20,20,0.98);
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 12px;
+  /* fixed height + scroll */
+  max-height: 320px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+}
 
+.suggestions.hidden{ display:none; }
+.suggestions button{
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  color: inherit;
+  padding: 10px 12px;
+  cursor: pointer;
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+  align-items: baseline;
+}
+.suggestions button:hover{
+  background: rgba(255,255,255,0.06);
+}
+.s-main{ font-weight: 600; }
+.s-meta{ opacity: 0.75; font-size: 12px; white-space: nowrap; }
+
+/* =========================
+   FOOTER
+========================= */
 .footer{ margin:18px 0 30px; color:var(--muted); font-size:13px; }
 
-@media (max-width: 900px){
-  .grid{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .totals{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
-
-}
+/* =========================
+   TOGGLES / FILTERS / MVP OVERRIDES
+   (kept BOTH .toggle blocks, order preserved so overrides still win)
+========================= */
 
 /* v7: ex-players toggle */
 .toggle{
@@ -354,7 +387,7 @@ th.sortable{ cursor:pointer; user-select:none; }
 th.sortable.active-sort{ color: var(--text);  }
 th.sortable .arrow{ margin-left:6px; color: var(--muted); font-weight:900; }
 
-/* Final MVP tweaks */
+/* Final MVP tweaks (toggle override) */
 .toggle{
   display:inline-flex;
   align-items:center;
@@ -374,13 +407,13 @@ th.sortable .arrow{ margin-left:6px; color: var(--muted); font-weight:900; }
 
 #filter-active{display:none;}
 
-
 /* Dashboard: inline save name editor */
-
 #save-rows span.subtle{display: none;}
-
 .save-name-input{ width:100%; font-weight:700; }
 
+/* =========================
+   MODAL / SCANNER UI
+========================= */
 .modal.hidden { display:none; }
 .modal { position:fixed; inset:0; z-index:9999; }
 .modal-backdrop { position:absolute; inset:0; background:rgba(0,0,0,0.6); }
@@ -468,15 +501,11 @@ th.sortable .arrow{ margin-left:6px; color: var(--muted); font-weight:900; }
     inset 0 0 12px rgba(57, 255, 20, 0.22);
 }
 
-
 #scan-zoom{ width:160px; }
 
-
-
 /* =========================
-   Pitch view (GRID, auto height, compact)
+   PITCH VIEW (GRID, auto height, compact)
 ========================= */
-
 .pitch-wrap {
   width: 100%;
   overflow: auto;
@@ -622,11 +651,7 @@ th.sortable .arrow{ margin-left:6px; color: var(--muted); font-weight:900; }
   /* font-size: 12px; */
 }
 
-
-@media (min-width: 1200px){
-  .pitch-pos ul { max-height: 220px; }
-}
-
+/* --- Duplicate/override block kept as-is (order preserved) --- */
 .pitch-pos li {
   display: flex;
   align-items: baseline;
@@ -658,4 +683,16 @@ th.sortable .arrow{ margin-left:6px; color: var(--muted); font-weight:900; }
   /* font-size: 13px; */
   /* max-height: none; */           /* empty state doesn't need scrolling */
   /* overflow: hidden; */
+}
+
+/* =========================
+   MEDIA QUERIES (moved to bottom)
+========================= */
+@media (max-width: 900px){
+  .grid{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .totals{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (min-width: 1200px){
+  .pitch-pos ul { max-height: 220px; }
 }
