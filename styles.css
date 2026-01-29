@@ -27,7 +27,7 @@
   --body: "Inter", sans-serif;
 }
 
-.font-head{font-family:var(--heading);}
+.fontHeader{font-family:var(--heading);}
 
 /* =========================
    RESET / GLOBALS
