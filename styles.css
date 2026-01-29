@@ -6,8 +6,10 @@
    CSS VARIABLES / THEME
 ========================= */
 :root{
-  --bg:#0b1220;
+  --bg-primary:#04021E;
+  --bg-secondary:#070729;
   --text:#e7eefc;
+  --txt-secondary:#979CB4;
   --muted:#a8b3cf;
   --border:#283362;
   --danger:#ff6b6b;
@@ -26,7 +28,7 @@ html,body{ height:100%; overflow-x:hidden;}
 
 body{
   margin:0;
-  background-color: #040d20;
+  background-color: var(--bg-primary);
   color:var(--text);
   font-family:var(--sans);
   overflow-x:hidden;
