@@ -176,7 +176,7 @@ button{  font-family: var(--heading);}
   border:0;
   background: transparent;
   color: var(--muted);
-  padding: 6px 6px;
+  padding: 6px 8px;
   cursor:pointer;
   font-size: 8px;
   text-transform: uppercase;
