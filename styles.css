@@ -69,8 +69,8 @@ h1{ margin:10px 0 6px; font-size:28px; }
 ========================= */
 .card{
   background-color: #070729;
-  border:1px solid var(--border);
-  border-radius:16px;
+  border: 2px solid var(--border);
+  border-radius: 8px;
   padding: 16px;
   margin:16px 0;
   transition: box-shadow .2s ease, border-color .2s ease;
@@ -92,7 +92,7 @@ h1{ margin:10px 0 6px; font-size:28px; }
   gap:12px;
 }
 
-.card h2{ margin:0; font-size:18px; }
+.card h2{margin:0;font-size:18px;text-transform: uppercase;}
 
 .edit-name{
   font-size:16px;
@@ -116,7 +116,7 @@ h1{ margin:10px 0 6px; font-size:28px; }
   background:rgba(255,255,255,.06);
   color:var(--text);
   padding:9px 12px;
-  border-radius:12px;
+  border-radius: 4px;
   cursor:pointer;
   font-weight:600;
 }
@@ -170,7 +170,7 @@ form#player-form{
   margin-bottom: 10px;
 }
 
-label{ display:flex; flex-direction:column; gap:7px; color:var(--muted); font-size:12px; }
+label{display:flex;flex-direction:column;gap:7px;color:var(--muted);font-size:12px;font-family: var(--heading);}
 
 .grid{
   display:grid;
@@ -185,11 +185,11 @@ label{ display:flex; flex-direction:column; gap:7px; color:var(--muted); font-si
 }
 
 input, select{
-  background: rgba(0,0,0,.22);
+  background: #04021E;
   border:1px solid var(--border);
   color:var(--text);
   padding:10px 10px;
-  border-radius:12px;
+  border-radius: 4px;
   font-size:14px;
   outline:none;
   height: 42px;
@@ -522,7 +522,7 @@ th.sortable .arrow{ margin-left:6px; color: var(--muted); font-weight:900; }
 .pitch {
   position: relative;
   width: 100%;
-  max-width: 375px;          /* âœ… was 860; reduces overall pitch width on small screens */
+  /* max-width: 375px; */          /* âœ… was 860; reduces overall pitch width on small screens */
   overflow: scroll;
           /* âœ… allow height to grow */
   border-radius: 16px;
