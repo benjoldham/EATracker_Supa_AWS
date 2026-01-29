@@ -272,24 +272,30 @@ input:-ms-input-placeholder {
 /* =========================
    TABLE STYLES
 ========================= */
-.table-wrap{ overflow:auto; border-radius:14px; border:1px solid var(--border); }
+.table-wrap{overflow:auto;border-radius: 4px;border:1px solid var(--border);}
 table{
   width:100%;
   border-collapse:collapse;
-  background: rgba(0,0,0,.16);
+  background: var(--bg-primary);
   min-width: 440px;
 }
 thead th{
   position:sticky;
   top:0;
-  background: rgba(10,18,32,.95);
   border-bottom:1px solid var(--border);
-  text-align:left;
+  text-align: center;
   padding: 5px;
-  font-size:12px;
+  font-size: 10px;
+  text-transform: uppercase;
   color:var(--muted);
   white-space:nowrap;
+  font-family: var(--heading);
 }
+
+thead th:first-child{
+  text-align:left;
+}
+
 tbody td{
   padding: 2px 4px;
   border-bottom:1px solid rgba(255,255,255,.06);
@@ -306,21 +312,29 @@ th:first-child, td:first-child {
   position: sticky;
   left: 0;
   z-index: 2;
-  background:#0e1424;
+  background: var(--bg-primary);
   font-weight: bold;
 }
 
 td .cell-contain{
-  font-size: 12px;
+  font-size: 11px;
   width: 48px;
   text-overflow: ellipsis;
   overflow: hidden;
+  text-align: center;
+  color:var(--muted);
+  font-weight:600;
 }
 td .cell-contain.wide{
   width: 88px;
 }
 td .cell-contain.hidden{
   display:none;
+}
+
+td:first-child .cell-contain{
+  text-align:left;
+  font-family:var(--heading);
 }
 
 @keyframes flashRow{
