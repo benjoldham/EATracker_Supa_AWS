@@ -59,9 +59,12 @@ h1, h2, h3, h4{ font-family:var(--heading); font-weight: 400; font-style: normal
 /* =========================
    TYPOGRAPHY / HELPERS
 ========================= */
-h1{ margin:10px 0 6px; font-size:28px; }
-.sub{ margin:0 0 14px; color:var(--muted); }
+h1{font-size:24px;margin:0 0 8px 0;}
+h2{font-size:20px;}
+h3{font-size:16px;}
 
+
+.sub{ margin:0 0 14px; color:var(--muted); }
 .hint{ margin-top:10px; color:var(--muted); font-size:13px; }
 .subtle{ margin:10px 0 0; color:var(--muted); font-size:13px; }
 .mono{ font-family:var(--mono); }
@@ -102,12 +105,13 @@ h1{ margin:10px 0 6px; font-size:28px; }
   gap:12px;
 }
 
-.card h2{margin:0;font-size:18px;text-transform: uppercase;}
+.card h2{margin:0;font-size: 16px;text-transform: uppercase;}
 
 .edit-name{
-  font-size: 20px;
-  margin:2px 0 12px;
-  letter-spacing:.2px;
+  font-size: 16px;
+  margin: 8px 0;
+  letter-spacing: 0.02em;
+  font-family: var(--heading);
   color: var(--muted);
 }
 
@@ -209,10 +213,11 @@ input, select{
   background: #04021E;
   border:1px solid var(--border);
   color:var(--text);
-  padding: 12px;
+  padding: 8px;
   border-radius: 2px;
-  font-size:12px;
+  font-size: 12px;
   font-weight:500;
+  letter-spacing: -0.02em;
   outline:none;
   height: 40px;
   width: 100%;
