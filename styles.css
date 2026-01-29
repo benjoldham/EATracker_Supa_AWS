@@ -9,10 +9,11 @@
   --bg:#0b1220;
   --text:#e7eefc;
   --muted:#a8b3cf;
-  --border:rgba(255,255,255,.10);
+  --border:#283362;
   --danger:#ff6b6b;
   --ok:#2dd4bf;
   --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  --heading: "Special Gothic Expanded One", sans-serif;
   --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
 }
 
@@ -30,6 +31,8 @@ body{
   font-family:var(--sans);
   overflow-x:hidden;
 }
+
+h1, h2, h3, h4{ font-family:var(--heading); font-weight: 400; font-style: normal;}
 
 /* =========================
    LAYOUT / CONTAINERS
@@ -63,10 +66,10 @@ h1{ margin:10px 0 6px; font-size:28px; }
    CARDS
 ========================= */
 .card{
-  background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,0));
+  background-color: #070729;
   border:1px solid var(--border);
   border-radius:16px;
-  padding: 8px;
+  padding: 16px;
   margin:16px 0;
   transition: box-shadow .2s ease, border-color .2s ease;
   display: flex;
