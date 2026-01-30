@@ -306,8 +306,8 @@ thead th:first-child{
 }
 
 tbody td{
-  padding: 2px 2px;
-  border-bottom:1px solid rgba(255,255,255,.06);
+  padding: 8px 2px;
+  border-bottom: 1px solid #979cb45e;
   vertical-align:middle;
   font-size:14px;
   white-space:nowrap;
@@ -326,16 +326,20 @@ th:first-child, td:first-child {
 }
 
 td .cell-contain{
-  font-size: 9px;
-  width: 36px;
+  font-size: 10px;
+  width: 32px;
   text-overflow: ellipsis;
   overflow: hidden;
   text-align: center;
-  color:var(--muted);
-  font-weight: 700;
+  color: var(--muted);
+  font-weight: 500;
+  letter-spacing:0.02em;
 }
+
 td .cell-contain.wide{
-  width: 88px;
+  width: 104px;
+  color: var(--white);
+  
 }
 td .cell-contain.hidden{
   display:none;
@@ -346,13 +350,14 @@ td:first-child .cell-contain{
   font-family:var(--heading);
   display: flex;
   flex-direction: column;
-  gap: 1px;
-  padding: 0 3px;
+  gap: 4px;
+  padding: 0 0 0 3px;
 }
 
 td:first-child .cell-contain span{
   font-family:var(--body);
-  font-size: 8px;
+  font-size: 10px;
+  color: var(--muted);
 }
 
 td:first-child .cell-contain span.badge{
