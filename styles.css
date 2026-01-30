@@ -285,7 +285,7 @@ thead th{
   border-bottom:1px solid var(--border);
   text-align: center;
   padding: 5px;
-  font-size: 10px;
+  font-size: 8px;
   text-transform: uppercase;
   color:var(--muted);
   white-space:nowrap;
@@ -318,7 +318,7 @@ th:first-child, td:first-child {
 
 td .cell-contain{
   font-size: 9px;
-  width: 48px;
+  width: 28px;
   text-overflow: ellipsis;
   overflow: hidden;
   text-align: center;
@@ -326,7 +326,7 @@ td .cell-contain{
   font-weight:600;
 }
 td .cell-contain.wide{
-  width: 88px;
+  width: 96px;
 }
 td .cell-contain.hidden{
   display:none;
@@ -342,7 +342,7 @@ td:first-child .cell-contain{
 
 td:first-child .cell-contain span{
   font-family:var(--body);
-  font-size:8px;
+  font-size: 8px;
 }
 
 td:first-child .cell-contain span.badge{
