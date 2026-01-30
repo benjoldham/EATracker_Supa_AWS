@@ -30,7 +30,14 @@
   --great: var(--amber);
   --sell: var(--red);
   --heading: "Special Gothic Expanded One", sans-serif;
-  --body: "Rubik", sans-serif;
+  --body-font: "Rubik", sans-serif;
+  
+  --h1: clamp(1.5rem, 4vw, 2rem);
+  --h2: clamp(1.375rem, 3.2vw, 1.75rem);
+  --h3: clamp(1.25rem, 2.8vw, 1.5rem);
+  --h4: clamp(1.125rem, 2.2vw, 1.25rem);
+  --h5: 1rem;
+  --body: clamp(0.875rem, 1.8vw, 1rem);
 }
 
 .font-head{font-family:var(--heading);}
@@ -46,7 +53,8 @@ body{
   margin:0;
   background-color: var(--bg-primary);
   color:var(--text);
-  font-family:var(--body);
+  font-family: var(--body-font);
+  font-size: var(--body);
   overflow-x:hidden;
 }
 
@@ -65,10 +73,11 @@ h1, h2, h3, h4{ font-family:var(--heading); font-weight: 400; font-style: normal
 /* =========================
    TYPOGRAPHY / HELPERS
 ========================= */
-h1{font-size:24px;margin:0 0 8px 0;}
-h2{font-size:20px;}
-h3{font-size:16px;}
-
+h1{ font-size: var(--h1); margin:0 0 8px 0;}
+h2{ font-size: var(--h2);}
+h3{ font-size: var(--h3);}
+h4{ font-size: var(--h4);}
+h5{ font-size: var(--h5);}
 
 .sub{ margin:0 0 14px; color:var(--muted); }
 .hint{ margin-top:10px; color:var(--muted); font-size:13px; }
@@ -111,14 +120,15 @@ h3{font-size:16px;}
   gap:12px;
 }
 
-.card h2{margin:0;font-size: 16px;text-transform: uppercase;}
+.card h2{margin:0;text-transform: uppercase;font-size: clamp(1rem, 2vw, 2rem);}
 
 .edit-name{
   font-size: 16px;
   margin: 8px 0;
   letter-spacing: 0.02em;
   font-family: var(--heading);
-  color: var(--muted);
+  color: var(--white);
+  font-size: clamp(0.875rem, 2vw, 1rem);
 }
 
 /* =========================
@@ -311,8 +321,8 @@ tbody td{
   vertical-align:middle;
   font-size:14px;
   white-space:nowrap;
-  /* display: flex; */
-  width: 36px;
+  min-width: 36px;
+  width: 20%;
 }
 tbody tr:hover td{ background: rgba(255,255,255,.03); }
 tbody tr.flash td{
@@ -562,7 +572,7 @@ th.sortable .arrow{margin: 2px 0 0 3px;color: var(--text);font-weight:900;positi
 
 #scan-status{ margin-left:auto; }
 
-/* Donâ€™t let video push buttons off-screen */
+/* DonÃ¢â‚¬â„¢t let video push buttons off-screen */
 #scan-video{
   width:100%;
   height:auto;
@@ -618,18 +628,18 @@ th.sortable .arrow{margin: 2px 0 0 3px;color: var(--text);font-weight:900;positi
 .pitch {
   position: relative;
   width: 100%;
-  /* max-width: 375px; */          /* Ã¢Å“â€¦ was 860; reduces overall pitch width on small screens */
+  /* max-width: 375px; */          /* ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ was 860; reduces overall pitch width on small screens */
   overflow: scroll;
-          /* Ã¢Å“â€¦ allow height to grow */
+          /* ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ allow height to grow */
   border-radius: 16px;
   border: 1px solid rgba(255,255,255,0.08);
   background:
     radial-gradient(circle at 50% 50%, rgba(255,255,255,0.06), transparent 55%),
     linear-gradient(180deg, rgba(30, 140, 80, 0.22), rgba(10, 70, 40, 0.22));
 
-  /* Ã¢Å“â€¦ tighter grid */
+  /* ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ tighter grid */
   display: grid;
-   /* Ã¢Å“â€¦ narrower & controlled */
+   /* ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ narrower & controlled */
   grid-auto-rows: minmax(min-content, max-content);
   grid-template-areas:
     ".   .    st   .   ."
@@ -638,10 +648,10 @@ th.sortable .arrow{margin: 2px 0 0 3px;color: var(--text);font-weight:900;positi
     ".   .    cdm  .   ."
     "lb  cbl  .    cbr rb"
     ".   .    gk   .   .";
-  gap: 12px 10px;                 /* Ã¢Å“â€¦ was 18 */
-  padding: 20px 4px;             /* Ã¢Å“â€¦ was 22 */
+  gap: 12px 10px;                 /* ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ was 18 */
+  padding: 20px 4px;             /* ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ was 22 */
   box-sizing: border-box;
-  justify-content: center;    /* Ã¢Å“â€¦ keeps grid centered instead of stretching wide */
+  justify-content: center;    /* ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ keeps grid centered instead of stretching wide */
   align-content: start;
 }
 
@@ -689,40 +699,40 @@ th.sortable .arrow{margin: 2px 0 0 3px;color: var(--text);font-weight:900;positi
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 4px;      /* Ã¢Å“â€¦ tighter */
+  padding: 4px;      /* ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ tighter */
   background: #050d20;
 }
 
 .pitch-pos .pos-code {
   font-weight: 700;
   letter-spacing: 0.02em;
-  font-size: 9px;                 /* Ã¢Å“â€¦ a touch smaller */
+  font-size: 9px;                 /* ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ a touch smaller */
 }
 
 .pitch-pos .count {
   opacity: 0.75;
-  font-size: 10px;                 /* Ã¢Å“â€¦ smaller */
+  font-size: 10px;                 /* ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ smaller */
   display: none;
 }
 
-/* Ã¢Å“â€¦ list hugs content (no max-height, no scroll) */
+/* ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ list hugs content (no max-height, no scroll) */
 .pitch-pos ul {
   list-style: none;
   margin: 0;
-  padding: 0;     /* Ã¢Å“â€¦ tighter */
+  padding: 0;     /* ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ tighter */
   display: grid;
-  gap: 0px;                        /* Ã¢Å“â€¦ tighter */
+  gap: 0px;                        /* ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ tighter */
   background: #050d20;
   border-radius: 0 0 2px 2px;
 }
 
-/* Ã¢Å“â€¦ compact row */
+/* ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ compact row */
 .pitch-pos li {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
   gap: 10px;
-  font-size: 12px;                 /* Ã¢Å“â€¦ requested */
+  font-size: 12px;                 /* ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ requested */
   white-space: nowrap;
 }
 
