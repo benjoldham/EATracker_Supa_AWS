@@ -13,6 +13,9 @@
   --blue: #121A3D;
   --green: #01ff49;
   --red: #F20091;
+  --purple: #d751ff;
+  --teal: #47ffd9;
+  --amber: #ff9f57;
   --bg-primary: var(--black);
   --bg-secondary: var(--navy);
   --text: var(--white);
@@ -21,8 +24,11 @@
   --border:#283362;
   --danger: var(--red);
   --ok: var(--green);
-  --inactive: var();
   --inactive: var(--blue);
+  --special: var(--purple);
+  --exciting: var(--teal);
+  --great: var(--amber);
+  --sell: var(--red);
   --heading: "Special Gothic Expanded One", sans-serif;
   --body: "Inter", sans-serif;
 }
@@ -297,7 +303,7 @@ thead th:first-child{
 }
 
 tbody td{
-  padding: 2px 4px;
+  padding: 2px 2px;
   border-bottom:1px solid rgba(255,255,255,.06);
   vertical-align:middle;
   font-size:14px;
@@ -318,7 +324,7 @@ th:first-child, td:first-child {
 
 td .cell-contain{
   font-size: 9px;
-  width: 28px;
+  width: 36px;
   text-overflow: ellipsis;
   overflow: hidden;
   text-align: center;
@@ -348,13 +354,14 @@ td:first-child .cell-contain span{
 td:first-child .cell-contain span.badge{
   padding:0;
   border:none;
+  background:transparent;
 }
 
 @keyframes flashRow{
   0%{ background: rgba(45,212,191,.22); }
   100%{ background: rgba(255,255,255,0); }
 }
-.num{/* text-align:right; */}
+.num{}
 
 /* =========================
    BADGES
@@ -368,10 +375,10 @@ td:first-child .cell-contain span.badge{
   gap:6px;
   align-items:center;
 }
-.badge.special{ border-color: rgba(110,168,254,.55); background: rgba(110,168,254,.12); color: rgba(110,168,254,.55)}
-.badge.exciting{ border-color: rgba(45,212,191,.55); background: rgba(45,212,191,.10); color: rgba(45,212,191,.55)}
-.badge.great{ border-color: rgba(251,191,36,.55); background: rgba(251,191,36,.10); color: rgba(251,191,36,.55);}
-.badge.sell{ border-color: rgba(255,107,107,.55); background: rgba(255,107,107,.10); color: rgba(255,107,107,.55)}
+.badge.special{border-color: rgba(110,168,254,.55);background: rgba(110,168,254,.12); color: var(--special);}
+.badge.exciting{ border-color: rgba(45,212,191,.55); background: rgba(45,212,191,.10); color: var(--exciting);}
+.badge.great{ border-color: rgba(251,191,36,.55); background: rgba(251,191,36,.10); color: var(--great);}
+.badge.sell{ border-color: rgba(255,107,107,.55); background: rgba(255,107,107,.10); color: var(--sell);}
 
 /* Auto-detected badge (form) */
 .auto-badge{
