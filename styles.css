@@ -32,12 +32,16 @@
   --heading: "Special Gothic Expanded One", sans-serif;
   --body-font: "Rubik", sans-serif;
   
-  --h1: clamp(1.5rem, 4vw, 2rem);
-  --h2: clamp(1.375rem, 3.2vw, 1.75rem);
-  --h3: clamp(1.25rem, 2.8vw, 1.5rem);
-  --h4: clamp(1.125rem, 2.2vw, 1.25rem);
-  --h5: 1rem;
-  --body: clamp(0.875rem, 1.8vw, 1rem);
+  --type-h1: clamp(1.5rem, 4vw, 2rem);
+  --type-h2: clamp(1.375rem, 3.2vw, 1.75rem);
+  --type-h3: clamp(1.25rem, 2.8vw, 1.5rem);
+  --type-h4: clamp(1.125rem, 2.2vw, 1.25rem);
+  --type-h5: 1rem;
+  --type-h6: clamp(0.625rem, 1.2vw, 0.75rem);;
+  --type-body: clamp(0.875rem, 1.8vw, 1rem);
+
+  --type-label: clamp(0.625rem, 1.2vw, 0.75rem);
+  --type-input: clamp(0.75rem, 1.6vw, 0.875rem);
 }
 
 .font-head{font-family:var(--heading);}
@@ -54,7 +58,7 @@ body{
   background-color: var(--bg-primary);
   color:var(--text);
   font-family: var(--body-font);
-  font-size: var(--body);
+  font-size: var(--type-body);
   overflow-x:hidden;
 }
 
@@ -73,15 +77,16 @@ h1, h2, h3, h4{ font-family:var(--heading); font-weight: 400; font-style: normal
 /* =========================
    TYPOGRAPHY / HELPERS
 ========================= */
-h1{ font-size: var(--h1); margin:0 0 8px 0;}
-h2{ font-size: var(--h2);}
-h3{ font-size: var(--h3);}
-h4{ font-size: var(--h4);}
-h5{ font-size: var(--h5);}
+h1{ font-size: var(--type-h1); margin:0 0 8px 0;}
+h2{ font-size: var(--type-h2);}
+h3{ font-size: var(--type-h3);}
+h4{ font-size: var(--type-h4);}
+h5{ font-size: var(--type-h5);}
+h6{ font-size: var(--type-h6);}
 
 .sub{ margin:0 0 14px; color:var(--muted); }
-.hint{ margin-top:10px; color:var(--muted); font-size:13px; }
-.subtle{ margin:10px 0 0; color:var(--muted); font-size:13px; }
+.hint{ margin-top:10px; color:var(--muted); }
+.subtle{ margin:10px 0 0; color:var(--muted);}
 .mono{ font-family:var(--mono); }
 
 .val-neg{ color: var(--danger);  }
@@ -123,12 +128,10 @@ h5{ font-size: var(--h5);}
 .card h2{margin:0;text-transform: uppercase;}
 
 .edit-name{
-  font-size: 16px;
   margin: 8px 0;
   letter-spacing: 0.02em;
   font-family: var(--heading);
   color: var(--white);
-  font-size: clamp(0.875rem, 2vw, 1rem);
 }
 
 /* =========================
@@ -151,7 +154,7 @@ h5{ font-size: var(--h5);}
   font-weight: 400;
   font-family: var(--heading);
   text-transform: uppercase;
-  font-size: 10px;
+  font-size: var(--type-label);
   letter-spacing: 0.02em;
   flex: 1;
 }
@@ -173,7 +176,7 @@ button{  font-family: var(--heading);}
   padding: 4px 6px;
   border-radius: 2px;
   cursor:pointer;
-  font-size: 8px;
+  font-size: var(--type-label);
   font-weight:700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -197,7 +200,7 @@ button{  font-family: var(--heading);}
   color: var(--muted);
   padding: 6px 8px;
   cursor:pointer;
-  font-size: 8px;
+  font-size: var(--type-label);
   text-transform: uppercase;
 }
 .seg-btn:hover{ background: rgba(255,255,255,.05); }
@@ -213,7 +216,7 @@ form#player-form{
   margin-bottom: 10px;
 }
 
-label{display:flex;flex-direction:column;gap:7px;color: var(--txt-secondary);font-size: 10px;font-family: var(--heading);text-transform: uppercase;letter-spacing: 0.05em;}
+label{display:flex;flex-direction:column;gap:7px;color: var(--txt-secondary);font-size: var(--type-label);font-family: var(--heading);text-transform: uppercase;letter-spacing: 0.05em;}
 
 .grid{
   display:grid;
@@ -234,7 +237,7 @@ input, select{
   color:var(--text);
   padding: 8px;
   border-radius: 2px;
-  font-size: 12px;
+  font-size: var(--type-input);
   font-weight:500;
   letter-spacing: -0.02em;
   outline:none;
@@ -282,8 +285,8 @@ input:-ms-input-placeholder {
   padding:10px 12px;
   font-family:var(--heading);
 }
-.total .label{ color:var(--muted); font-size:10px; letter-spacing:0.05em; text-transform:uppercase;}
-.total .value{ font-size:20px; margin-top:4px;  }
+.total .label{ color:var(--muted); font-size:var(--type-label); letter-spacing:0.05em; text-transform:uppercase;}
+.total .value{ font-size:var(--type-h2); margin-top:4px;  }
 
 .search{ min-width:260px; }
 .select{ min-width:160px; }
@@ -473,7 +476,6 @@ td:first-child .cell-contain span.badge{
    (kept BOTH .toggle blocks, order preserved so overrides still win)
 ========================= */
 
-/* v7: ex-players toggle */
 .toggle{
   display:inline-flex;
   gap:8px;
@@ -487,18 +489,17 @@ td:first-child .cell-contain span.badge{
 }
 .toggle input{ width:16px; height:16px; accent-color: var(--ok); }
 
-/* v7: ex-players styling */
+
 tbody tr.inactive td .cell-contain{
   font-style: italic;
   opacity:.2;
 }
 
-/* v7: sortable headers */
 th.sortable{ cursor:pointer; user-select:none; }
 th.sortable.active-sort{ color: var(--text);  }
 th.sortable .arrow{margin: 2px 0 0 3px;color: var(--text);font-weight:900;position: absolute;font-size: 6px;}
 
-/* Final MVP tweaks (toggle override) */
+
 .toggle{
   display:inline-flex;
   align-items:center;
@@ -572,7 +573,6 @@ th.sortable .arrow{margin: 2px 0 0 3px;color: var(--text);font-weight:900;positi
 
 #scan-status{ margin-left:auto; }
 
-/* DonÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢t let video push buttons off-screen */
 #scan-video{
   width:100%;
   height:auto;
