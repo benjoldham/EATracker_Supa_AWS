@@ -120,7 +120,7 @@ h5{ font-size: var(--h5);}
   gap:12px;
 }
 
-.card h2{margin:0;text-transform: uppercase;font-size: clamp(1rem, 2vw, 2rem);}
+.card h2{margin:0;text-transform: uppercase;}
 
 .edit-name{
   font-size: 16px;
@@ -572,7 +572,7 @@ th.sortable .arrow{margin: 2px 0 0 3px;color: var(--text);font-weight:900;positi
 
 #scan-status{ margin-left:auto; }
 
-/* DonÃ¢â‚¬â„¢t let video push buttons off-screen */
+/* DonÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢t let video push buttons off-screen */
 #scan-video{
   width:100%;
   height:auto;
@@ -628,18 +628,18 @@ th.sortable .arrow{margin: 2px 0 0 3px;color: var(--text);font-weight:900;positi
 .pitch {
   position: relative;
   width: 100%;
-  /* max-width: 375px; */          /* ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ was 860; reduces overall pitch width on small screens */
+  /* max-width: 375px; */          /* ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ was 860; reduces overall pitch width on small screens */
   overflow: scroll;
-          /* ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ allow height to grow */
+          /* ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ allow height to grow */
   border-radius: 16px;
   border: 1px solid rgba(255,255,255,0.08);
   background:
     radial-gradient(circle at 50% 50%, rgba(255,255,255,0.06), transparent 55%),
     linear-gradient(180deg, rgba(30, 140, 80, 0.22), rgba(10, 70, 40, 0.22));
 
-  /* ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ tighter grid */
+  /* ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ tighter grid */
   display: grid;
-   /* ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ narrower & controlled */
+   /* ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ narrower & controlled */
   grid-auto-rows: minmax(min-content, max-content);
   grid-template-areas:
     ".   .    st   .   ."
@@ -648,10 +648,10 @@ th.sortable .arrow{margin: 2px 0 0 3px;color: var(--text);font-weight:900;positi
     ".   .    cdm  .   ."
     "lb  cbl  .    cbr rb"
     ".   .    gk   .   .";
-  gap: 12px 10px;                 /* ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ was 18 */
-  padding: 20px 4px;             /* ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ was 22 */
+  gap: 12px 10px;                 /* ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ was 18 */
+  padding: 20px 4px;             /* ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ was 22 */
   box-sizing: border-box;
-  justify-content: center;    /* ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ keeps grid centered instead of stretching wide */
+  justify-content: center;    /* ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ keeps grid centered instead of stretching wide */
   align-content: start;
 }
 
@@ -699,40 +699,40 @@ th.sortable .arrow{margin: 2px 0 0 3px;color: var(--text);font-weight:900;positi
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 4px;      /* ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ tighter */
+  padding: 4px;      /* ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ tighter */
   background: #050d20;
 }
 
 .pitch-pos .pos-code {
   font-weight: 700;
   letter-spacing: 0.02em;
-  font-size: 9px;                 /* ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ a touch smaller */
+  font-size: 9px;                 /* ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ a touch smaller */
 }
 
 .pitch-pos .count {
   opacity: 0.75;
-  font-size: 10px;                 /* ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ smaller */
+  font-size: 10px;                 /* ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ smaller */
   display: none;
 }
 
-/* ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ list hugs content (no max-height, no scroll) */
+/* ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ list hugs content (no max-height, no scroll) */
 .pitch-pos ul {
   list-style: none;
   margin: 0;
-  padding: 0;     /* ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ tighter */
+  padding: 0;     /* ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ tighter */
   display: grid;
-  gap: 0px;                        /* ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ tighter */
+  gap: 0px;                        /* ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ tighter */
   background: #050d20;
   border-radius: 0 0 2px 2px;
 }
 
-/* ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ compact row */
+/* ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ compact row */
 .pitch-pos li {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
   gap: 10px;
-  font-size: 12px;                 /* ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ requested */
+  font-size: 12px;                 /* ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ requested */
   white-space: nowrap;
 }
 
