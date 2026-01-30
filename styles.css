@@ -30,7 +30,7 @@
   --great: var(--amber);
   --sell: var(--red);
   --heading: "Special Gothic Expanded One", sans-serif;
-  --body: "Inter", sans-serif;
+  --body: "Rubik", sans-serif;
 }
 
 .font-head{font-family:var(--heading);}
