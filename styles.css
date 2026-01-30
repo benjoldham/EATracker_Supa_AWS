@@ -60,7 +60,8 @@
   --space-10: 128px;
 
   --space-page-gutter: var(--space-2); 
-  --space-page-max-gutter: var(--space-10);  
+  --space-page-max-gutter: var(--space-10);
+  --space-card-padding: clamp(var(--space-2),2vw,var(--space-5));
 }
 
 .font-head{font-family:var(--heading);}
@@ -128,7 +129,7 @@ h6{ font-size: var(--type-h6);}
   background-color: #070729;
   border: 2px solid var(--border);
   border-radius: 8px;
-  padding: 16px;
+  padding: var(--space-card-padding);
   margin: 16px 0;
   transition: box-shadow .2s ease, border-color .2s ease;
   display: flex;
@@ -255,15 +256,15 @@ label{display:flex;flex-direction:column;gap:7px;color: var(--txt-secondary);fon
 }
 
 input, select{
-  font-family:var(--body);
+  font-family:var(--body-font);
   background: #04021E;
   border:1px solid var(--border);
   color:var(--text);
   padding: 8px;
   border-radius: 2px;
   font-size: var(--type-input);
-  font-weight:500;
-  letter-spacing: -0.02em;
+  font-weight:400;
+  letter-spacing: 0em;
   outline:none;
   height: 40px;
   width: 100%;
