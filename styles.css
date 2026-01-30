@@ -343,7 +343,7 @@ td:first-child .cell-contain{
   font-family:var(--heading);
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1px;
   padding: 0 3px;
 }
 
