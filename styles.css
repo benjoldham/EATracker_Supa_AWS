@@ -46,6 +46,21 @@
 
   --type-table-head: clamp(0.5rem, 1vw, 0.875rem);
   --type-table-data: clamp(0.625rem, 1.2vw, 0.875rem);
+
+  --space-0: 0px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+  --space-9: 96px;
+  --space-10: 128px;
+
+  --space-page-gutter: var(--space-2); 
+  --space-page-max-gutter: var(--space-10);  
 }
 
 .font-head{font-family:var(--heading);}
@@ -71,10 +86,15 @@ h1, h2, h3, h4{ font-family:var(--heading); font-weight: 400; font-style: normal
 /* =========================
    LAYOUT / CONTAINERS
 ========================= */
-.container{max-width:1100px;margin:0 auto;padding: 8px;}
+.container{
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 1rem;
+  padding-inline: clamp(var(--space-page-gutter), 6vw, var(--space-page-max-gutter));
+}
 
 .app-header{
-  border-bottom:1px solid var(--border);
+  /* border-bottom:1px solid var(--border); */
   background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,0));
 }
 
@@ -109,7 +129,7 @@ h6{ font-size: var(--type-h6);}
   border: 2px solid var(--border);
   border-radius: 8px;
   padding: 16px;
-  margin:16px 0;
+  margin: 16px 0;
   transition: box-shadow .2s ease, border-color .2s ease;
   display: flex;
   flex-direction: column;
@@ -225,7 +245,7 @@ label{display:flex;flex-direction:column;gap:7px;color: var(--txt-secondary);fon
 .grid{
   display:grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap:12px;
+  gap: var(--space-3);
 }
 .grid > label{ min-width:0; }
 
@@ -808,4 +828,9 @@ th.sortable .arrow{margin: 2px 0 0 3px;color: var(--text);font-weight:900;positi
 
 @media (min-width: 1200px){
   .pitch-pos ul { max-height: 220px; }
+}
+
+@media (max-width: 768px) {       /* pick your “not mobile anymore” breakpoint */
+  .container{
+     padding-inline: var(--space-page-gutter);}
 }
