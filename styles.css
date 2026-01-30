@@ -30,7 +30,7 @@
   --great: var(--amber);
   --sell: var(--red);
   --heading: "Special Gothic Expanded One", sans-serif;
-  --body: "Inter", sans-serif;
+  --body: "Rubik", sans-serif;
 }
 
 .font-head{font-family:var(--heading);}
@@ -306,11 +306,13 @@ thead th:first-child{
 }
 
 tbody td{
-  padding: 8px 2px;
+  padding: 8px 0;
   border-bottom: 1px solid #979cb45e;
   vertical-align:middle;
   font-size:14px;
   white-space:nowrap;
+  /* display: flex; */
+  width: 36px;
 }
 tbody tr:hover td{ background: rgba(255,255,255,.03); }
 tbody tr.flash td{
@@ -328,6 +330,7 @@ th:first-child, td:first-child {
 td .cell-contain{
   font-size: 10px;
   width: 32px;
+  margin: 0 auto;
   text-overflow: ellipsis;
   overflow: hidden;
   text-align: center;
@@ -351,7 +354,8 @@ td:first-child .cell-contain{
   display: flex;
   flex-direction: column;
   gap: 4px;
-  padding: 0 0 0 3px;
+  padding: 0 0 0 4px;
+  margin: 0;
 }
 
 td:first-child .cell-contain span{
