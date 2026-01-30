@@ -345,6 +345,10 @@ td:first-child .cell-contain span{
   font-size:8px;
 }
 
+td:first-child .cell-contain span.badge{
+  padding:0;
+  border:none;
+}
 
 @keyframes flashRow{
   0%{ background: rgba(45,212,191,.22); }
@@ -364,10 +368,10 @@ td:first-child .cell-contain span{
   gap:6px;
   align-items:center;
 }
-.badge.special{ border-color: rgba(110,168,254,.55); background: rgba(110,168,254,.12); }
-.badge.exciting{ border-color: rgba(45,212,191,.55); background: rgba(45,212,191,.10); }
-.badge.great{ border-color: rgba(251,191,36,.55); background: rgba(251,191,36,.10); }
-.badge.sell{ border-color: rgba(255,107,107,.55); background: rgba(255,107,107,.10); }
+.badge.special{ border-color: rgba(110,168,254,.55); background: rgba(110,168,254,.12); color: rgba(110,168,254,.55)}
+.badge.exciting{ border-color: rgba(45,212,191,.55); background: rgba(45,212,191,.10); color: rgba(45,212,191,.55)}
+.badge.great{ border-color: rgba(251,191,36,.55); background: rgba(251,191,36,.10); color: rgba(251,191,36,.55);}
+.badge.sell{ border-color: rgba(255,107,107,.55); background: rgba(255,107,107,.10); color: rgba(255,107,107,.55)}
 
 /* Auto-detected badge (form) */
 .auto-badge{
