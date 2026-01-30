@@ -317,7 +317,7 @@ th:first-child, td:first-child {
 }
 
 td .cell-contain{
-  font-size: 11px;
+  font-size: 9px;
   width: 48px;
   text-overflow: ellipsis;
   overflow: hidden;
@@ -335,7 +335,16 @@ td .cell-contain.hidden{
 td:first-child .cell-contain{
   text-align:left;
   font-family:var(--heading);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
+
+td:first-child .cell-contain span{
+  font-family:var(--body);
+  font-size:8px;
+}
+
 
 @keyframes flashRow{
   0%{ background: rgba(45,212,191,.22); }
