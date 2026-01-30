@@ -1450,7 +1450,7 @@ function render(){
     if (lastFlashId && p.id === lastFlashId) tr.classList.add("flash");
 
     tr.innerHTML = `
-      <td><div class="cell-contain wide">${escapeHtml(displayName(p))} ${escapeHtml((p.foot === "L") ? "L" : "R")}</div></td>
+      <td><div class="cell-contain wide">${escapeHtml(displayName(p))} <span>${escapeHtml((p.foot === "L") ? "L" : "R")}</span></div></td>
       <td><div class="cell-contain">${escapeHtml(p.pos || "")}</div></td>
       <td><div class="cell-contain">${escapeHtml((p.foot === "L") ? "L" : "R")}</div></td>
       <td><div class="cell-contain">${escapeHtml(String(p.intl ?? ""))}</div></td>
