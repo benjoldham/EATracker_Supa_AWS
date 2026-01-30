@@ -1450,9 +1450,9 @@ function render(){
     if (lastFlashId && p.id === lastFlashId) tr.classList.add("flash");
 
     tr.innerHTML = `
-      <td><div class="cell-contain wide">${escapeHtml(displayName(p))} <div class="player-meta"><span>${escapeHtml((p.foot === "L") ? "L" : "R")} • <span class="badge ${badgeClass(status)}">${status}</span> • ${escapeHtml(p.seniority || "Senior")}</span></div></div></td>
+      <td><div class="cell-contain wide">${escapeHtml(displayName(p))} <div class="player-meta"><span><span class="badge ${badgeClass(status)}">${status}</span> • ${escapeHtml(p.seniority || "Senior")} • ${escapeHtml((p.foot === "L") ? "L" : "R")} •  ${p.homegrown ? "Y" : "N"}</span></div></div></td>
       <td><div class="cell-contain">${escapeHtml(p.pos || "")}</div></td>
-      <td><div class="cell-contain">${escapeHtml((p.foot === "L") ? "L" : "R")}</div></td>
+      <!-- <td><div class="cell-contain">${escapeHtml((p.foot === "L") ? "L" : "R")}</div></td> -->
       <td><div class="cell-contain">${escapeHtml(String(p.intl ?? ""))}</div></td>
       <td><div class="cell-contain">${avgDisplay}</div></td>
       <!-- <td><div class="cell-contain wide"><span class="badge ${badgeClass(status)}">${status}</span></div></td>
