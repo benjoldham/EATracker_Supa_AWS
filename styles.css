@@ -61,7 +61,11 @@
 
   --space-page-gutter: var(--space-2); 
   --space-page-max-gutter: var(--space-10);
-  --space-card-padding: clamp(var(--space-2),2vw,var(--space-5));
+
+  --space-card-padding: clamp(var(--space-2), 2vw, var(--space-5)) ;
+  --space-card-items: var(--space-4);
+
+  --space-form-fields: clamp(var(--space-2), 2vw, var(--space-4)) ;
 }
 
 .font-head{font-family:var(--heading);}
@@ -134,7 +138,7 @@ h6{ font-size: var(--type-h6);}
   transition: box-shadow .2s ease, border-color .2s ease;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--space-card-items);
 }
 .card.editing{
   border-color: rgba(45,212,191,.45);
@@ -164,7 +168,7 @@ h6{ font-size: var(--type-h6);}
 ========================= */
 .actions{
   display:flex;
-  gap:10px;
+  gap: var(--space-form-fields);
   flex-wrap:wrap;
   align-items:center;
 }
@@ -246,7 +250,7 @@ label{display:flex;flex-direction:column;gap:7px;color: var(--txt-secondary);fon
 .grid{
   display:grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: var(--space-3);
+  gap: var(--space-form-fields);
 }
 .grid > label{ min-width:0; }
 
