@@ -44,7 +44,8 @@
   --type-input: clamp(0.75rem, 1.6vw, 0.875rem);
   --type-toggle-label: clamp(0.5rem, 1vw, 0.625rem);
 
-  --type-table: clamp(0.5rem, 1vw, 0.625rem);
+  --type-table-head: clamp(0.5rem, 1vw, 0.875rem);
+  --type-table-data: clamp(0.625rem, 1.2vw, 0.875rem);
 }
 
 .font-head{font-family:var(--heading);}
@@ -310,7 +311,7 @@ thead th{
   border-bottom:1px solid var(--border);
   text-align: center;
   padding: 5px;
-  font-size: var(--type-table);
+  font-size: var(--type-table-head);
   text-transform: uppercase;
   color:var(--muted);
   white-space:nowrap;
@@ -343,7 +344,7 @@ th:first-child, td:first-child {
 }
 
 td .cell-contain{
-  font-size: var(--type-table);
+  font-size: var(--type-table-data);
   width: 32px;
   margin: 0 auto;
   text-overflow: ellipsis;
@@ -355,9 +356,8 @@ td .cell-contain{
 }
 
 td .cell-contain.wide{
-  width: 104px;
+  width: clamp(6.5rem, 25vw,12rem);
   color: var(--white);
-  
 }
 td .cell-contain.hidden{
   display:none;
@@ -369,13 +369,13 @@ td:first-child .cell-contain{
   display: flex;
   flex-direction: column;
   gap: 4px;
-  padding: 0 0 0 4px;
+  padding: 0 0 0 6px;
   margin: 0;
 }
 
 td:first-child .cell-contain span{
   font-family:var(--body-font);
-  font-size: var(--type-table);
+  font-size: var(--type-table-data);
   color: var(--muted);
 }
 
