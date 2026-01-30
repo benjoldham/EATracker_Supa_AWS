@@ -329,10 +329,10 @@ td .cell-contain{
   overflow: hidden;
   text-align: center;
   color:var(--muted);
-  font-weight:600;
+  font-weight: 700;
 }
 td .cell-contain.wide{
-  width: 96px;
+  width: 88px;
 }
 td .cell-contain.hidden{
   display:none;
@@ -344,6 +344,7 @@ td:first-child .cell-contain{
   display: flex;
   flex-direction: column;
   gap: 2px;
+  padding: 0 3px;
 }
 
 td:first-child .cell-contain span{
