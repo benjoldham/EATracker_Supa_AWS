@@ -1450,13 +1450,13 @@ function render(){
     if (lastFlashId && p.id === lastFlashId) tr.classList.add("flash");
 
     tr.innerHTML = `
-      <td><div class="cell-contain wide">${escapeHtml(displayName(p))} <div class="player-meta"><span>${escapeHtml((p.foot === "L") ? "L" : "R")} • ${badgeClass(status)}">${status} • ${escapeHtml(p.seniority || "Senior")}</span></div></div></td>
+      <td><div class="cell-contain wide">${escapeHtml(displayName(p))} <div class="player-meta"><span>${escapeHtml((p.foot === "L") ? "L" : "R")} • <span class="badge ${badgeClass(status)}">${status}</span> • ${escapeHtml(p.seniority || "Senior")}</span></div></div></td>
       <td><div class="cell-contain">${escapeHtml(p.pos || "")}</div></td>
       <td><div class="cell-contain">${escapeHtml((p.foot === "L") ? "L" : "R")}</div></td>
       <td><div class="cell-contain">${escapeHtml(String(p.intl ?? ""))}</div></td>
       <td><div class="cell-contain">${avgDisplay}</div></td>
-      <td><div class="cell-contain wide"><span class="badge ${badgeClass(status)}">${status}</span></div></td>
-      <td><div class="cell-contain wide">${escapeHtml(p.seniority || "Senior")}</div></td>
+      <!-- <td><div class="cell-contain wide"><span class="badge ${badgeClass(status)}">${status}</span></div></td>
+      <td><div class="cell-contain wide">${escapeHtml(p.seniority || "Senior")}</div></td> -->
       <td><div class="cell-contain">${p.homegrown ? "Y" : "N"}</div></td>
       <td class="num"><div class="cell-contain"><span class="val-neg">${fmtMoneyAbbrevFromGBP(p.cost_gbp || 0, currency)}</span></div></td>
       <td class="num"><div class="cell-contain">${saleCell}</div></td>
