@@ -322,6 +322,7 @@ const importFile = $("import-file");
 
 const rowsEl = $("rows");
 const tCost = $("t-cost");
+const playersCountEl = $("players-count");
 const tSale = $("t-sale");
 const tProfit = $("t-profit");
 const tRoi = $("t-roi");
@@ -419,7 +420,13 @@ async function startScanCamera(){
 
     // start at current zoom if available
     const settings = scanVideoTrack.getSettings?.() || {};
-    const startZoom = (typeof caps.zoom.max === "number") ? caps.zoom.max : (settings.zoom ?? caps.zoom.min);
+
+    // Start at ~50% between min and max (less zoomed-in than before)
+    const minZ = Number(caps.zoom.min);
+    const maxZ = Number(caps.zoom.max);
+    const midZ = (Number.isFinite(minZ) && Number.isFinite(maxZ)) ? (minZ + (maxZ - minZ) * 0.5) : (settings.zoom ?? caps.zoom.min);
+
+    const startZoom = midZ;
     scanZoom.value = startZoom;
 
     // Apply zoom immediately so it starts zoomed-in
@@ -1432,6 +1439,10 @@ function render(){
     });
 
   filtered = sortPlayers(filtered);
+
+  if (playersCountEl){
+    playersCountEl.textContent = `Showing ${filtered.length} player${filtered.length === 1 ? "" : "s"}`;
+  }
 
   rowsEl.innerHTML = "";
   for(const p of filtered){
