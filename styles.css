@@ -353,7 +353,7 @@ tbody td{
   vertical-align:middle;
   white-space:nowrap;
   min-width: 36px;
-  width: 20%;
+  width: clamp(2rem, 20vw, 10rem);
 }
 tbody tr:hover td{ background: rgba(255,255,255,.03); }
 tbody tr.flash td{
