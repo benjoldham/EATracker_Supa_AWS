@@ -386,11 +386,31 @@ export async function deleteSave(id) {
 
 export async function listPlayers(careerSaveId) {
   await initAws();
-  const { data, errors } = await client.models.Player.list({
-    filter: { careerSaveId: { eq: careerSaveId } },
-  });
-  if (errors?.length) throw new Error(joinErrors(errors));
-  return data ?? [];
+
+  let allPlayers = [];
+  let nextToken = null;
+
+  do {
+    const response = await client.models.Player.list({
+      filter: { careerSaveId: { eq: careerSaveId } },
+      limit: 1000,
+      nextToken,
+    });
+
+    const { data, errors } = response;
+
+    if (errors?.length) {
+      throw new Error(joinErrors(errors));
+    }
+
+    if (Array.isArray(data)) {
+      allPlayers = allPlayers.concat(data);
+    }
+
+    nextToken = response?.nextToken || null;
+  } while (nextToken);
+
+  return allPlayers;
 }
 
 export async function addPlayer(careerSaveId, player) {
