@@ -1803,10 +1803,15 @@ btnAdd.addEventListener("click", async ()=>{
     await requireLoginOrRedirect();
 
     // create via awsClient
-    const created = await aws.addPlayer?.(CURRENT_SAVE_ID, toAwsPlayer({ ...data, id: uid() }));
-    const inserted = created ? fromAwsPlayer(created) : fromAwsPlayer({ ...data, id: uid() });
+  const created = await aws.addPlayer?.(
+    CURRENT_SAVE_ID,
+    toAwsPlayer(data)
+  );
+
+  const inserted = fromAwsPlayer(created || data);
 
     players.push(inserted);
+    players = await fetchPlayers();
 
     if (seniorityFilter !== "All"){
       setSeniorityFilter(inserted.seniority);
