@@ -12,17 +12,21 @@
 <body>
   <header class="app-header">
     <div class="container">
-      <div class="card-head" style="margin:0; padding:0;">
+      <div class="card-head tracker-header">
         <div>
-          <h1 id="save-title">FC26 Transfer Tracker Test</h1>
+          <div class="save-title-row">
+            <h1 id="save-title">FC26 Transfer Tracker Test</h1>
+            <button id="edit-save-title" class="title-edit" type="button">Edit title</button>
+          </div>
           <p class="sub" id="save-sub">Track transfer cost, sale, profit and ROI per player. Data is saved to AWS (your account name here).</p>
         </div>
-        <div class="actions">
-          <a id="back-to-dashboard" class="btn btn-secondary" href="./index.html">Back to dashboard</a>
-          <button id="edit-save-title" class="btn btn-secondary" type="button">Edit title</button>
+        <div class="actions tracker-nav">
+          <a id="back-to-dashboard" class="btn btn-secondary" href="./index.html" aria-label="Dashboard" title="Dashboard">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          </a>
           <button id="btn-seed-master" class="btn btn-secondary hidden" type="button">Seed Player DB</button>
 <input id="master-file" class="hidden" type="file" accept=".csv,text/csv" />
-          <button id="btn-signout" type="button">Sign out</button>
+          <button id="btn-signout" class="btn btn-secondary" type="button">Sign out</button>
         </div>
       </div>
     </div>
@@ -71,7 +75,7 @@
             <select id="f-seniority">
               <option value="Senior" selected>Senior</option>
               <option value="Youth">Youth</option>
-              <option value="Watchlist">Watchlist</option>
+              <option value="Watchlist">Shortlist</option>
             </select>
           </label>
 
@@ -166,7 +170,7 @@
           <div class="segmented" role="tablist" aria-label="Seniority filter">
             <button class="seg-btn active" data-seniority="Senior" type="button">Senior</button>
             <button class="seg-btn" data-seniority="Youth" type="button">Youth</button>
-            <button class="seg-btn" data-seniority="Watchlist" type="button">Watchlist</button>
+            <button class="seg-btn" data-seniority="Watchlist" type="button">Shortlist</button>
             <button class="seg-btn" data-seniority="All" type="button">All</button>
           </div>
           <button id="btn-export" class="btn btn-secondary hidden" type="button">Export JSON</button>
@@ -204,7 +208,7 @@
           <div class="segmented" role="tablist" aria-label="Seniority filter">
             <button class="seg-btn active" data-seniority="Senior" type="button">Senior</button>
             <button class="seg-btn" data-seniority="Youth" type="button">Youth</button>
-            <button class="seg-btn" data-seniority="Watchlist" type="button">Watchlist</button>
+            <button class="seg-btn" data-seniority="Watchlist" type="button">Shortlist</button>
             <button class="seg-btn" data-seniority="All" type="button">All</button>
           </div>
           
@@ -217,7 +221,7 @@
       </div>
       <input id="search" class="search" placeholder="Search name / position…" />
       <label class="toggle">
-        <input type="checkbox" id="toggle-ex" checked>
+        <input type="checkbox" id="toggle-ex">
         <span>Show ex-players</span>
       </label>
 
@@ -248,44 +252,39 @@
     </section>
 
     <section class="card" id="pitch-card">
-  <div class="card-head">
-    <h2>Squad on pitch</h2>
-
-    <div class="actions">
-      <div class="segmented" role="tablist" aria-label="Pitch sort">
-        <button class="seg-btn active" data-pitch-sort="ovr" type="button">Overall</button>
-        <button class="seg-btn" data-pitch-sort="potential" type="button">Potential</button>
+      <div class="card-head pitch-header">
+        <h2>Squad on pitch</h2>
+        <div class="segmented" role="tablist" aria-label="Pitch sort">
+          <button class="seg-btn active" data-pitch-sort="ovr" type="button">Overall</button>
+          <button class="seg-btn" data-pitch-sort="potential" type="button">Potential</button>
+        </div>
       </div>
 
-      <select id="formation-select" class="select" aria-label="Formation">
-       <!-- options injected by JS from formations.js -->
+      <select id="formation-select" aria-label="Formation">
+        <!-- options injected by JS from formations.js -->
       </select>
 
-      <div class="segmented" role="tablist" aria-label="Pitch seniority">
-        <button class="seg-btn active" data-pitch-seniority="Senior" type="button">Senior</button>
-        <button class="seg-btn" data-pitch-seniority="Youth" type="button">Youth</button>
-        <button class="seg-btn" data-pitch-seniority="All" type="button">Senior+Youth</button>
-        <button class="seg-btn" data-pitch-seniority="Homegrown" type="button">Homegrown</button>
+      <p class="subtle pitch-hint">Players are grouped by position. Use the squad filters below to choose who appears.</p>
+
+      <div class="pitch-filters">
+        <div class="segmented segmented-secondary" role="tablist" aria-label="Pitch seniority">
+          <button class="seg-btn active" data-pitch-seniority="Senior" type="button">Senior</button>
+          <button class="seg-btn" data-pitch-seniority="Youth" type="button">Youth</button>
+          <button class="seg-btn" data-pitch-seniority="All" type="button">Senior + Youth</button>
+          <button class="seg-btn" data-pitch-seniority="Homegrown" type="button">Homegrown</button>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="pitch-watchlist">
+          <span>Include shortlist</span>
+        </label>
       </div>
 
-      <label class="toggle" style="margin-left:8px;">
-        <input type="checkbox" id="pitch-watchlist">
-        <span>Include watchlist</span>
-      </label>
-    </div>
-
-  </div>
-
-  <p class="subtle">
-    Uses the same Seniority / Active / Search filters as the table above. Players are grouped by position.
-  </p>
-
-  <div class="pitch-wrap">
-    <div class="pitch" id="pitch">
-      <!-- JS injects position panels here -->
-    </div>
-  </div>
-</section>
+      <div class="pitch-wrap">
+        <div class="pitch" id="pitch">
+          <!-- JS injects position panels here -->
+        </div>
+      </div>
+    </section>
 
 <!-- Scan modal -->
 <div id="scan-modal" class="modal hidden" role="dialog" aria-modal="true" aria-label="Scan player card">
