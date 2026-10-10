@@ -343,14 +343,21 @@ thead th{
   font-family: var(--heading);
 }
 
-thead th:first-child{
+thead th:first-child, tbody td:first-child{
   text-align:left;
+  padding-left: var(--space-2);
+}
+
+thead th:last-child, tbody td:last-child{
+  text-align:right;
+  padding-right: var(--space-2);
 }
 
 tbody td{
   padding: 8px 0;
   border-bottom: 1px solid #979cb45e;
   vertical-align:middle;
+  text-align:center;
   white-space:nowrap;
   min-width: 36px;
   width: clamp(2rem, 20vw, 10rem);
@@ -394,7 +401,7 @@ td:first-child .cell-contain{
   display: flex;
   flex-direction: column;
   gap: 4px;
-  padding: 0 0 0 6px;
+  padding: 0;
   margin: 0;
 }
 
@@ -547,6 +554,17 @@ th.sortable .arrow{margin: 2px 0 0 3px;color: var(--text);font-weight:900;positi
 #filter-active{display:none;}
 
 /* Dashboard: inline save name editor */
+#save-rows td{
+  font-size: var(--type-table-data);
+}
+#save-rows td:not(:first-child):not(:last-child){
+  color: var(--muted);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+#save-rows td:first-child{
+  font-family: var(--heading);
+}
 #save-rows span.subtle{display: none;}
 .save-name-input{ width:100%; font-weight:700; }
 
