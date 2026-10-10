@@ -87,10 +87,12 @@ function render(saves, statsBySaveId) {
       <td>${fmtDate(getSaveCreatedIso(s))}</td>
       <td class="num">${stat.count}</td>
       <td class="num">${fmtMoneyAbbrevGBP(stat.profit)}</td>
-      <td style="white-space:nowrap;">
-        <button class="btn btn-secondary" data-open>Open</button>
-        <button class="btn btn-secondary" data-edit>Edit</button>
-        <button class="btn btn-danger" data-del>Delete</button>
+      <td>
+        <div class="row-actions">
+          <button class="icon-btn" type="button" data-open>Open</button>
+          <button class="icon-btn" type="button" data-edit>Edit</button>
+          <button class="icon-btn danger" type="button" data-del>Delete</button>
+        </div>
       </td>
     `;
     rowsEl.appendChild(tr);
