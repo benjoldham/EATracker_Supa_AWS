@@ -5,18 +5,20 @@
   <title>Login — FC26 Transfer Tracker</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="stylesheet" href="./styles.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,300..900;1,300..900&family=Special+Gothic+Expanded+One&display=swap" rel="stylesheet">
   <style>
     .login-wrap { max-width: 520px; margin: 64px auto; padding: 0 16px; }
-    .card { background: #fff; border: 1px solid rgba(0,0,0,.08); border-radius: 14px; padding: 18px; }
-    .row { display: flex; gap: 10px; flex-wrap: wrap; }
-    .row > * { flex: 1; min-width: 180px; }
-    input { width: 100%; padding: 10px; font-size: 16px; }
-    button { padding: 10px 12px; font-size: 16px; cursor: pointer; }
-    .muted { opacity: .75; }
-    .error { color: #b00020; white-space: pre-wrap; }
-    .ok { color: #0a7a2f; white-space: pre-wrap; }
-    .hidden { display: none; }
-    .divider { height: 12px; }
+    .login-wrap .row { display: flex; gap: var(--space-form-fields); flex-wrap: wrap; }
+    .login-wrap .row > * { flex: 1; min-width: min(180px, 100%); }
+    .login-wrap label { margin-bottom: 7px; }
+    .login-wrap input { font-size: 16px; }
+    .login-wrap .muted { color: var(--muted); }
+    .login-wrap .error { color: var(--danger); white-space: pre-wrap; }
+    .login-wrap .ok { color: var(--ok); white-space: pre-wrap; }
+    .login-wrap #confirm-block { display: flex; flex-direction: column; gap: var(--space-card-items); }
+    .login-wrap #status:empty, .login-wrap #error:empty, .login-wrap #ok:empty { display: none; }
   </style>
 </head>
 <body>
@@ -27,23 +29,19 @@
     <div class="card">
       <div class="row">
         <div>
-          <label>Email</label>
+          <label for="email">Email</label>
           <input id="email" type="email" autocomplete="email" placeholder="you@email.com" />
         </div>
         <div>
-          <label>Password</label>
+          <label for="password">Password</label>
           <input id="password" type="password" autocomplete="current-password" placeholder="••••••••" />
         </div>
       </div>
 
-      <div class="divider"></div>
-
       <div class="row">
-        <button id="btn-signin" class="btn" type="button">Sign in</button>
+        <button id="btn-signin" class="btn btn-primary" type="button">Sign in</button>
         <button id="btn-signup" class="btn btn-secondary" type="button">Create account</button>
       </div>
-
-      <div class="divider"></div>
 
       <!-- Confirmation block (shown only when needed) -->
       <div id="confirm-block" class="hidden">
@@ -52,10 +50,9 @@
         </p>
         <div class="row">
           <input id="confirm-code" inputmode="numeric" placeholder="Verification code" />
-          <button id="btn-confirm" class="btn" type="button">Confirm account</button>
+          <button id="btn-confirm" class="btn btn-primary" type="button">Confirm account</button>
           <button id="btn-resend" class="btn btn-secondary" type="button">Resend code</button>
         </div>
-        <div class="divider"></div>
       </div>
 
       <div id="status" class="muted"></div>
