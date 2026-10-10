@@ -118,8 +118,9 @@ p{ font-family:var(--body-font); }
 .pitch-header .segmented{ margin-left:auto; }
 .pitch-filters{ display:flex; align-items:center; flex-wrap:wrap; gap:var(--space-4); }
 .pitch-filters .segmented{ flex-wrap:wrap; }
-.segmented-secondary{ background:var(--bg-primary); }
-.segmented-secondary .seg-btn.active{ background:var(--blue); color:var(--text); box-shadow:inset 0 -2px var(--green); }
+.segmented-secondary{ background:transparent; border:0; border-radius:0; }
+.segmented-secondary .seg-btn:hover{ background:transparent; color:var(--text); }
+.segmented-secondary .seg-btn.active{ background:transparent; color:var(--text); box-shadow:inset 0 -2px var(--green); }
 .pitch-hint{ margin:0; }
 
 /* =========================
