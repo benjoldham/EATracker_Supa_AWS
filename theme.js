@@ -11,7 +11,7 @@
     theme = next === "light" ? "light" : "dark";
     document.documentElement.dataset.theme = theme;
     document.querySelectorAll("[data-theme-toggle]").forEach(button => {
-      button.setAttribute("aria-pressed", String(theme === "light"));
+      button.setAttribute("aria-checked", String(theme === "dark"));
     });
   }
 
