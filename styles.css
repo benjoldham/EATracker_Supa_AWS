@@ -88,6 +88,8 @@ body{
 
 h1, h2, h3, h4{ font-family:var(--heading); font-weight: 400; font-style: normal;}
 
+p{ font-family:var(--body-font); }
+
 /* =========================
    LAYOUT / CONTAINERS
 ========================= */
@@ -371,6 +373,7 @@ thead th:last-child, tbody td:last-child{
 }
 
 tbody td{
+  font-family:var(--body-font);
   padding: 8px 0;
   border-bottom: 1px solid #979cb45e;
   vertical-align:middle;
@@ -572,15 +575,13 @@ th.sortable .arrow{margin: 2px 0 0 3px;color: var(--text);font-weight:900;positi
 
 /* Dashboard: inline save name editor */
 #save-rows td{
+  font-family: var(--body-font);
   font-size: var(--type-table-data);
 }
 #save-rows td:not(:first-child):not(:last-child){
   color: var(--muted);
   font-weight: 500;
   letter-spacing: 0.02em;
-}
-#save-rows td:first-child{
-  font-family: var(--heading);
 }
 #save-rows span.subtle{display: none;}
 .save-name-input{ width:100%; font-weight:700; }
