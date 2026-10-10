@@ -425,6 +425,11 @@ td:first-child .cell-contain{
   margin: 0;
 }
 
+td:first-child .cell-contain strong{
+  font-family:inherit;
+  font-weight:inherit;
+}
+
 td:first-child .cell-contain span{
   font-family:var(--body-font);
   font-size: var(--type-table-data);
