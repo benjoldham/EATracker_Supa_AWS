@@ -58,8 +58,11 @@
 
     <footer class="footer">
       <div class="theme-control">
-        <span>Appearance</span>
-        <button class="btn btn-secondary" type="button" data-theme-toggle aria-pressed="false">Light mode</button>
+        <button class="theme-switch" type="button" role="switch" data-theme-toggle aria-label="Dark mode" aria-checked="true" title="Toggle light and dark mode">
+          <span class="theme-switch-thumb" aria-hidden="true"></span>
+          <svg class="theme-switch-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></svg>
+          <svg class="theme-switch-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 14A9 9 0 0 1 10 3.5 9 9 0 1 0 20.5 14Z"/></svg>
+        </button>
       </div>
       <p>Tip: your saves are tied to your login, so you can access them on any device.</p>
     </footer>
