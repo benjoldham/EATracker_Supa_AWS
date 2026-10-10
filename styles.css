@@ -612,23 +612,27 @@ td:first-child .cell-contain span.badge{
 .footer{ margin:18px 0 30px; color:var(--muted); font-size:13px; }
 
 /* =========================
-   TOGGLES / FILTERS / MVP OVERRIDES
-   (kept BOTH .toggle blocks, order preserved so overrides still win)
+   CHECKBOX LABELS / FILTERS
 ========================= */
-
-.toggle{
+.checkbox-label{
   display:inline-flex;
-  gap:8px;
   align-items:center;
+  flex-direction:row;
+  gap:6px;
   color:var(--muted);
-  font-size:13px;
-  padding:6px 10px;
-  border:1px solid var(--border);
-  background: var(--bg-primary);
-  border-radius:999px;
+  font-size:var(--type-toggle-label);
+  padding:0;
+  border:0;
+  background:none;
 }
-.toggle input{ width:16px; height:16px; accent-color: var(--ok); }
-
+.checkbox-label input[type="checkbox"]{
+  width:auto;
+  height:auto;
+  max-width:none;
+  flex:none;
+  align-self:center;
+  margin:0;
+}
 
 tbody tr.inactive td .cell-contain{
   font-style: italic;
@@ -639,23 +643,6 @@ th.sortable{ cursor:pointer; user-select:none; }
 th.sortable.active-sort{ color: var(--text);  }
 th.sortable .arrow{margin: 2px 0 0 3px;color: var(--text);font-weight:900;position: absolute;font-size: 6px;}
 
-
-.toggle{
-  display:inline-flex;
-  align-items:center;
-  flex-direction: row;
-  gap:6px;
-  color:var(--muted);
-  font-size: 8px;
-  padding:0;
-  border:0;
-  background:none;
-}
-.toggle input{
-  width:14px;
-  height:14px;
-  margin:0;
-}
 
 #filter-active{display:none;}
 
@@ -1010,7 +997,6 @@ input, select, .btn-secondary, .icon-btn, .segmented{ border-color:var(--control
 .segmented-secondary .seg-btn{ border-bottom-color:var(--control-border); }
 .segmented-secondary .seg-btn.active{ border-bottom-color:var(--green); }
 .icon-btn, .seg-btn{ min-height:32px; }
-.toggle{ font-size:12px; min-height:24px; }
 .title-edit{ min-height:24px; }
 @media (prefers-reduced-motion: reduce){
   *, *::before, *::after{ animation:none !important; transition:none !important; }
