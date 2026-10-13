@@ -12,7 +12,7 @@
   --border-hover: #7582ad;
   --row-border: #979cb45e;
   --focus: #a9c7ff;
-  --control-border: #68769b;
+  --control-border: var(--border);
   --danger-bg: rgba(255,107,107,.12);
   --danger-border: #c06b85;
   --pitch-panel: #050d20;
@@ -44,6 +44,7 @@
   --exciting: var(--teal);
   --great: var(--amber);
   --sell: var(--red);
+  --radius-cell: 2px;
   --heading: "Special Gothic Expanded One", sans-serif;
   --body-font: "Rubik", sans-serif;
   
@@ -240,7 +241,7 @@ h6{ font-size: var(--type-h6);}
   background:var(--surface-hover);
   color:var(--text);
   padding:9px 12px;
-  border-radius: 2px;
+  border-radius: var(--radius-cell);
   cursor:pointer;
   font-weight: 400;
   font-family: var(--heading);
@@ -265,7 +266,7 @@ button{  font-family: var(--heading);}
   background: var(--surface-hover);
   color:var(--text);
   padding: 4px 6px;
-  border-radius: 2px;
+  border-radius: var(--radius-cell);
   cursor:pointer;
   font-size: var(--type-label);
   font-weight:700;
@@ -282,7 +283,7 @@ button{  font-family: var(--heading);}
   display:inline-flex;
   border:1px solid var(--border);
   background: var(--inactive);
-  border-radius: 2px;
+  border-radius: var(--radius-cell);
   overflow:hidden;
 }
 .seg-btn{
@@ -347,7 +348,7 @@ input, select{
   border:1px solid var(--border);
   color:var(--text);
   padding: 8px;
-  border-radius: 2px;
+  border-radius: var(--radius-cell);
   font-size: var(--type-input);
   font-weight:400;
   letter-spacing: 0em;
@@ -402,7 +403,7 @@ input:-ms-input-placeholder {
 .total{
   border:1px solid var(--border);
   background: var(--bg-primary);
-  border-radius:14px;
+  border-radius:var(--radius-cell);
   padding:10px 12px;
   font-family:var(--heading);
 }
@@ -415,7 +416,7 @@ input:-ms-input-placeholder {
 /* =========================
    TABLE STYLES
 ========================= */
-.table-wrap{overflow:auto;border-radius: 4px;border:1px solid var(--border);}
+.table-wrap{overflow:auto;border-radius: var(--radius-cell);border:1px solid var(--border);}
 table{
   width:100%;
   border-collapse:collapse;
@@ -535,7 +536,7 @@ td:first-child .cell-contain span.badge{
 .badge{
   font-size:12px;
   padding:4px 8px;
-  border-radius:999px;
+  border-radius:var(--radius-cell);
   border:1px solid var(--border);
   display:inline-flex;
   gap:6px;
@@ -548,19 +549,16 @@ td:first-child .cell-contain span.badge{
 
 /* Auto-detected badge (form) */
 .auto-badge{
-  display:inline-flex;
-  align-items:center;
-  gap:6px;
-  margin-top:6px;
-  width: fit-content;
-  padding:3px 8px;
-  font-size:11px;
-  font-weight:700;
-  border-radius:999px;
-  border:1px solid var(--green);
-  color: var(--green);
-  background:color-mix(in srgb, var(--green) 8%, var(--bg-secondary));
-  box-shadow: 0 0 10px color-mix(in srgb, var(--green) 18%, transparent);
+  display:inline-block;
+  margin-top:0;
+  padding:0;
+  font-size:var(--type-toggle-label);
+  font-weight:400;
+  border-radius:0;
+  border:0;
+  color:var(--green);
+  background:none;
+  box-shadow:none;
 }
 
 /* =========================
@@ -577,7 +575,7 @@ td:first-child .cell-contain span.badge{
   z-index: 50;
   background: var(--black);
   border: 1px solid var(--border);
-  border-radius: 2px;
+  border-radius: var(--radius-cell);
   /* fixed height + scroll */
   max-height: 320px;
   overflow-y: auto;
@@ -768,7 +766,7 @@ th.sortable .arrow{margin: 2px 0 0 3px;color: var(--text);font-weight:900;positi
   /* max-width: 375px; */          /* ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ was 860; reduces overall pitch width on small screens */
   overflow: scroll;
           /* ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ allow height to grow */
-  border-radius: 16px;
+  border-radius: var(--radius-cell);
   border: 1px solid var(--border);
   background:var(--pitch-bg);
 
@@ -824,7 +822,7 @@ th.sortable .arrow{margin: 2px 0 0 3px;color: var(--text);font-weight:900;positi
   position: relative;
   z-index:1;
   width: 100%;
-  border-radius: 4px;
+  border-radius: var(--radius-cell);
   backdrop-filter: blur(6px);
   box-sizing: border-box;
   overflow: hidden;
@@ -861,7 +859,7 @@ th.sortable .arrow{margin: 2px 0 0 3px;color: var(--text);font-weight:900;positi
   display: grid;
   gap: 0px;                        /* ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ tighter */
   background: var(--pitch-panel);
-  border-radius: 0 0 2px 2px;
+  border-radius: 0 0 var(--radius-cell) var(--radius-cell);
 }
 
 /* ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ compact row */
