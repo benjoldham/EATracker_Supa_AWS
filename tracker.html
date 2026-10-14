@@ -54,7 +54,7 @@
 
       <form id="player-form" autocomplete="off">
         <div class="grid">
-          <label class="suggest-box" style="grid-column: 1 / -1;">
+          <label class="suggest-box">
             Search player database
             <input id="f-lookup" placeholder="Type a name… (e.g. Bellingham)" />
             <div id="lookup-suggestions" class="suggestions hidden"></div>
@@ -226,7 +226,7 @@
         <span>Show ex-players</span>
       </label>
 
-      <div id="players-count" class="subtle" style="margin: 8px 0 6px;">Showing 0 players</div>
+      <div id="players-count" class="subtle">Showing 0 players</div>
 
       <div class="table-wrap">
         <table>
@@ -292,12 +292,12 @@
   <div class="modal-backdrop" data-scan-close></div>
     <div class="modal-panel">
     <div class="modal-head">
-      <h3 style="margin:0;">Scan player</h3>
+      <h3>Scan player</h3>
       <button class="btn btn-secondary" type="button" data-scan-close>Close</button>
     </div>
 
     <div class="modal-body">
-      <p class="subtle" style="margin-top:8px;">
+      <p class="subtle">
         Point your camera at the player overview screen, then tap Capture.
       </p>
 
@@ -310,7 +310,7 @@
 
       <canvas id="scan-canvas" class="hidden"></canvas>
 
-      <pre id="scan-debug" class="hidden" style="white-space:pre-wrap; margin-top:10px;"></pre>
+      <pre id="scan-debug" class="hidden"></pre>
     </div>
 
     <div class="modal-foot">
