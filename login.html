@@ -9,18 +9,6 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,300..900;1,300..900&family=Special+Gothic+Expanded+One&display=swap" rel="stylesheet">
-  <style>
-    .login-wrap { max-width: 520px; margin: 64px auto; padding: 0 16px; }
-    .login-wrap .row { display: flex; gap: var(--space-form-fields); flex-wrap: wrap; }
-    .login-wrap .row > * { flex: 1; min-width: min(180px, 100%); }
-    .login-wrap label { margin-bottom: 7px; }
-    .login-wrap input { font-size: 16px; }
-    .login-wrap .muted { color: var(--muted); }
-    .login-wrap .error { color: var(--danger); white-space: pre-wrap; }
-    .login-wrap .ok { color: var(--ok); white-space: pre-wrap; }
-    .login-wrap #confirm-block { display: flex; flex-direction: column; gap: var(--space-card-items); }
-    .login-wrap #status:empty, .login-wrap #error:empty, .login-wrap #ok:empty { display: none; }
-  </style>
 </head>
 <body>
   <div class="login-wrap">
@@ -46,7 +34,7 @@
 
       <!-- Confirmation block (shown only when needed) -->
       <div id="confirm-block" class="hidden">
-        <p class="muted" style="margin: 0 0 8px 0;">
+        <p class="muted confirmation-copy">
           Enter the verification code sent to your email.
         </p>
         <div class="row">
