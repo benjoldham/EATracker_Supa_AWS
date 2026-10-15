@@ -146,6 +146,7 @@ document.getElementById("btn-signin").addEventListener("click", async () => {
     if (!aws.getSession) throw new Error("Missing awsClient function: getSession()");
     const s = await aws.getSession();
     if (!s?.signedIn) throw new Error("Sign-in did not establish a session. If you just signed up, confirm your account first.");
+    window.FCTrackerNavigation.confirmSession();
 
     setStatus("");
     setOk("Signed in.");
@@ -169,7 +170,12 @@ document.getElementById("btn-signin").addEventListener("click", async () => {
   try {
     if (aws.getSession) {
       const s = await aws.getSession();
-      if (s?.signedIn) await goHome();
+      if (s?.signedIn) {
+        window.FCTrackerNavigation.confirmSession();
+        await goHome();
+      } else {
+        window.FCTrackerNavigation.clearSession();
+      }
     }
   } catch {
     // ignore
