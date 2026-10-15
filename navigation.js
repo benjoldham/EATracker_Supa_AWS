@@ -15,3 +15,11 @@ export function renderAppNavigation({ currentPage } = {}) {
   `;
   return navigation;
 }
+
+export function showAppLoadingError() {
+  if (!document.querySelector(".app-nav")?.hidden) return;
+  const status = document.querySelector(".app-loading-status");
+  status.setAttribute("role", "alert");
+  status.textContent =
+    "Unable to load your session. Please refresh to try again.";
+}
