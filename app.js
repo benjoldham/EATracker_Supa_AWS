@@ -1,21 +1,11 @@
 import * as aws from "./awsClient.js";
 import { FORMATIONS, DEFAULT_FORMATION } from "./formations.js";
 import Tesseract from "https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.esm.min.js";
-import { renderAppNavigation } from "./navigation.js";
-
-const appNavigation = renderAppNavigation();
+const appNavigation = window.FCTrackerNavigation;
 
 // FC26 Transfer Tracker (v7) — v6 UI + correct sorting + ex-player toggle
 // Exchange rates source: exchangerate-api.com (open.er-api.com) base GBP.
 // Rates last updated: Tue, 23 Dec 2025 00:02:31 +0000.
-
-document.getElementById("btn-signout")?.addEventListener("click", async () => {
-  const ok = confirm("Sign out?");
-  if (!ok) return;
-
-  await aws.awsSignOut?.();
-  location.href = "./login.html";
-});
 
 // Multi-save storage (legacy) — left in place for now; AWS uses URL save param + backend.
 const SAVES_KEY = "fc26_transfer_tracker_saves_v1";
@@ -1011,10 +1001,11 @@ btnEditSaveTitle?.addEventListener("click", async () => {
 async function requireLoginOrRedirect(){
   const session = await aws.getSession?.();
   if(!session?.signedIn){
+    appNavigation.clearSession();
     location.href = "./login.html";
     throw new Error("Not signed in");
   }
-  appNavigation.hidden = false;
+  appNavigation.confirmSession();
   return session;
 }
 
