@@ -55,7 +55,7 @@ function fixture(login) {
     let saves = JSON.parse(sessionStorage.getItem('fixture-saves') || 'null') || [{id:'city',title:'City RTG',createdAt:'2026-10-10T12:00:00.000Z',preferredFormation:'4-3-3'}, {id:'cfg',title:'CFG C2',createdAt:'2026-01-25T12:00:00.000Z'}, {id:'mcw',title:'MCWFC',createdAt:'2026-01-05T12:00:00.000Z'}];
     export async function initAws() {}
     export async function getSession() {if(globalThis.__fixtureSessionReady){globalThis.__fixtureSessionStarted=true;await globalThis.__fixtureSessionReady;}return {signedIn,user:{username:'fixture'}};}
-    export async function listSaves() {return structuredClone(saves);}
+    export async function listSaves() {globalThis.__fixtureSaveReads=(globalThis.__fixtureSaveReads||0)+1;return structuredClone(saves);}
     export async function listPlayers(id) {return structuredClone(players.filter(p=>p.careerSaveId===id));}
     export async function updateSave(id,patch) {const s=saves.find(s=>s.id===id);Object.assign(s,patch);sessionStorage.setItem('fixture-saves',JSON.stringify(saves));return structuredClone(s);}
     export async function updateSaveTitle(id,title) {return updateSave(id,{title});}
@@ -121,39 +121,82 @@ function fixture(login) {
     page.setDefaultTimeout(10000);
     const errors = [];
     page.on("pageerror", (e) => errors.push(e.message));
-    let releaseNavigation;
+    let releaseDependency;
+    const warm = checkLoading === "warm";
+    let initialHeaderY;
     if (checkLoading) {
-      await context.addInitScript(() => {
+      await context.addInitScript((warm) => {
+        if (warm) sessionStorage.setItem("fc26-session-ui", "signed-in");
         window.__fixtureSessionReady = new Promise((resolve) => {
           window.__releaseFixtureSession = resolve;
         });
+      }, warm);
+      const dependencyReady = new Promise((resolve) => {
+        releaseDependency = resolve;
       });
-      const navigationReady = new Promise((resolve) => {
-        releaseNavigation = resolve;
-      });
-      await context.route("**/navigation.js", async (route) => {
-        await navigationReady;
-        await route.continue();
-      });
+      await context.route(
+        warm ? "**/awsClient.js" : "**/navigation.js",
+        async (route) => {
+          await dependencyReady;
+          if (warm) {
+            await route.fulfill({
+              contentType: "text/javascript",
+              body: fixture(false),
+            });
+          } else {
+            await route.continue();
+          }
+        },
+      );
     }
     await page.goto(
       `${base}/${screen === "dashboard" ? "index" : screen}.html${screen === "tracker" ? "?save=city" : ""}`,
       { waitUntil: checkLoading ? "commit" : "load" },
     );
     if (checkLoading) {
-      await page.locator(".app-loading-status").waitFor();
-      await page.locator(".app-header").waitFor({ state: "hidden" });
-      assert.equal(await page.locator("main").isVisible(), false);
-      assert.equal(await page.locator(".app-nav").isVisible(), false);
-      assert.equal(await page.locator(".app-nav-brand").count(), 0);
-      releaseNavigation();
+      if (warm) {
+        await page.locator(".app-nav").waitFor();
+        await page.locator(".app-header").waitFor();
+        await page.locator("main").waitFor();
+        assert.equal(
+          await page.locator(".app-loading-status").isVisible(),
+          false,
+        );
+        initialHeaderY = (await page.locator(".app-header").boundingBox()).y;
+        assert.equal(initialHeaderY, 64);
+        assert.equal(
+          await page.evaluate(() => Boolean(window.__fixtureSessionStarted)),
+          false,
+        );
+        // The navigation responds even while the AWS module import is blocked.
+        page.once("dialog", (dialog) => {
+          assert.equal(dialog.message(), "Sign out?");
+          return dialog.dismiss();
+        });
+        await page.locator("#btn-signout").click();
+        assert.equal(
+          await page.evaluate(() => sessionStorage.getItem("fc26-session-ui")),
+          "signed-in",
+        );
+      } else {
+        await page.locator(".app-loading-status").waitFor();
+        await page.locator(".app-header").waitFor({ state: "hidden" });
+        assert.equal(await page.locator("main").isVisible(), false);
+        assert.equal(await page.locator(".app-nav").isVisible(), false);
+        assert.equal(await page.locator(".app-nav-brand").count(), 0);
+      }
+      releaseDependency();
       await page.waitForFunction(() => window.__fixtureSessionStarted);
       assert.equal(await page.locator(".app-nav-brand").count(), 1);
-      assert.equal(await page.locator(".app-nav").isVisible(), false);
-      assert.equal(await page.locator(".app-header").isVisible(), false);
-      assert.equal(await page.locator("main").isVisible(), false);
+      assert.equal(await page.locator(".app-nav").isVisible(), warm);
+      assert.equal(await page.locator(".app-header").isVisible(), warm);
+      assert.equal(await page.locator("main").isVisible(), warm);
+      assert.equal(
+        await page.evaluate(() => window.__fixtureSaveReads || 0),
+        0,
+      );
       await page.screenshot({
-        path: `${output}/loading-${screen}-${width}.png`,
+        path: `${output}/loading-${warm ? "warm" : "cold"}-${screen}-${width}.png`,
       });
       await page.evaluate(() => window.__releaseFixtureSession());
     }
@@ -169,12 +212,18 @@ function fixture(login) {
       );
     }
     if (checkLoading) {
+      if (warm)
+        assert.equal(
+          (await page.locator(".app-header").boundingBox()).y,
+          initialHeaderY,
+        );
       report.checks.push({
         screen,
         theme,
         width,
-        loading:
-          "Delayed module and session: loading status first, navigation and page revealed together",
+        loading: warm
+          ? "Verified tab: navigation and page visible before AWS imports and session check; no data read before validation or header shift afterward"
+          : "Fresh tab: loading status until initial session validation, then navigation and page revealed together",
       });
     }
     const geometry = await page.evaluate(() => ({
@@ -453,6 +502,19 @@ function fixture(login) {
             await page.locator("#confirm-code").fill("123456");
             await page.locator("#btn-confirm").click();
             await page.locator("#confirm-block").waitFor({ state: "hidden" });
+            await page.locator("#btn-signin").click();
+            await page.waitForURL("**/index.html");
+            await page.locator(".app-nav").waitFor();
+            assert.equal(
+              await page.evaluate(() =>
+                sessionStorage.getItem("fc26-session-ui"),
+              ),
+              "signed-in",
+            );
+            // An authenticated visit to Login retains the hint when redirecting.
+            await page.goto(`${base}/login.html`);
+            await page.waitForURL("**/index.html");
+            await page.locator(".app-nav").waitFor();
           }
           assert.deepEqual(errors, [], "No errors during interactions");
           assert.deepEqual(
@@ -489,6 +551,12 @@ function fixture(login) {
               null,
             );
             assert.equal(page.url(), target);
+            assert.equal(
+              await page.evaluate(() =>
+                sessionStorage.getItem("fc26-session-ui"),
+              ),
+              "signed-in",
+            );
             page.once("dialog", (d) => d.accept());
             await page.locator("#btn-signout").click();
             await page.waitForURL("**/login.html");
@@ -499,6 +567,12 @@ function fixture(login) {
               "1",
             );
             assert.equal(await page.locator(".app-nav").count(), 0);
+            assert.equal(
+              await page.evaluate(() =>
+                sessionStorage.getItem("fc26-session-ui"),
+              ),
+              null,
+            );
             await context.addInitScript(() => {
               // Avoid the pre-existing signed-out error alert blocking its own redirect.
               // Sign-out confirmation was exercised with real native dialogs above.
@@ -565,14 +639,16 @@ function fixture(login) {
     }
     for (const screen of ["dashboard", "tracker"]) {
       for (const width of [320, 1440]) {
-        const { context } = await open(
-          screen,
-          width === 320 ? "light" : "dark",
-          width,
-          1000,
-          true,
-        );
-        await context.close();
+        for (const mode of [true, "warm"]) {
+          const { context } = await open(
+            screen,
+            width === 320 ? "light" : "dark",
+            width,
+            1000,
+            mode,
+          );
+          await context.close();
+        }
       }
     }
     const failureContext = await browser.newContext();
@@ -602,6 +678,47 @@ function fixture(login) {
         "Loading state becomes an accessible error with a retry instruction",
     });
     await failureContext.close();
+    const expiredContext = await browser.newContext();
+    await expiredContext.addInitScript(() => {
+      if (location.pathname !== "/login.html")
+        sessionStorage.setItem("fc26-session-ui", "signed-in");
+      sessionStorage.setItem("fixture-signed-in", "false");
+      window.alert = () => {};
+    });
+    await expiredContext.route("**/awsClient.js", (route) =>
+      route.fulfill({
+        contentType: "text/javascript",
+        body: fixture(true),
+      }),
+    );
+    await expiredContext.route("https://esm.sh/aws-amplify@6/auth", (route) =>
+      route.fulfill({
+        contentType: "text/javascript",
+        body: "export async function confirmSignUp(){};export async function resendSignUpCode(){};",
+      }),
+    );
+    const expiredPage = await expiredContext.newPage();
+    await expiredPage.goto(`${base}/index.html`, { waitUntil: "commit" });
+    await expiredPage.waitForFunction(() =>
+      location.pathname.endsWith("/login.html"),
+    );
+    await expiredPage.locator("#email").waitFor();
+    assert.equal(
+      await expiredPage.evaluate(() =>
+        sessionStorage.getItem("fc26-session-ui"),
+      ),
+      null,
+    );
+    assert.equal(
+      await expiredPage.evaluate(() => window.__fixtureSaveReads || 0),
+      0,
+    );
+    assert.equal(await expiredPage.locator(".app-nav").count(), 0);
+    report.checks.push({
+      expiredSession:
+        "Stale presentation hint is cleared on a denied session; login redirect remains in place",
+    });
+    await expiredContext.close();
     report.status = "passed";
   } catch (error) {
     report.status = "failed";
