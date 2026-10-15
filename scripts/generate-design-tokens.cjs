@@ -4,8 +4,27 @@ const root = path.resolve(__dirname, "..");
 const snapshot = JSON.parse(
   fs.readFileSync(path.join(root, "design-system/figma-tokens.json"), "utf8"),
 );
-const name = (value) => value.replaceAll("/", "-");
-const primitive = (value) => `--primitive-${name(value)}`;
+// Use Figma's token name, excluding its organisational groups. Keep the
+// immediate role only for ambiguous leaves shared by different variables.
+const qualifiedNames = {
+  "font/family/primary": "family-primary",
+  "font/family/secondary": "family-secondary",
+  "text/primary": "text-primary",
+  "action/primary": "action-primary",
+  "control/secondary": "control-secondary",
+  "border/hover": "border-hover",
+  "surface/hover": "surface-hover",
+  "card/gap": "card-gap",
+  "pitch/gap": "pitch-gap",
+};
+const name = (value) => {
+  const leaf = value.split("/").at(-1);
+  // Bare numeric weights would lose their meaning in a flat namespace.
+  return (
+    qualifiedNames[value] || (/^\d+$/.test(leaf) ? `weight-${leaf}` : leaf)
+  );
+};
+const property = (value) => `--${name(value)}`;
 function unwrap(value) {
   if (value && value.alias) return unwrap(value.values[0].value);
   if (value && value.missing)
@@ -25,13 +44,10 @@ function literal(variable, value) {
 }
 function declaration(variable, mode, collection) {
   const entry = variable.values.find((x) => x.mode === mode);
-  const key =
-    collection === "_primitives"
-      ? primitive(variable.name)
-      : `--${name(variable.name)}`;
+  const key = property(variable.name);
   let value =
     collection === "Colour Modes"
-      ? `var(${primitive(entry.value.alias)})`
+      ? `var(${property(entry.value.alias)})`
       : literal(variable, entry.value);
   // Sizes aliases to approved spacing retain the primitive hierarchy.
   if (collection === "Sizes" && entry.value.alias?.startsWith("spacing/")) {
@@ -40,7 +56,7 @@ function declaration(variable, mode, collection) {
       (v) =>
         v.name.startsWith("spacing/") && unwrap(v.values[0].value) === resolved,
     );
-    if (match) value = `var(${primitive(match.name)})`;
+    if (match) value = `var(${property(match.name)})`;
   }
   return `  ${key}: ${value};`;
 }
@@ -50,6 +66,17 @@ const colours = snapshot.collections["Colour Modes"];
 const sizes = snapshot.collections.Sizes.filter(
   (v) => !v.name.startsWith("breakpoint/"),
 );
+// Refuse collisions instead of silently overriding another token or changing
+// established public names when a future Figma variable is added.
+const properties = new Map();
+for (const variable of [...primitives, ...colours, ...sizes]) {
+  const key = property(variable.name);
+  if (properties.has(key))
+    throw new Error(
+      `Token name collision: ${properties.get(key)} and ${variable.name} both map to ${key}`,
+    );
+  properties.set(key, variable.name);
+}
 const block = (selector, lines) => `${selector} {\n${lines.join("\n")}\n}\n`;
 let css =
   "/* Generated from live Figma collections. Run node scripts/generate-design-tokens.cjs. */\n";
