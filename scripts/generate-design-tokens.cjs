@@ -58,6 +58,10 @@ function declaration(variable, mode, collection) {
     );
     if (match) value = `var(${property(match.name)})`;
   }
+  // Application density override; retain the original Figma snapshot for reference.
+  if (variable.name === "page/gutter" && mode === "Xl > LG") {
+    value = "var(--spacing-24)";
+  }
   return `  ${key}: ${value};`;
 }
 const primitives = snapshot.collections._primitives;
