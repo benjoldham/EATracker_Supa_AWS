@@ -57,6 +57,44 @@ p {
   padding-inline: var(--gutter);
 }
 
+/* Shared signed-in navigation; colours follow the active theme tokens. */
+.app-nav {
+  background: var(--card);
+  border-bottom: 1px solid var(--default);
+}
+.app-nav .container {
+  min-height: calc(var(--spacing-64) - 1px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-24);
+  padding-block: var(--spacing-12);
+}
+.app-nav-brand {
+  min-width: 0;
+  font-family: var(--family-secondary), sans-serif;
+  font-size: var(--h4);
+  line-height: var(--h4-line-height);
+  text-transform: uppercase;
+}
+.app-nav-actions {
+  flex-shrink: 0;
+  flex-wrap: nowrap;
+  gap: var(--spacing-8);
+}
+.app-nav .btn {
+  flex: none;
+  height: var(--utility-height);
+  white-space: nowrap;
+}
+.app-nav #back-to-dashboard {
+  width: var(--utility-height);
+  padding: 0;
+}
+.app-nav [aria-current="page"] {
+  border-color: var(--border-hover);
+}
+
 .app-header {
   background: var(--page);
 }
@@ -64,10 +102,13 @@ p {
 .card-head.page-header {
   align-items: flex-start;
   flex-wrap: wrap;
-  padding-bottom: var(--spacing-64);
+  padding-block: var(--spacing-64);
 }
 .app-header .container {
-  padding-bottom: 0;
+  padding-block: 0;
+}
+.app-header + main.container {
+  padding-top: 0;
 }
 .page-header > :first-child {
   flex: 1;
@@ -103,6 +144,9 @@ p {
   flex-wrap: nowrap;
   gap: var(--spacing-8);
 }
+.header-utilities:not(:has(> .btn:not(.hidden))) {
+  display: none;
+}
 .header-utilities /* Action variants and hover states */
 .btn {
   display: inline-flex;
@@ -112,10 +156,6 @@ p {
   height: var(--utility-height);
   text-decoration: none;
   white-space: nowrap;
-}
-.header-utilities #back-to-dashboard {
-  width: var(--utility-height);
-  padding: 0;
 }
 .pitch-header {
   flex-wrap: wrap;
@@ -1077,6 +1117,9 @@ th.sortable .arrow {
 }
 
 @media (max-width: 768px) {
+  .app-nav .container {
+    gap: var(--spacing-8);
+  }
   .page-header > :first-child {
     flex-basis: 100%;
   }
@@ -1084,7 +1127,7 @@ th.sortable .arrow {
     margin-left: auto;
   }
   .card-head.page-header {
-    padding-bottom: var(--spacing-32);
+    padding-block: var(--spacing-32);
   }
   .pitch {
     min-height: 0;
