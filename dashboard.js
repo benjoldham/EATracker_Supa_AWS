@@ -1,4 +1,7 @@
 import * as aws from "./awsClient.js";
+import { renderAppNavigation } from "./navigation.js";
+
+const appNavigation = renderAppNavigation({ currentPage: "dashboard" });
 
 document.getElementById("btn-signout")?.addEventListener("click", async () => {
   const ok = confirm("Sign out?");
@@ -105,6 +108,7 @@ async function requireLoginOrRedirect() {
     location.href = "./login.html";
     throw new Error("Not signed in");
   }
+  appNavigation.hidden = false;
   return s;
 }
 
