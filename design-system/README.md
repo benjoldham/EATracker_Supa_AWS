@@ -18,6 +18,8 @@ Semantic colours still reference primitives, and Size aliases to existing spacin
 
 Dark is the default. `[data-theme="light"]` changes only semantic colour bindings. Compact Sizes values apply at `max-width: 768px`. The three breakpoint variables contain explanatory strings, rather than numeric CSS lengths: they map to 768px for the compact/gutter mode, 900px for two-column forms and totals, and 1200px for pitch list constraints. They are preserved in the snapshot and represented as literal media conditions because custom properties cannot be used in media conditions.
 
+Application override: the desktop page gutter uses `--spacing-24` (24px) instead of the snapshot's 96px. Compact gutters remain 8px. The generator applies this override centrally so navigation and page content stay aligned and regeneration preserves the requested spacing; the original Figma snapshot is unchanged.
+
 | Type | Desktop size / line height | Compact size / line height |
 | --- | --- | --- |
 | h1 | 36 / 40 | 24 / 32 |
