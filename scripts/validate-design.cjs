@@ -50,7 +50,7 @@ const seedPlayers = Array.from({ length: 25 }, (_, i) => ({
 }));
 function fixture(login) {
   return `
-    let signedIn = ${!login};
+    let signedIn = JSON.parse(sessionStorage.getItem('fixture-signed-in') || '${!login}');
     let players = ${JSON.stringify(seedPlayers)};
     let saves = JSON.parse(sessionStorage.getItem('fixture-saves') || 'null') || [{id:'city',title:'City RTG',createdAt:'2026-10-10T12:00:00.000Z',preferredFormation:'4-3-3'}, {id:'cfg',title:'CFG C2',createdAt:'2026-01-25T12:00:00.000Z'}, {id:'mcw',title:'MCWFC',createdAt:'2026-01-05T12:00:00.000Z'}];
     export async function initAws() {}
@@ -68,8 +68,8 @@ function fixture(login) {
     export function getPlayerMasterCacheStatus() {return {ready:true,loadedCount:25};}
     export async function searchPlayerMaster() {return [{id:'master',firstName:'Jude',surname:'Bellingham',position:'CM',overall:90,potential:94,foot:'R'}];}
     export async function awsSignUp() {return {nextStep:{signUpStep:'CONFIRM_SIGN_UP'}};}
-    export async function awsSignIn() {signedIn=true;}
-    export async function awsSignOut() {signedIn=false;}
+    export async function awsSignIn() {signedIn=true;sessionStorage.setItem('fixture-signed-in','true');}
+    export async function awsSignOut() {signedIn=false;sessionStorage.setItem('fixture-signed-in','false');sessionStorage.setItem('fixture-signout-count',String(Number(sessionStorage.getItem('fixture-signout-count'))+1));}
   `;
 }
 (async () => {
@@ -153,6 +153,47 @@ function fixture(login) {
       "Google fonts must load for visual comparison",
     );
     if (geometry.field) assert.equal(geometry.field, 40);
+    if (screen === "login") {
+      assert.equal(await page.locator(".app-nav").count(), 0);
+    } else {
+      const nav = page.locator('nav[aria-label="Application"]');
+      assert.equal(await nav.isVisible(), true);
+      const navBox = await nav.boundingBox();
+      assert.equal(navBox.x, 0);
+      assert.equal(navBox.width, width);
+      assert.equal(navBox.height, 64);
+      assert.equal(await nav.locator(".btn.btn-secondary").count(), 2);
+      assert.equal(await page.locator("#btn-signout").count(), 1);
+      assert.equal(await page.locator("#back-to-dashboard").count(), 1);
+      assert.equal(
+        await page
+          .locator(".app-header #btn-signout, .app-header #back-to-dashboard")
+          .count(),
+        0,
+      );
+      assert.equal(
+        await page.locator("#back-to-dashboard").getAttribute("aria-current"),
+        screen === "dashboard" ? "page" : null,
+      );
+      const alignment = await page.evaluate(() => ({
+        brand: document.querySelector(".app-nav-brand").getBoundingClientRect()
+          .x,
+        card: document.querySelector("main > .card").getBoundingClientRect().x,
+        header: document.querySelector(".app-header").getBoundingClientRect().y,
+      }));
+      assert.equal(alignment.brand, alignment.card);
+      assert.equal(alignment.header, 64);
+      await page.keyboard.press("Tab");
+      for (const id of ["back-to-dashboard", "btn-signout"]) {
+        await page.locator(`#${id}`).focus();
+        assert.equal(
+          await page
+            .locator(`#${id}`)
+            .evaluate((el) => getComputedStyle(el).outlineStyle),
+          "solid",
+        );
+      }
+    }
     const file = `${screen}-${theme}-${width}.png`;
     await page.screenshot({ path: `${output}/${file}`, fullPage: true });
     report.screenshots.push(file);
@@ -189,6 +230,33 @@ function fixture(login) {
                 : 844,
           );
           if (screen === "tracker") {
+            // Production hides the administrative action; its empty group must not add a row.
+            await page
+              .locator("#btn-seed-master")
+              .evaluate((el) => el.classList.add("hidden"));
+            assert.equal(
+              await page.locator(".header-utilities").isVisible(),
+              false,
+            );
+            await page
+              .locator("#btn-seed-master")
+              .evaluate((el) => el.classList.remove("hidden"));
+            assert.equal(
+              await page.locator("#btn-seed-master").isVisible(),
+              true,
+            );
+            page.once("dialog", (d) => d.accept("Navigation test career"));
+            await page.locator("#edit-save-title").click();
+            assert.equal(
+              await page.locator("#save-title").textContent(),
+              "Navigation test career",
+            );
+            await page.reload();
+            await page.waitForFunction(
+              () =>
+                document.querySelector("#save-title")?.textContent ===
+                "Navigation test career",
+            );
             const wrap = page.locator(".table-wrap").first();
             if (width < 768)
               assert.equal(
@@ -349,6 +417,74 @@ function fixture(login) {
             ),
             [],
           );
+          if (screen !== "login") {
+            // Exercise the shared link and the original confirmation/sign-out handlers.
+            await page.locator("#back-to-dashboard").click();
+            await page.waitForURL("**/index.html");
+            await page
+              .locator('#back-to-dashboard[aria-current="page"]')
+              .waitFor();
+            const target = `${base}/${screen === "dashboard" ? "index.html" : "tracker.html?save=city"}`;
+            await page.goto(target);
+            await page.locator(".app-nav").waitFor({ state: "visible" });
+            page.once("dialog", (d) => {
+              assert.equal(d.message(), "Sign out?");
+              return d.dismiss();
+            });
+            await page.locator("#btn-signout").click();
+            assert.equal(
+              await page.evaluate(() =>
+                sessionStorage.getItem("fixture-signout-count"),
+              ),
+              null,
+            );
+            assert.equal(page.url(), target);
+            page.once("dialog", (d) => d.accept());
+            await page.locator("#btn-signout").click();
+            await page.waitForURL("**/login.html");
+            assert.equal(
+              await page.evaluate(() =>
+                sessionStorage.getItem("fixture-signout-count"),
+              ),
+              "1",
+            );
+            assert.equal(await page.locator(".app-nav").count(), 0);
+            await context.addInitScript(() => {
+              // Avoid the pre-existing signed-out error alert blocking its own redirect.
+              // Sign-out confirmation was exercised with real native dialogs above.
+              window.alert = () => {};
+              new MutationObserver(() => {
+                if (document.querySelector(".app-nav:not([hidden])")) {
+                  sessionStorage.setItem(
+                    "fixture-unauthenticated-nav-shown",
+                    "true",
+                  );
+                }
+              }).observe(document, {
+                subtree: true,
+                attributes: true,
+                childList: true,
+              });
+            });
+            await page.goto(target, { waitUntil: "commit" });
+            await page.waitForFunction(() =>
+              location.pathname.endsWith("/login.html"),
+            );
+            await page.locator("#email").waitFor();
+            assert.equal(
+              await page.evaluate(() =>
+                sessionStorage.getItem("fixture-unauthenticated-nav-shown"),
+              ),
+              null,
+            );
+            report.checks.push({
+              screen,
+              theme,
+              width,
+              navigation:
+                "link, current page, sign-out cancel/confirm and signed-out redirect passed",
+            });
+          }
           await context.close();
         }
     // Intermediate breakpoints, focus, hover and reduced motion.
