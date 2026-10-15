@@ -34,6 +34,8 @@ The obsolete colour names, role-specific font-size aliases and old spacing alias
 
 ## Component mapping
 
+The shared `navigation.js` script renders navigation before the page header, independently of AWS and OCR module imports. The tab-scoped `fc26-session-ui` sessionStorage entry records a previously verified session for presentation only, allowing subsequent pages to render immediately. The existing AWS session check still gates account data; the hint grants no access. Login and successful session checks set the hint, while sign-out and a denied session clear it. A fresh tab or unavailable storage retains the initial session-loading screen. Login uses the same lifecycle helper without rendering navigation.
+
 | Application selectors | Live master nodes |
 | --- | --- |
 | `.btn`, `.icon-btn`, `.title-edit` | Buttons `58:23`, Row Button `61:13`, Text Link within Page Header `74:570` |
