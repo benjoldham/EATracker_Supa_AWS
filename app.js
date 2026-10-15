@@ -1,6 +1,9 @@
 import * as aws from "./awsClient.js";
 import { FORMATIONS, DEFAULT_FORMATION } from "./formations.js";
 import Tesseract from "https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.esm.min.js";
+import { renderAppNavigation } from "./navigation.js";
+
+const appNavigation = renderAppNavigation();
 
 // FC26 Transfer Tracker (v7) — v6 UI + correct sorting + ex-player toggle
 // Exchange rates source: exchangerate-api.com (open.er-api.com) base GBP.
@@ -1011,6 +1014,7 @@ async function requireLoginOrRedirect(){
     location.href = "./login.html";
     throw new Error("Not signed in");
   }
+  appNavigation.hidden = false;
   return session;
 }
 
