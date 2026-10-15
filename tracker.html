@@ -11,6 +11,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,300..900;1,300..900&family=Special+Gothic+Expanded+One&display=swap" rel="stylesheet">
 </head>
 <body>
+  <nav class="app-nav" aria-label="Application" hidden></nav>
   <header class="app-header">
     <div class="container">
       <div class="card-head page-header">
@@ -22,12 +23,8 @@
           <p class="sub" id="save-sub">Track transfer cost, sale, profit and ROI per player. Data is saved to AWS (your account name here).</p>
         </div>
         <div class="actions header-utilities">
-          <a id="back-to-dashboard" class="btn btn-secondary" href="./index.html" aria-label="Dashboard" title="Dashboard">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-          </a>
           <button id="btn-seed-master" class="btn btn-secondary hidden" type="button">Seed Player DB</button>
-<input id="master-file" class="hidden" type="file" accept=".csv,text/csv" />
-          <button id="btn-signout" class="btn btn-secondary" type="button">Sign out</button>
+          <input id="master-file" class="hidden" type="file" accept=".csv,text/csv" />
         </div>
       </div>
     </div>
