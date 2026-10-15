@@ -58,6 +58,19 @@ p {
 }
 
 /* Shared signed-in navigation; colours follow the active theme tokens. */
+.app-loading-status {
+  margin: var(--spacing-64) auto;
+  padding: var(--spacing-16) var(--gutter);
+  color: var(--muted);
+}
+/* Apply before scripts load, then reveal the complete shell in the same render. */
+.app-nav[hidden] ~ .app-header,
+.app-nav[hidden] ~ main {
+  display: none;
+}
+.app-nav:not([hidden]) + .app-loading-status {
+  display: none;
+}
 .app-nav {
   background: var(--card);
   border-bottom: 1px solid var(--default);
