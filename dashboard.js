@@ -1,5 +1,5 @@
 import * as aws from "./awsClient.js";
-import { renderAppNavigation } from "./navigation.js";
+import { renderAppNavigation, showAppLoadingError } from "./navigation.js";
 
 const appNavigation = renderAppNavigation({ currentPage: "dashboard" });
 
@@ -206,6 +206,7 @@ rowsEl?.addEventListener("click", async (e) => {
     await requireLoginOrRedirect();
     await refresh();
   } catch (err) {
+    showAppLoadingError();
     alert(err?.message || String(err));
     console.error(err);
   }
