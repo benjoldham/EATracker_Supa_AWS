@@ -1,5 +1,9 @@
 # Executed validation — 14 October 2026
 
+## Token naming follow-up — 15 October 2026
+
+Renamed token properties to Figma leaf names and updated every CSS reference and the generator. A comparison against the pre-rename stylesheets confirmed identical declarations, values, aliases, selectors, theme scopes and media conditions after substituting the rename map. All custom-property references resolve; generation, formatting and `git diff --check` passed. The existing fixture-backed Chrome validation script passed all 23 layout cases again. All 23 main layout screenshots were byte-identical to their pre-rename captures (SHA-256 comparison). This follow-up did not change application JavaScript, token values or Figma source paths. Follow-up browser output is in `/private/tmp/fc26-token-rename-visual/`.
+
 ## Automated checks
 
 - `node scripts/generate-design-tokens.cjs --check`: passed; 56 primitives, 25 semantic colours in both modes and 29 numeric Sizes tokens. The other three Sizes variables describe breakpoints and map to literal media queries.
