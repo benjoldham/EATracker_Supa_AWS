@@ -54,7 +54,7 @@ function fixture(login) {
     let players = ${JSON.stringify(seedPlayers)};
     let saves = JSON.parse(sessionStorage.getItem('fixture-saves') || 'null') || [{id:'city',title:'City RTG',createdAt:'2026-10-10T12:00:00.000Z',preferredFormation:'4-3-3'}, {id:'cfg',title:'CFG C2',createdAt:'2026-01-25T12:00:00.000Z'}, {id:'mcw',title:'MCWFC',createdAt:'2026-01-05T12:00:00.000Z'}];
     export async function initAws() {}
-    export async function getSession() {return {signedIn,user:{username:'fixture'}};}
+    export async function getSession() {if(globalThis.__fixtureSessionReady){globalThis.__fixtureSessionStarted=true;await globalThis.__fixtureSessionReady;}return {signedIn,user:{username:'fixture'}};}
     export async function listSaves() {return structuredClone(saves);}
     export async function listPlayers(id) {return structuredClone(players.filter(p=>p.careerSaveId===id));}
     export async function updateSave(id,patch) {const s=saves.find(s=>s.id===id);Object.assign(s,patch);sessionStorage.setItem('fixture-saves',JSON.stringify(saves));return structuredClone(s);}
@@ -88,7 +88,7 @@ function fixture(login) {
     checks: [],
     screenshots: [],
   };
-  async function open(screen, theme, width, height) {
+  async function open(screen, theme, width, height, checkLoading = false) {
     const context = await browser.newContext({
       viewport: { width, height },
       reducedMotion: "reduce",
@@ -121,12 +121,62 @@ function fixture(login) {
     page.setDefaultTimeout(10000);
     const errors = [];
     page.on("pageerror", (e) => errors.push(e.message));
+    let releaseNavigation;
+    if (checkLoading) {
+      await context.addInitScript(() => {
+        window.__fixtureSessionReady = new Promise((resolve) => {
+          window.__releaseFixtureSession = resolve;
+        });
+      });
+      const navigationReady = new Promise((resolve) => {
+        releaseNavigation = resolve;
+      });
+      await context.route("**/navigation.js", async (route) => {
+        await navigationReady;
+        await route.continue();
+      });
+    }
     await page.goto(
       `${base}/${screen === "dashboard" ? "index" : screen}.html${screen === "tracker" ? "?save=city" : ""}`,
+      { waitUntil: checkLoading ? "commit" : "load" },
     );
-    await page.evaluate(() => document.fonts.ready);
+    if (checkLoading) {
+      await page.locator(".app-loading-status").waitFor();
+      await page.locator(".app-header").waitFor({ state: "hidden" });
+      assert.equal(await page.locator("main").isVisible(), false);
+      assert.equal(await page.locator(".app-nav").isVisible(), false);
+      assert.equal(await page.locator(".app-nav-brand").count(), 0);
+      releaseNavigation();
+      await page.waitForFunction(() => window.__fixtureSessionStarted);
+      assert.equal(await page.locator(".app-nav-brand").count(), 1);
+      assert.equal(await page.locator(".app-nav").isVisible(), false);
+      assert.equal(await page.locator(".app-header").isVisible(), false);
+      assert.equal(await page.locator("main").isVisible(), false);
+      await page.screenshot({
+        path: `${output}/loading-${screen}-${width}.png`,
+      });
+      await page.evaluate(() => window.__releaseFixtureSession());
+    }
     if (screen === "tracker") await page.waitForSelector("#rows tr");
     if (screen === "dashboard") await page.waitForSelector("#save-rows tr");
+    await page.evaluate(() => document.fonts.ready);
+    if (screen !== "login") {
+      assert.equal(await page.locator(".app-header").isVisible(), true);
+      assert.equal(await page.locator("main").isVisible(), true);
+      assert.equal(
+        await page.locator(".app-loading-status").isVisible(),
+        false,
+      );
+    }
+    if (checkLoading) {
+      report.checks.push({
+        screen,
+        theme,
+        width,
+        loading:
+          "Delayed module and session: loading status first, navigation and page revealed together",
+      });
+    }
     const geometry = await page.evaluate(() => ({
       viewport: innerWidth,
       document: document.documentElement.scrollWidth,
@@ -513,6 +563,45 @@ function fixture(login) {
       );
       await context.close();
     }
+    for (const screen of ["dashboard", "tracker"]) {
+      for (const width of [320, 1440]) {
+        const { context } = await open(
+          screen,
+          width === 320 ? "light" : "dark",
+          width,
+          1000,
+          true,
+        );
+        await context.close();
+      }
+    }
+    const failureContext = await browser.newContext();
+    await failureContext.addInitScript(() => {
+      window.alert = () => {};
+    });
+    await failureContext.route("**/awsClient.js", (route) =>
+      route.fulfill({
+        contentType: "text/javascript",
+        body: fixture(false).replace(
+          "export async function getSession() {",
+          'export async function getSession() {throw new Error("Fixture session failure");',
+        ),
+      }),
+    );
+    const failurePage = await failureContext.newPage();
+    await failurePage.goto(`${base}/index.html`);
+    const failureStatus = failurePage.locator(
+      '.app-loading-status[role="alert"]',
+    );
+    await failureStatus.waitFor();
+    assert.match(await failureStatus.textContent(), /refresh to try again/);
+    assert.equal(await failurePage.locator(".app-nav").isVisible(), false);
+    assert.equal(await failurePage.locator(".app-header").isVisible(), false);
+    report.checks.push({
+      sessionFailure:
+        "Loading state becomes an accessible error with a retry instruction",
+    });
+    await failureContext.close();
     report.status = "passed";
   } catch (error) {
     report.status = "failed";
