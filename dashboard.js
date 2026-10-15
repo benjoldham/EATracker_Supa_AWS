@@ -1,14 +1,5 @@
 import * as aws from "./awsClient.js";
-import { renderAppNavigation, showAppLoadingError } from "./navigation.js";
-
-const appNavigation = renderAppNavigation({ currentPage: "dashboard" });
-
-document.getElementById("btn-signout")?.addEventListener("click", async () => {
-  const ok = confirm("Sign out?");
-  if (!ok) return;
-  await aws.awsSignOut?.();
-  location.href = "./login.html";
-});
+const appNavigation = window.FCTrackerNavigation;
 
 function asInt(v, fallback = 0) {
   const n = Number(v);
@@ -105,10 +96,11 @@ function render(saves, statsBySaveId) {
 async function requireLoginOrRedirect() {
   const s = await aws.getSession?.();
   if (!s?.signedIn) {
+    appNavigation.clearSession();
     location.href = "./login.html";
     throw new Error("Not signed in");
   }
-  appNavigation.hidden = false;
+  appNavigation.confirmSession();
   return s;
 }
 
@@ -206,7 +198,7 @@ rowsEl?.addEventListener("click", async (e) => {
     await requireLoginOrRedirect();
     await refresh();
   } catch (err) {
-    showAppLoadingError();
+    appNavigation.showLoadingError();
     alert(err?.message || String(err));
     console.error(err);
   }
