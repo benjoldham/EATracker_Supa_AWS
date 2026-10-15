@@ -10,7 +10,11 @@ Source: [Foundations](https://www.figma.com/design/iouhdP3Vig0SLCm4hOPE45/FC-Tra
 
 `tokens.css` is generated with `node scripts/generate-design-tokens.cjs`. Check it with `node scripts/generate-design-tokens.cjs --check`. Future changes should first refresh the snapshot from live Figma, then regenerate and run the browser checks; do not edit generated CSS independently or infer values from this snapshot when live information is available.
 
-The primitive prefix is `--primitive-`, with Figma slash paths represented by hyphens. Semantic colours retain their paths (`--surface-card`, `--action-primary`, `--text-muted`) and reference primitives. Sizes retain their paths (`--card-padding`, `--form-field-height`, `--typescale-body-sm`). Size aliases to existing spacing primitives reference those primitives. Component CSS uses semantic colours exclusively; raw colour values occur only in the generated primitive block.
+CSS properties use the actual Figma token name (the last segment), without collection prefixes or organisational groups. For example, `color/grey/grey-100` becomes `--grey-100`, `spacing/spacing-16` becomes `--spacing-16`, `radius/radius-2` becomes `--radius-2`, `typescale/h1` becomes `--h1`, and `form/field-height` becomes `--field-height`. Full Figma paths remain in the source snapshot for traceability.
+
+When different variables share a name, the immediate role distinguishes them: `--family-primary`, `--text-primary`, `--action-primary`, `--family-secondary`, `--control-secondary`, `--border-hover`, `--surface-hover`, `--card-gap` and `--pitch-gap`. Numeric font weights use `--weight-400`, `--weight-500` and `--weight-700`. These explicit exceptions are stable; the generator rejects new collisions rather than silently overriding or renaming existing tokens.
+
+Semantic colours still reference primitives, and Size aliases to existing spacing primitives still reference those primitives. Component CSS uses semantic colours; raw colour values occur only in the generated primitive block. The naming refactor on 15 October 2026 changed identifiers only, preserving values, aliases, themes, responsive modes and component rules. The four local component tokens below also omit the unnecessary `component-` prefix; the 2px spacing value is named `--spacing-2` consistently with the spacing scale.
 
 Dark is the default. `[data-theme="light"]` changes only semantic colour bindings. Compact Sizes values apply at `max-width: 768px`. The three breakpoint variables contain explanatory strings, rather than numeric CSS lengths: they map to 768px for the compact/gutter mode, 900px for two-column forms and totals, and 1200px for pitch list constraints. They are preserved in the snapshot and represented as literal media conditions because custom properties cannot be used in media conditions.
 
@@ -50,10 +54,10 @@ The Save List master has a header with no extra bottom padding, unlike Section H
 
 Four component tokens are outside the three local collections; all come directly from live masters, not invented scales:
 
-- `--component-space-half: 2px`: pitch player-row padding and theme-switch inset bind to external Tailwind `spacing/0-5`, which has no local spacing primitive. It is separate from the local radius token because it describes spacing.
-- `--component-pitch-centre-circle-size: 180px`: the Pitch Field’s centre-circle geometry; no Sizes variable covers this dimension.
-- `--component-pitch-min-height: 598px`: the Pitch Field variant’s desktop height. It is a minimum so real player lists can grow. Compact layouts retain content-driven height.
-- `--component-dialog-padding: 14px`: the Dialog Panel binds to external Tailwind `spacing/3-5`. No local spacing token resolves to 14px.
+- `--spacing-2: 2px`: pitch player-row padding and theme-switch inset bind to external Tailwind `spacing/0-5`, which has no local spacing primitive. It is separate from the local radius token because it describes spacing.
+- `--pitch-centre-circle-size: 180px`: the Pitch Field’s centre-circle geometry; no Sizes variable covers this dimension.
+- `--pitch-min-height: 598px`: the Pitch Field variant’s desktop height. It is a minimum so real player lists can grow. Compact layouts retain content-driven height.
+- `--dialog-padding: 14px`: the Dialog Panel binds to external Tailwind `spacing/3-5`. No local spacing token resolves to 14px.
 
 The application retains its 1440px page maximum, 520px login column, 720px dialog maximum, native table minimum widths (440px and 640px), fluid player-name widths, search/select minimum widths, 220px long-pitch-list constraint, circle positioning, camera crop percentages, dynamic viewport height and video sizing. These are structural or functional geometry where the collections supply no complete replacement. Long pitch lists now scroll rather than being clipped at their maximum height. On narrow screens, the five pitch columns scroll within the pitch wrapper. Header content wraps above utilities in compact mode.
 
